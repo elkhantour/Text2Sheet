@@ -108,8 +108,7 @@ export function Footer({ nodes }: FooterProps): React.ReactElement {
 			</button>
 
 			{/* Stats row */}
-			<div style={{ display: "flex", gap: 12, paddingTop: 2 }}>
-				<Stat label="Layers" value={nodes.length} />
+			<div style={{ display: "flex", gap: 12, paddingTop: 2, justifyContent: "end" }}>
 				<Stat label="Text rows" value={rowCount} accent />
 			</div>
 
