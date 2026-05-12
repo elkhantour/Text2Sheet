@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { MarkedNode } from "../types/messages";
+import type { MarkedNode } from "../../types/messages";
 
 interface NodeCardProps {
   node: MarkedNode;
@@ -11,24 +11,6 @@ interface NodeCardProps {
   onDragOver: (e: React.DragEvent, id: string) => void;
   onDragEnd: () => void;
 }
-
-const nodeTypeColors: Record<string, string> = {
-  TEXT: "var(--accent)",
-  FRAME: "#a78bfa",
-  GROUP: "#fb923c",
-  COMPONENT: "#f472b6",
-  INSTANCE: "#e879f9",
-  SECTION: "#60a5fa",
-};
-
-const nodeTypeIcons: Record<string, string> = {
-  TEXT: "T",
-  FRAME: "☐",
-  GROUP: "◎",
-  COMPONENT: "◈",
-  INSTANCE: "◈",
-  SECTION: "▤",
-};
 
 export function NodeCard({
   node,
@@ -42,14 +24,12 @@ export function NodeCard({
 }: NodeCardProps): React.ReactElement {
   const [hovered, setHovered] = useState(false);
 
-  const typeColor = nodeTypeColors[node.nodeType] ?? "var(--text-muted)";
-  const typeIcon = nodeTypeIcons[node.nodeType] ?? "?";
   const isContainer = node.nodeType !== "TEXT";
-  const childCount = node.childTextNodes?.length ?? 0;
 
-  const previewText = isContainer
-    ? node.childTextNodes?.map((c) => c.content).join(" · ") ?? ""
-    : node.previewText;
+  // For text nodes: single preview line. For containers: one line per child text node.
+  const previewLines: string[] = isContainer
+    ? (node.childTextNodes ?? []).map((c) => c.content).filter(Boolean)
+    : node.previewText ? [node.previewText] : [];
 
   return (
     <div
@@ -77,23 +57,6 @@ export function NodeCard({
           {hovered ? "⠿" : String(index + 1).padStart(2, "0")}
         </span>
 
-        {/* Type badge */}
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 700,
-            fontFamily: "var(--font)",
-            color: typeColor,
-            background: `${typeColor}18`,
-            border: `1px solid ${typeColor}40`,
-            borderRadius: 4,
-            padding: "1px 5px",
-            flexShrink: 0,
-          }}
-        >
-          {typeIcon} {node.nodeType}
-        </span>
-
         {/* Layer name */}
         <span
           className="truncate"
@@ -109,20 +72,12 @@ export function NodeCard({
 
         {/* Actions */}
         <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-          <ActionButton
-            title="Focus layer in canvas"
-            onClick={() => onSelect(node.id)}
-          >
+          <ActionButton title="Focus layer in canvas" onClick={() => onSelect(node.id)}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M1 1h3.5M1 1v3.5M11 1h-3.5M11 1v3.5M1 11h3.5M1 11v-3.5M11 11h-3.5M11 11v-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
             </svg>
           </ActionButton>
-
-          <ActionButton
-            title="Remove from export"
-            onClick={() => onUnmark(node.id)}
-            danger
-          >
+          <ActionButton title="Remove from export" onClick={() => onUnmark(node.id)} danger>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
             </svg>
@@ -130,34 +85,22 @@ export function NodeCard({
         </div>
       </div>
 
-      {/* Preview row */}
-      {previewText && (
-        <div
-          className="truncate"
-          style={{
-            marginTop: 6,
-            marginLeft: 24,
-            fontSize: 11,
-            color: "var(--text-muted)",
-            fontFamily: "var(--font)",
-          }}
-        >
-          {previewText}
-        </div>
-      )}
-
-      {/* Child count for containers */}
-      {isContainer && (
-        <div style={{ marginTop: 6, marginLeft: 24, display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{
-            fontSize: 10,
-            color: childCount > 0 ? "var(--accent)" : "var(--danger)",
-            fontFamily: "var(--font)",
-          }}>
-            {childCount > 0
-              ? `↳ ${childCount} text node${childCount !== 1 ? "s" : ""} found`
-              : "↳ no text nodes found"}
-          </span>
+      {/* Preview lines */}
+      {previewLines.length > 0 && (
+        <div style={{ marginTop: 6, marginLeft: 24, display: "flex", flexDirection: "column", gap: 2 }}>
+          {previewLines.map((line, i) => (
+            <div
+              key={i}
+              className="truncate"
+              style={{
+                fontSize: 11,
+                color: "var(--text-muted)",
+                fontFamily: "var(--font)",
+              }}
+            >
+              {line}
+            </div>
+          ))}
         </div>
       )}
     </div>

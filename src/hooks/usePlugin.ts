@@ -6,6 +6,8 @@ export interface PluginHookReturn {
   isLoading: boolean;
   toast: { message: string; kind: "error" | "success" | "info" } | null;
   markSelection: () => void;
+  highlightMarked: () => void;
+  clearAll: () => void;
   unmarkNode: (nodeId: string) => void;
   selectNode: (nodeId: string) => void;
   reorderNodes: (nodeIds: string[]) => void;
@@ -57,6 +59,14 @@ export function usePlugin(): PluginHookReturn {
     postMessage({ type: "MARK_SELECTION" });
   }, []);
 
+  const selectAll = useCallback(() => {
+    postMessage({ type: "HIGHLIGHT_MARKED" });
+  }, []);
+
+  const clearAll = useCallback(() => {
+    postMessage({ type: "CLEAR_ALL" });
+  }, []);
+
   const unmarkNode = useCallback((nodeId: string) => {
     postMessage({ type: "UNMARK_NODE", nodeId });
   }, []);
@@ -76,6 +86,8 @@ export function usePlugin(): PluginHookReturn {
     isLoading,
     toast,
     markSelection,
+    highlightMarked: selectAll,
+    clearAll,
     unmarkNode,
     selectNode,
     reorderNodes,

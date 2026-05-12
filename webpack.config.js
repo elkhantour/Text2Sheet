@@ -4,11 +4,13 @@ const path = require("path");
 
 // ─── Webpack config ───────────────────────────────────────────────────────────
 
-module.exports = [
+module.exports = (env, argv) => [
 	{
 		name: "code",
 		entry: "./src/code.ts",
 		target: "web",
+		mode: argv.mode === 'production' ? 'production' : 'development',
+		devtool: argv.mode === 'production' ? false : 'inline-source-map',
 		output: {
 			filename: "code.js",
 			path: path.resolve(__dirname, "dist"),
@@ -29,6 +31,8 @@ module.exports = [
 		name: "ui",
 		entry: "./src/ui.tsx",
 		target: "web",
+		mode: argv.mode === 'production' ? 'production' : 'development',
+		devtool: argv.mode === 'production' ? false : 'inline-source-map',
 		output: {
 			filename: "ui.js",
 			path: path.resolve(__dirname, "dist"),
@@ -53,6 +57,7 @@ module.exports = [
 				template: "./src/ui.html",
 				filename: "ui.html",
 				inject: "body",
+				cache: false //refresh html on watch
 			}),
 			new HtmlInlineScriptPlugin({ scriptMatchPattern: [/ui/] }),
 		],

@@ -1,10 +1,9 @@
 import React from "react";
 import { usePlugin } from "./hooks/usePlugin";
-import { Header } from "./components/Header";
-import { Toolbar } from "./components/Toolbar";
-import { NodeList } from "./components/NodeList";
-import { Footer } from "./components/Footer";
-import { Toast } from "./components/Toast";
+import { Toolbar } from "./components/Toolbar/Toolbar";
+import { NodeList } from "./components/NodeList/NodeList";
+import { Footer } from "./components/Footer/Footer";
+import { Toast } from "./components/Toast/Toast";
 
 export function App(): React.ReactElement {
   const {
@@ -12,19 +11,13 @@ export function App(): React.ReactElement {
     isLoading,
     toast,
     markSelection,
+    highlightMarked,
+    clearAll,
     unmarkNode,
     selectNode,
     reorderNodes,
     dismissToast,
   } = usePlugin();
-
-  const handleClearAll = () => {
-    // Unmark each one — simple approach, triggers one storage update per node.
-    // For a cleaner UX, a dedicated CLEAR_ALL message could be added.
-    for (const node of markedNodes) {
-      unmarkNode(node.id);
-    }
-  };
 
   return (
     <div
@@ -36,12 +29,11 @@ export function App(): React.ReactElement {
         background: "var(--bg)",
       }}
     >
-      <Header />
-
       <Toolbar
         nodes={markedNodes}
         onMarkSelection={markSelection}
-        onClearAll={handleClearAll}
+        onHighlightMarked={highlightMarked}
+        onClearAll={clearAll}
       />
 
       {isLoading ? (

@@ -2,6 +2,8 @@
 
 export type UIToPluginMessage =
   | { type: "MARK_SELECTION" }
+  | { type: "HIGHLIGHT_MARKED" }
+  | { type: "CLEAR_ALL" }
   | { type: "UNMARK_NODE"; nodeId: string }
   | { type: "SELECT_NODE"; nodeId: string }
   | { type: "LOAD_MARKED" }

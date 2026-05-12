@@ -31,14 +31,6 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: "-0.02em",
     fontFamily: "var(--font)",
   },
-  badge: {
-    fontSize: 10,
-    fontWeight: 600,
-    color: "var(--text-muted)",
-    letterSpacing: "0.08em",
-    textTransform: "uppercase" as const,
-    fontFamily: "var(--font)",
-  },
 };
 
 export function Header(): React.ReactElement {
@@ -58,7 +50,6 @@ export function Header(): React.ReactElement {
         </div>
         <span style={styles.title}>Text2Sheet</span>
       </div>
-      <span style={styles.badge}>v1.0</span>
     </header>
   );
 }

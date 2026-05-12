@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import type { MarkedNode } from "../types/messages";
-import { NodeCard } from "./NodeCard";
+import type { MarkedNode } from "../../types/messages";
+import { NodeCard } from "../NodeCard/NodeCard";
 
 interface NodeListProps {
   nodes: MarkedNode[];

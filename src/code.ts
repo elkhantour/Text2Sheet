@@ -28,8 +28,18 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
       await handleMarkSelection();
       break;
 
+    case "HIGHLIGHT_MARKED":
+      await handleHighlightMarked();
+      break;
+
     case "UNMARK_NODE":
       await handleUnmarkNode(msg.nodeId);
+      break;
+
+    case "CLEAR_ALL":
+      await saveIds([]);
+      await loadAndSendMarkedNodes();
+      sendNotify("Cleared all marked layers.");
       break;
 
     case "SELECT_NODE":
@@ -47,6 +57,22 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 };
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
+
+async function handleHighlightMarked(): Promise<void> {
+  const storedIds = await getStoredIds();
+  const nodes = storedIds
+    .map((id) => figma.getNodeById(id))
+    .filter((n): n is SceneNode => n !== null && "parent" in n && n.parent !== null);
+
+  if (nodes.length === 0) {
+    sendError("No marked layers found in this file.");
+    return;
+  }
+
+  figma.currentPage.selection = nodes;
+  figma.viewport.scrollAndZoomIntoView(nodes);
+  sendNotify(`Highlighted ${nodes.length} marked layer${nodes.length !== 1 ? "s" : ""}.`);
+}
 
 async function handleMarkSelection(): Promise<void> {
   const selection = figma.currentPage.selection;
