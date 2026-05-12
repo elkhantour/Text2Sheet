@@ -107,7 +107,7 @@ function EmptyState(): React.ReactElement {
           No layers marked
         </p>
         <p style={{ fontSize: 12, lineHeight: 1.5 }}>
-          Select layers in the canvas,<br />then click <strong style={{ color: "var(--text-secondary)" }}>Mark Selection</strong>
+          Select layers in the canvas,<br />then click <strong style={{ color: "var(--text-secondary)" }}>Add Selection</strong>
         </p>
       </div>
     </div>

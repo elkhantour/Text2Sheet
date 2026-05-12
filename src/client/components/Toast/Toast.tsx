@@ -33,7 +33,7 @@ export function Toast({ message, kind, onDismiss }: ToastProps): React.ReactElem
       onClick={onDismiss}
       style={{
         position: "absolute",
-        bottom: 72,
+       bottom: 120,
         left: 12,
         right: 12,
         background: c.bg,
