@@ -5,7 +5,7 @@ import type {
   PluginToUIMessage,
   MarkedNode,
   ChildTextNode,
-} from "./types/messages";
+} from "@ctypes/messages";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

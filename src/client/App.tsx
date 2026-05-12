@@ -1,9 +1,9 @@
 import React from "react";
 import { usePlugin } from "./hooks/usePlugin";
-import { Toolbar } from "./components/Toolbar/Toolbar";
-import { NodeList } from "./components/NodeList/NodeList";
-import { Footer } from "./components/Footer/Footer";
-import { Toast } from "./components/Toast/Toast";
+import { Toolbar } from "@components/Toolbar/Toolbar";
+import { NodeList } from "@components/NodeList/NodeList";
+import { Footer } from "@components/Footer/Footer";
+import { Toast } from "@components/Toast/Toast";
 
 export function App(): React.ReactElement {
   const {

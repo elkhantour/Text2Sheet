@@ -1,16 +1,36 @@
 {
-  "compilerOptions": {
-    "target": "ES6",
-    "lib": ["ES6", "DOM"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "react",
-    "strict": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "outDir": "./dist"
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+	"compilerOptions": {
+		"target": "ES6",
+		"lib": [
+			"ES6",
+			"DOM"
+		],
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"jsx": "react",
+		"strict": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"skipLibCheck": true,
+		"outDir": "./dist",
+		"baseUrl": "./",
+		"paths": {
+			"@components/*": [
+				"src/client/components/*"
+			],
+			"@styles/*": [
+				"src/client/styles/*"
+			],
+			"@ctypes/*": [
+				"src/types/*"
+			]
+		}
+	},
+	"include": [
+		"src/**/*"
+	],
+	"exclude": [
+		"node_modules",
+		"dist"
+	]
 }

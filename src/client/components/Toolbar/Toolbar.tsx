@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { countExportableRows } from "../../utils/csv";
-import type { MarkedNode } from "../../types/messages";
+import type { MarkedNode } from "@ctypes/messages";
 
 interface ToolbarProps {
 	nodes: MarkedNode[];

@@ -7,7 +7,7 @@ const path = require("path");
 module.exports = (env, argv) => [
 	{
 		name: "code",
-		entry: "./src/code.ts",
+		entry: "./src/server/code.ts",
 		target: "web",
 		mode: argv.mode === 'production' ? 'production' : 'development',
 		devtool: argv.mode === 'production' ? false : 'inline-source-map',
@@ -29,7 +29,7 @@ module.exports = (env, argv) => [
 	},
 	{
 		name: "ui",
-		entry: "./src/ui.tsx",
+		entry: "./src/client/ui.tsx",
 		target: "web",
 		mode: argv.mode === 'production' ? 'production' : 'development',
 		devtool: argv.mode === 'production' ? false : 'inline-source-map',
@@ -38,7 +38,14 @@ module.exports = (env, argv) => [
 			path: path.resolve(__dirname, "dist"),
 			publicPath: "",
 		},
-		resolve: { extensions: [".tsx", ".ts", ".js"] },
+		resolve: {
+			extensions: [".tsx", ".ts", ".js"],
+			alias: {
+				"@components": path.resolve(__dirname, "src/client/components/"),
+				"@styles": path.resolve(__dirname, "src/client/styles/"),
+				"@ctypes": path.resolve(__dirname, "src/types/"),
+			}
+		},
 		module: {
 			rules: [
 				{
@@ -54,7 +61,7 @@ module.exports = (env, argv) => [
 		},
 		plugins: [
 			new HtmlWebpackPlugin({
-				template: "./src/ui.html",
+				template: "./src/client/ui.html",
 				filename: "ui.html",
 				inject: "body",
 				cache: false //refresh html on watch

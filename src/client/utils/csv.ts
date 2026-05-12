@@ -1,4 +1,4 @@
-import type { MarkedNode } from "../types/messages";
+import type { MarkedNode } from "@ctypes/messages";
 
 /**
  * Builds a CSV string from the marked nodes list.

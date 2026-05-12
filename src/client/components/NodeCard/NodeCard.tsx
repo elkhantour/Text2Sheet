@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { MarkedNode } from "../../types/messages";
+import type { MarkedNode } from "@ctypes/messages";
 
 interface NodeCardProps {
   node: MarkedNode;

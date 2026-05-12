@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from "react";
-import type { MarkedNode, UIToPluginMessage, PluginToUIMessage } from "../types/messages";
+import type { MarkedNode, UIToPluginMessage, PluginToUIMessage } from "@ctypes/messages";
 
 export interface PluginHookReturn {
   markedNodes: MarkedNode[];
