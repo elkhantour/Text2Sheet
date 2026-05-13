@@ -6,23 +6,30 @@ interface FooterProps {
 	nodes: MarkedNode[];
 }
 
-function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
+function Stat({
+	label,
+	value,
+	accent,
+}: {
+	label: string;
+	value: number;
+	accent?: boolean;
+}) {
 	return (
-		<div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-			<span style={{
-				fontSize: 16,
-				fontWeight: 700,
-				color: accent ? "var(--accent)" : "var(--text-primary)",
-				fontFamily: "var(--font)",
-				lineHeight: 1,
-			}}>
+		<div className="flex items-baseline gap-1">
+			<span
+				className={`text-[16px] font-bold leading-none font-[var(--font)] ${accent ? "text-[var(--accent)]" : "text-[var(--text-primary)]"
+					}`}
+			>
 				{value}
 			</span>
-			<span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
+
+			<span className="text-[11px] text-[var(--text-muted)]">
+				{label}
+			</span>
 		</div>
 	);
 }
-
 
 export function Footer({ nodes }: FooterProps): React.ReactElement {
 	const [hovered, setHovered] = useState(false);
@@ -46,45 +53,26 @@ export function Footer({ nodes }: FooterProps): React.ReactElement {
 	};
 
 	return (
-		<div
-			style={{
-				padding: "10px 12px 14px",
-				borderTop: "1px solid var(--border)",
-				flexShrink: 0,
-				display: "flex",
-				flexDirection: "column",
-				gap: 6,
-			}}
-		>
+		<div className="flex shrink-0 flex-col gap-1.5 border-t border-[var(--border)] px-3 pt-2.5 pb-6">
 			<button
 				onMouseEnter={() => setHovered(true)}
 				onMouseLeave={() => setHovered(false)}
 				onClick={handleDownload}
 				disabled={!canDownload}
-				style={{
-					width: "100%",
-					height: 40,
-					borderRadius: "var(--radius-md)",
-					border: canDownload
-						? `1px solid ${hovered ? "var(--accent)" : "var(--border-light)"}`
-						: "1px solid var(--border)",
-					background: canDownload
-						? hovered ? "var(--accent-dim)" : "var(--surface-2)"
-						: "var(--surface)",
-					color: canDownload
-						? hovered ? "var(--accent)" : "var(--text-secondary)"
-						: "var(--text-muted)",
-					fontSize: 13,
-					fontWeight: 600,
-					fontFamily: "var(--font)",
-					cursor: canDownload ? "pointer" : "not-allowed",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					gap: 8,
-					transition: "all var(--transition)",
-					letterSpacing: "0.01em",
-				}}
+				className={`
+  w-full h-10 rounded-[var(--radius-md)]
+  flex items-center justify-center gap-2
+  text-[13px] font-semibold font-[var(--font)]
+  tracking-[0.01em]
+  transition-all duration-200
+  ${canDownload ? "cursor-pointer" : "cursor-not-allowed"}
+  ${canDownload
+						? hovered
+							? "border border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]"
+							: "border border-[var(--border-light)] bg-[var(--surface-2)] text-[var(--text-secondary)]"
+						: "border border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]"
+					}
+`}
 			>
 				{downloading ? (
 					<>
@@ -108,7 +96,9 @@ export function Footer({ nodes }: FooterProps): React.ReactElement {
 			</button>
 
 			{/* Stats row */}
-			<div style={{ display: "flex", gap: 12, paddingTop: 2, justifyContent: "end" }}>
+			<div style={{ display: "flex", gap: 12, paddingTop: 2, justifyContent: "space-between" }}>
+				<div>
+				</div>
 				<Stat label="Text rows" value={rowCount} accent />
 			</div>
 
