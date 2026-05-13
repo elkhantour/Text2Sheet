@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { BaseSyntheticEvent, useState } from "react";
 import type { MarkedNode } from "@ctypes/messages";
 import { buildCSV, downloadCSV, countExportableRows } from "../../utils/csv";
+import Checkbox from "@components/Checkbox/Checkbox";
+import "./Footer.scss";
 
 interface FooterProps {
 	nodes: MarkedNode[];
@@ -24,7 +26,7 @@ function Stat({
 				{value}
 			</span>
 
-			<span className="text-[11px] text-[var(--text-muted)]">
+			<span className="text-[12px] text-[var(--text-muted)]">
 				{label}
 			</span>
 		</div>
@@ -32,19 +34,18 @@ function Stat({
 }
 
 export function Footer({ nodes }: FooterProps): React.ReactElement {
-	const [hovered, setHovered] = useState(false);
 	const [downloading, setDownloading] = useState(false);
+	const [includeLayerName, setIncludeLayerName] = useState(false);
 
 	const rowCount = countExportableRows(nodes);
 	const canDownload = rowCount > 0;
-	const hasNodes = nodes.length > 0;
 
 	const handleDownload = () => {
 		if (!canDownload || downloading) return;
 
 		setDownloading(true);
 		try {
-			const csv = buildCSV(nodes);
+			const csv = buildCSV(nodes, includeLayerName);
 			const filename = `text2sheet_${new Date().toISOString().slice(0, 10)}.csv`;
 			downloadCSV(csv, filename);
 		} finally {
@@ -53,27 +54,12 @@ export function Footer({ nodes }: FooterProps): React.ReactElement {
 	};
 
 	return (
-		<div className="flex shrink-0 flex-col gap-1.5 border-t border-[var(--border)] px-3 pt-2.5 pb-6">
+		<div className="footer flex shrink-0 flex-col gap-3 border-t border-[var(--border)] px-3 pt-6 pb-6">
 			<button
-				onMouseEnter={() => setHovered(true)}
-				onMouseLeave={() => setHovered(false)}
 				onClick={handleDownload}
 				disabled={!canDownload}
-				className={`
-  w-full h-10 rounded-[var(--radius-md)]
-  flex items-center justify-center gap-2
-  text-[13px] font-semibold font-[var(--font)]
-  tracking-[0.01em]
-  transition-all duration-200
-  ${canDownload ? "cursor-pointer" : "cursor-not-allowed"}
-  ${canDownload
-						? hovered
-							? "border border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]"
-							: "border border-[var(--border-light)] bg-[var(--surface-2)] text-[var(--text-secondary)]"
-						: "border border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]"
-					}
-`}
-			>
+				data-download={canDownload}
+				className={`footer-download ${canDownload ? "enabled" : "disabled"}`}>
 				{downloading ? (
 					<>
 						<Spinner />
@@ -97,9 +83,12 @@ export function Footer({ nodes }: FooterProps): React.ReactElement {
 
 			{/* Stats row */}
 			<div style={{ display: "flex", gap: 12, paddingTop: 2, justifyContent: "space-between" }}>
-				<div>
-				</div>
-				<Stat label="Text rows" value={rowCount} accent />
+				<Checkbox
+					label="Include layer names"
+					className="text-[var(--text-muted)]"
+					onChange={(e: BaseSyntheticEvent) => { setIncludeLayerName(e.target.checked); }}
+				/>
+				<Stat label="Text rows" value={rowCount} {...(canDownload ? { accent: true } : {})} />
 			</div>
 
 

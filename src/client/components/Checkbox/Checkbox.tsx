@@ -1,25 +1,22 @@
-import React from "react";
+import React, { ComponentPropsWithoutRef } from "react";
 
-type CheckboxProps = {
-  label?: string;
-  checked?: boolean;
-  onChange?: (checked: boolean) => void;
+interface ICheckboxProps extends ComponentPropsWithoutRef<"div"> {
+	label?: string;
 };
 
 export default function Checkbox({
-  label = "Accept terms",
-  checked = false,
-  onChange,
-}: CheckboxProps) {
-  return (
-    <label className="flex items-center gap-2 cursor-pointer">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange?.(e.target.checked)}
-        className="w-4 h-4"
-      />
-      <span>{label}</span>
-    </label>
-  );
+	label = "Accept terms",
+	onChange,
+	className,
+}: ICheckboxProps) {
+	return (
+		<label className={`flex items-center gap-2 cursor-pointer ${className}`}>
+			<input
+				type="checkbox"
+				onChange={onChange}
+				className="w-4 h-4"
+			/>
+			<span>{label}</span>
+		</label>
+	);
 }
