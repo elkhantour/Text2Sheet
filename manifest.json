@@ -1,12 +1,19 @@
 {
-  "name": "Text2Sheet",
-  "id": "text2sheet-plugin",
-  "api": "1.0.0",
-  "main": "dist/code.js",
-  "ui": "dist/ui.html",
-  "editorType": ["figma"],
-  "permissions": ["currentuser"],
-  "networkAccess": {
-    "allowedDomains": ["none"]
-  }
+	"name": "Text2Sheet",
+	"id": "1636234698006384369",
+	"api": "1.0.0",
+	"main": "dist/code.js",
+	"ui": "dist/ui.html",
+	"documentAccess": "dynamic-page",
+	"editorType": [
+		"figma"
+	],
+	"permissions": [
+		"currentuser"
+	],
+	"networkAccess": {
+		"allowedDomains": [
+			"none"
+		]
+	}
 }
