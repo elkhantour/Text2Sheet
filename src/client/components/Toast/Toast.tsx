@@ -7,67 +7,72 @@ interface ToastProps {
 }
 
 export function Toast({ message, kind, onDismiss }: ToastProps): React.ReactElement {
-  const [visible, setVisible] = useState(false);
+	const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
-    // Trigger enter animation
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
+	useEffect(() => {
+		requestAnimationFrame(() => setVisible(true));
+	}, []);
 
-  const colors = {
-    error: { bg: "var(--danger-dim)", border: "var(--danger)", text: "var(--danger)" },
-    success: { bg: "var(--accent-dim)", border: "var(--accent)", text: "var(--accent)" },
-    info: { bg: "var(--surface-2)", border: "var(--border-light)", text: "var(--text-secondary)" },
-  };
+	return (
+		<div
+			onClick={onDismiss}
+			data-visible={visible}
+			data-kind={kind}
+			className="
+				absolute
+				bottom-[120px]
+				left-3
+				right-3
+				z-50
+				flex
+				cursor-pointer
+				items-center
+				gap-2
+				rounded-md
+				border
+				p-2.5
+				text-xs
+				leading-relaxed
+				opacity-0
+				translate-y-2
+				transition-all
+				duration-200
 
-  const c = colors[kind];
+				data-[visible=true]:opacity-100
+				data-[visible=true]:translate-y-0
 
-  const icon = {
-    error: "✕",
-    success: "✓",
-    info: "i",
-  }[kind];
+				data-[kind=error]:bg-[var(--danger-dim)]
+				data-[kind=error]:border-[var(--danger)]
+				data-[kind=error]:text-[var(--danger)]
 
-  return (
-    <div
-      onClick={onDismiss}
-      style={{
-        position: "absolute",
-       bottom: 120,
-        left: 12,
-        right: 12,
-        background: c.bg,
-        border: `1px solid ${c.border}`,
-        borderRadius: "var(--radius-md)",
-        padding: "10px 12px",
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        cursor: "pointer",
-        zIndex: 100,
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(8px)",
-        transition: "opacity 200ms ease, transform 200ms ease",
-      }}
-    >
-      <span
-        style={{
-          width: 18,
-          height: 18,
-          borderRadius: "50%",
-          border: `1.5px solid ${c.border}`,
-          color: c.text,
-          fontSize: 10,
-          fontWeight: 700,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        {icon}
-      </span>
-      <span style={{ color: c.text, fontSize: 12, lineHeight: 1.4 }}>{message}</span>
-    </div>
-  );
+				data-[kind=success]:bg-[var(--accent-dim)]
+				data-[kind=success]:border-[var(--accent)]
+				data-[kind=success]:text-[var(--accent)]
+
+				data-[kind=info]:bg-[var(--surface-2)]
+				data-[kind=info]:border-[var(--border-light)]
+				data-[kind=info]:text-[var(--text-secondary)]
+			"
+		>
+			<span
+				className="
+					flex
+					h-[18px]
+					w-[18px]
+					shrink-0
+					items-center
+					justify-center
+					rounded-full
+					border
+					border-current
+					text-[10px]
+					font-bold
+				"
+			>
+				{kind === "error" ? "✕" : kind === "success" ? "✓" : "i"}
+			</span>
+
+			<span>{message}</span>
+		</div>
+	);
 }
