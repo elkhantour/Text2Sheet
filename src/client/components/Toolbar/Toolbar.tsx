@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { MarkedNode } from "@ctypes/messages";
-import { Button } from "@radix-ui/themes";
-import { PlusIcon } from "lucide-react";
+import { Button, DropdownMenu } from "@radix-ui/themes";
+import { EllipsisVerticalIcon, PlusIcon } from "lucide-react";
 
 interface ToolbarProps {
 	nodes: MarkedNode[];
@@ -19,24 +19,27 @@ export function Toolbar({
 	const hasNodes = nodes.length > 0;
 
 	return (
-		<>
-			{/* Ghost buttons row */}
-			<div className="flex gap-1.5 border-b border-[var(--border)] px-3 py-2.5">
-				<Button variant="surface" onClick={hasNodes ? onHighlightMarked : () => 0} disabled={!hasNodes}>
-					Highlight Selected
-				</Button>
+		<div className="flex justify-between w-full px-3 py-3 items-center">
+			{/* Primary action */}
+			<Button onClick={onMarkSelection} > <PlusIcon /> Add Selection</Button>
 
-				<Button variant="surface" color="red" onClick={onClearAll} disabled={!hasNodes}>
-					Clear All
-				</Button>
+			<DropdownMenu.Root>
 
-			</div>
+				<DropdownMenu.Trigger>
+					<Button variant="ghost">
+						<EllipsisVerticalIcon />
+					</Button>
+				</DropdownMenu.Trigger>
 
-			{/* Primary action section */}
-			<div className="flex flex-col gap-1.5 border-b border-[var(--border)] px-3 py-2.5">
-				<Button onClick={onMarkSelection} > <PlusIcon /> Add Selection</Button>
-			</div >
-		</>
+				<DropdownMenu.Content>
+					<DropdownMenu.Item color="red" onClick={hasNodes ? onClearAll : undefined} disabled={!hasNodes}>
+						Clear All
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+
+			</DropdownMenu.Root>
+
+		</div>
 	);
 }
 

@@ -2,8 +2,8 @@ import React, { BaseSyntheticEvent, useState } from "react";
 import type { MarkedNode } from "@ctypes/messages";
 import { buildCSV, downloadCSV, countExportableRows } from "../../utils/csv";
 import Checkbox from "@components/Checkbox/Checkbox";
-import { Button } from "@radix-ui/themes";
-import { FileDownIcon } from "lucide-react";
+import { Button, Dialog } from "@radix-ui/themes";
+import { FileDownIcon, SettingsIcon } from "lucide-react";
 
 interface FooterProps {
 	nodes: MarkedNode[];
@@ -56,29 +56,46 @@ export function Footer({ nodes }: FooterProps): React.ReactElement {
 
 	return (
 		<div className="footer flex shrink-0 flex-col gap-3 border-t border-[var(--border)] px-3 pt-6 pb-6">
-			<Button
-				onClick={handleDownload}
-				disabled={!canDownload}
-			>
-				{downloading ? (
-					<>
-						<Spinner />
-						Exporting…
-					</>
-				) : (<>
-					<FileDownIcon />
-					{canDownload ? "Download CSV" : "No text to export"}
-				</>
-				)}
-			</Button>
+			<div className="flex flex-row rounded-sm overflow-hidden w-fit">
+				<Button
+					onClick={handleDownload}
+					disabled={!canDownload}
+					radius="none"
+				>
+					{downloading ? (
+						<>
+							<Spinner />
+							Exporting…
+						</>
+					) : (
+						<>
+							<FileDownIcon />
+							{canDownload ? "Download CSV" : "No text to export"}
+						</>
+					)}
+				</Button>
+				<span className="w-[1px] h-full block bg-emerald-500"></span>
+				<Dialog.Root>
+					<Dialog.Trigger>
+						<Button radius="none">
+							<SettingsIcon />
+						</Button>
+					</Dialog.Trigger>
+					<Dialog.Content>
+						<Dialog.Title>Export settings</Dialog.Title>
+						<Checkbox
+							label="Include layer names"
+							className="text-[var(--text-muted)]"
+							onChange={(e: BaseSyntheticEvent) => { setIncludeLayerName(e.target.checked); }}
+						/>
+					</Dialog.Content>
+				</Dialog.Root>
+
+			</div>
 
 			{/* Stats row */}
 			<div style={{ display: "flex", gap: 12, paddingTop: 2, justifyContent: "space-between" }}>
-				<Checkbox
-					label="Include layer names"
-					className="text-[var(--text-muted)]"
-					onChange={(e: BaseSyntheticEvent) => { setIncludeLayerName(e.target.checked); }}
-				/>
+
 				<Stat label="Text rows" value={rowCount} {...(canDownload ? { accent: true } : {})} />
 			</div>
 

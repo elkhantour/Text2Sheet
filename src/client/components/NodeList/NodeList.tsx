@@ -51,16 +51,7 @@ export function NodeList({ nodes, onUnmark, onSelect, onReorder }: NodeListProps
 	}
 
 	return (
-		<div
-			style={{
-				flex: 1,
-				overflowY: "auto",
-				padding: "10px 12px",
-				display: "flex",
-				flexDirection: "column",
-				gap: 6,
-			}}
-		>
+		<div className="flex flex-1 flex-col gap-1.5 overflow-y-auto px-3 py-2.5">
 			{orderedNodes.map((node, index) => (
 				<NodeCard
 					key={node.id}
@@ -80,19 +71,7 @@ export function NodeList({ nodes, onUnmark, onSelect, onReorder }: NodeListProps
 
 function EmptyState(): React.ReactElement {
 	return (
-		<div
-			className="
-				flex
-				flex-1
-				flex-col
-				items-center
-				justify-center
-				p-8
-				text-center
-				gap-3
-				text-[var(--text-muted)]
-			"
-		>
+		<div className="flex flex-1 flex-col items-center justify-center p-8 text-center gap-3 text-[var(--text-muted)]">
 			{/* Grid icon */}
 			<svg width="40" height="40" viewBox="0 0 40 40" fill="none">
 				<rect
