@@ -2,7 +2,8 @@ import React, { BaseSyntheticEvent, useState } from "react";
 import type { MarkedNode } from "@ctypes/messages";
 import { buildCSV, downloadCSV, countExportableRows } from "../../utils/csv";
 import Checkbox from "@components/Checkbox/Checkbox";
-import "./Footer.scss";
+import { Button } from "@radix-ui/themes";
+import { FileDownIcon } from "lucide-react";
 
 interface FooterProps {
 	nodes: MarkedNode[];
@@ -55,31 +56,21 @@ export function Footer({ nodes }: FooterProps): React.ReactElement {
 
 	return (
 		<div className="footer flex shrink-0 flex-col gap-3 border-t border-[var(--border)] px-3 pt-6 pb-6">
-			<button
+			<Button
 				onClick={handleDownload}
 				disabled={!canDownload}
-				data-download={canDownload}
-				className={`footer-download ${canDownload ? "enabled" : "disabled"}`}>
+			>
 				{downloading ? (
 					<>
 						<Spinner />
 						Exporting…
 					</>
-				) : (
-					<>
-						<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-							<path
-								d="M7 1v8M4 6l3 3 3-3M2 10v2a1 1 0 001 1h8a1 1 0 001-1v-2"
-								stroke="currentColor"
-								strokeWidth="1.5"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-							/>
-						</svg>
-						{canDownload ? "Download CSV" : "No text to export"}
-					</>
+				) : (<>
+					<FileDownIcon />
+					{canDownload ? "Download CSV" : "No text to export"}
+				</>
 				)}
-			</button>
+			</Button>
 
 			{/* Stats row */}
 			<div style={{ display: "flex", gap: 12, paddingTop: 2, justifyContent: "space-between" }}>

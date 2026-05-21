@@ -3,79 +3,79 @@ import type { MarkedNode } from "@ctypes/messages";
 import { NodeCard } from "../NodeCard/NodeCard";
 
 interface NodeListProps {
-  nodes: MarkedNode[];
-  onUnmark: (id: string) => void;
-  onSelect: (id: string) => void;
-  onReorder: (nodeIds: string[]) => void;
+	nodes: MarkedNode[];
+	onUnmark: (id: string) => void;
+	onSelect: (id: string) => void;
+	onReorder: (nodeIds: string[]) => void;
 }
 
 export function NodeList({ nodes, onUnmark, onSelect, onReorder }: NodeListProps): React.ReactElement {
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [localOrder, setLocalOrder] = useState<string[] | null>(null);
+	const [draggingId, setDraggingId] = useState<string | null>(null);
+	const [localOrder, setLocalOrder] = useState<string[] | null>(null);
 
-  const orderedNodes = localOrder
-    ? localOrder.map((id) => nodes.find((n) => n.id === id)).filter(Boolean) as MarkedNode[]
-    : nodes;
+	const orderedNodes = localOrder
+		? localOrder.map((id) => nodes.find((n) => n.id === id)).filter(Boolean) as MarkedNode[]
+		: nodes;
 
-  const handleDragStart = (_e: React.DragEvent, id: string) => {
-    setDraggingId(id);
-    setLocalOrder(orderedNodes.map((n) => n.id));
-  };
+	const handleDragStart = (_e: React.DragEvent, id: string) => {
+		setDraggingId(id);
+		setLocalOrder(orderedNodes.map((n) => n.id));
+	};
 
-  const handleDragOver = (e: React.DragEvent, targetId: string) => {
-    e.preventDefault();
-    if (!draggingId || draggingId === targetId) return;
+	const handleDragOver = (e: React.DragEvent, targetId: string) => {
+		e.preventDefault();
+		if (!draggingId || draggingId === targetId) return;
 
-    setLocalOrder((prev) => {
-      const order = prev ?? orderedNodes.map((n) => n.id);
-      const fromIdx = order.indexOf(draggingId);
-      const toIdx = order.indexOf(targetId);
-      if (fromIdx === -1 || toIdx === -1) return order;
-      const next = [...order];
-      next.splice(fromIdx, 1);
-      next.splice(toIdx, 0, draggingId);
-      return next;
-    });
-  };
+		setLocalOrder((prev) => {
+			const order = prev ?? orderedNodes.map((n) => n.id);
+			const fromIdx = order.indexOf(draggingId);
+			const toIdx = order.indexOf(targetId);
+			if (fromIdx === -1 || toIdx === -1) return order;
+			const next = [...order];
+			next.splice(fromIdx, 1);
+			next.splice(toIdx, 0, draggingId);
+			return next;
+		});
+	};
 
-  const handleDragEnd = () => {
-    if (localOrder) {
-      onReorder(localOrder);
-    }
-    setDraggingId(null);
-    setLocalOrder(null);
-  };
+	const handleDragEnd = () => {
+		if (localOrder) {
+			onReorder(localOrder);
+		}
+		setDraggingId(null);
+		setLocalOrder(null);
+	};
 
-  if (nodes.length === 0) {
-    return <EmptyState />;
-  }
+	if (nodes.length === 0) {
+		return <EmptyState />;
+	}
 
-  return (
-    <div
-      style={{
-        flex: 1,
-        overflowY: "auto",
-        padding: "10px 12px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 6,
-      }}
-    >
-      {orderedNodes.map((node, index) => (
-        <NodeCard
-          key={node.id}
-          node={node}
-          index={index}
-          onUnmark={onUnmark}
-          onSelect={onSelect}
-          isDragging={draggingId === node.id}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-        />
-      ))}
-    </div>
-  );
+	return (
+		<div
+			style={{
+				flex: 1,
+				overflowY: "auto",
+				padding: "10px 12px",
+				display: "flex",
+				flexDirection: "column",
+				gap: 6,
+			}}
+		>
+			{orderedNodes.map((node, index) => (
+				<NodeCard
+					key={node.id}
+					node={node}
+					index={index}
+					onUnmark={onUnmark}
+					onSelect={onSelect}
+					isDragging={draggingId === node.id}
+					onDragStart={handleDragStart}
+					onDragOver={handleDragOver}
+					onDragEnd={handleDragEnd}
+				/>
+			))}
+		</div>
+	);
 }
 
 function EmptyState(): React.ReactElement {
