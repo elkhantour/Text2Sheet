@@ -1,40 +1,61 @@
 import { useEffect, useCallback, useState } from "react";
-import type { MarkedNode, UIToPluginMessage, PluginToUIMessage } from "@ctypes/messages";
+import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions } from "@ctypes/messages";
+
+const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
+  includeLayerNames: false,
+  splitBySections: false,
+};
 
 export interface PluginHookReturn {
   markedNodes: MarkedNode[];
   isLoading: boolean;
   toast: { message: string; kind: "error" | "success" | "info" } | null;
+  sections: NodeSection[];
+  itemOrder: string[];
+  exportOptions: ExportOptions;
   markSelection: () => void;
   highlightMarked: () => void;
   clearAll: () => void;
   unmarkNode: (nodeId: string) => void;
   selectNode: (nodeId: string) => void;
-  reorderNodes: (nodeIds: string[]) => void;
   dismissToast: () => void;
+  createSection: (name: string) => void;
+  deleteSection: (sectionId: string) => void;
+  renameSection: (sectionId: string, name: string) => void;
+  reorderItems: (itemIds: string[]) => void;
+  moveNodeToSection: (nodeId: string, sectionId: string | null, index: number) => void;
+  reorderNodesInSection: (sectionId: string, nodeIds: string[]) => void;
+  saveExportOptions: (options: ExportOptions) => void;
 }
 
 export function usePlugin(): PluginHookReturn {
   const [markedNodes, setMarkedNodes] = useState<MarkedNode[]>([]);
+  const [sections, setSections] = useState<NodeSection[]>([]);
+  const [itemOrder, setItemOrder] = useState<string[]>([]);
+  const [exportOptions, setExportOptions] = useState<ExportOptions>(DEFAULT_EXPORT_OPTIONS);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<PluginHookReturn["toast"]>(null);
 
-  // Auto-dismiss toast
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(t);
   }, [toast]);
 
-  // Listen to plugin messages
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       const msg = event.data.pluginMessage as PluginToUIMessage;
       if (!msg) return;
-
       switch (msg.type) {
         case "MARKED_NODES_UPDATE":
           setMarkedNodes(msg.nodes);
+          setIsLoading(false);
+          break;
+        case "STATE_UPDATE":
+          setMarkedNodes(msg.nodes);
+          setSections(msg.sections);
+          setItemOrder(msg.itemOrder);
+          setExportOptions(msg.exportOptions);
           setIsLoading(false);
           break;
         case "ERROR":
@@ -45,53 +66,32 @@ export function usePlugin(): PluginHookReturn {
           break;
       }
     };
-
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
   }, []);
 
-  // Load on mount
-  useEffect(() => {
-    postMessage({ type: "LOAD_MARKED" });
-  }, []);
+  useEffect(() => { postMessage({ type: "LOAD_MARKED" }); }, []);
 
-  const markSelection = useCallback(() => {
-    postMessage({ type: "MARK_SELECTION" });
+  const saveExportOptions = useCallback((options: ExportOptions) => {
+    setExportOptions(options); // optimistic local update
+    postMessage({ type: "SAVE_EXPORT_OPTIONS", options });
   }, []);
-
-  const selectAll = useCallback(() => {
-    postMessage({ type: "HIGHLIGHT_MARKED" });
-  }, []);
-
-  const clearAll = useCallback(() => {
-    postMessage({ type: "CLEAR_ALL" });
-  }, []);
-
-  const unmarkNode = useCallback((nodeId: string) => {
-    postMessage({ type: "UNMARK_NODE", nodeId });
-  }, []);
-
-  const selectNode = useCallback((nodeId: string) => {
-    postMessage({ type: "SELECT_NODE", nodeId });
-  }, []);
-
-  const reorderNodes = useCallback((nodeIds: string[]) => {
-    postMessage({ type: "REORDER_NODES", nodeIds });
-  }, []);
-
-  const dismissToast = useCallback(() => setToast(null), []);
 
   return {
-    markedNodes,
-    isLoading,
-    toast,
-    markSelection,
-    highlightMarked: selectAll,
-    clearAll,
-    unmarkNode,
-    selectNode,
-    reorderNodes,
-    dismissToast,
+    markedNodes, sections, itemOrder, exportOptions, isLoading, toast,
+    markSelection:          useCallback(() => postMessage({ type: "MARK_SELECTION" }), []),
+    highlightMarked:        useCallback(() => postMessage({ type: "HIGHLIGHT_MARKED" }), []),
+    clearAll:               useCallback(() => postMessage({ type: "CLEAR_ALL" }), []),
+    unmarkNode:             useCallback((nodeId) => postMessage({ type: "UNMARK_NODE", nodeId }), []),
+    selectNode:             useCallback((nodeId) => postMessage({ type: "SELECT_NODE", nodeId }), []),
+    dismissToast:           useCallback(() => setToast(null), []),
+    createSection:          useCallback((name) => postMessage({ type: "CREATE_SECTION", name }), []),
+    deleteSection:          useCallback((sectionId) => postMessage({ type: "DELETE_SECTION", sectionId }), []),
+    renameSection:          useCallback((sectionId, name) => postMessage({ type: "RENAME_SECTION", sectionId, name }), []),
+    reorderItems:           useCallback((itemIds) => postMessage({ type: "REORDER_ITEMS", itemIds }), []),
+    moveNodeToSection:      useCallback((nodeId, sectionId, index) => postMessage({ type: "MOVE_NODE_TO_SECTION", nodeId, sectionId, index }), []),
+    reorderNodesInSection:  useCallback((sectionId, nodeIds) => postMessage({ type: "REORDER_NODES_IN_SECTION", sectionId, nodeIds }), []),
+    saveExportOptions,
   };
 }
 

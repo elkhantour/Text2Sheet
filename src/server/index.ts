@@ -1,61 +1,41 @@
 /// <reference types="@figma/plugin-typings" />
-
-import type {
-	UIToPluginMessage,
-} from "@ctypes/messages";
+import type { UIToPluginMessage } from "@ctypes/messages";
 import { sendNotify } from "./message";
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
-import { loadAndSendMarkedNodes } from "./node";
-import { saveIds } from "./storage";
-import { handleHighlightMarked, handleMarkSelection, handleReorder, handleSelectNode, handleUnmarkNode } from "./handlers";
-
-
-
-// ─── Plugin entry ─────────────────────────────────────────────────────────────
+import { loadAndSendState } from "./node";
+import { saveIds, saveSections, saveItemOrder } from "./storage";
+import {
+  handleHighlightMarked, handleMarkSelection, handleSelectNode, handleUnmarkNode,
+  handleCreateSection, handleDeleteSection, handleRenameSection,
+  handleReorderItems, handleMoveNodeToSection, handleReorderNodesInSection,
+  handleSaveExportOptions,
+} from "./handlers";
 
 figma.showUI(__html__, { width: PLUGIN_WIDTH, height: PLUGIN_HEIGHT, title: "Text2Sheet" });
 
-// Send initial state on open
-loadAndSendMarkedNodes();
-
-// ─── Message handler ──────────────────────────────────────────────────────────
+loadAndSendState();
 
 figma.ui.onmessage = async (msg: UIToPluginMessage) => {
-	switch (msg.type) {
-		case "MARK_SELECTION":
-			await handleMarkSelection();
-			break;
-
-		case "HIGHLIGHT_MARKED":
-			await handleHighlightMarked();
-			break;
-
-		case "UNMARK_NODE":
-			await handleUnmarkNode(msg.nodeId);
-			break;
-
-		case "CLEAR_ALL":
-			await saveIds([]);
-			await loadAndSendMarkedNodes();
-			sendNotify("Cleared all marked layers.");
-			break;
-
-		case "SELECT_NODE":
-			await handleSelectNode(msg.nodeId);
-			break;
-
-		case "LOAD_MARKED":
-			await loadAndSendMarkedNodes();
-			break;
-
-		case "REORDER_NODES":
-			await handleReorder(msg.nodeIds);
-			break;
-	}
+  switch (msg.type) {
+    case "MARK_SELECTION":       await handleMarkSelection(); break;
+    case "HIGHLIGHT_MARKED":     await handleHighlightMarked(); break;
+    case "UNMARK_NODE":          await handleUnmarkNode(msg.nodeId); break;
+    case "SELECT_NODE":          await handleSelectNode(msg.nodeId); break;
+    case "LOAD_MARKED":          await loadAndSendState(); break;
+    case "REORDER_NODES":        await saveIds(msg.nodeIds); break; // legacy
+    case "CREATE_SECTION":       await handleCreateSection(msg.name); break;
+    case "DELETE_SECTION":       await handleDeleteSection(msg.sectionId); break;
+    case "RENAME_SECTION":       await handleRenameSection(msg.sectionId, msg.name); break;
+    case "REORDER_ITEMS":        await handleReorderItems(msg.itemIds); break;
+    case "MOVE_NODE_TO_SECTION": await handleMoveNodeToSection(msg.nodeId, msg.sectionId, msg.index); break;
+    case "REORDER_NODES_IN_SECTION": await handleReorderNodesInSection(msg.sectionId, msg.nodeIds); break;
+    case "SAVE_EXPORT_OPTIONS":  await handleSaveExportOptions(msg.options); break;
+    case "CLEAR_ALL":
+      await saveIds([]);
+      await saveSections([]);
+      await saveItemOrder([]);
+      await loadAndSendState();
+      sendNotify("Cleared all marked layers.");
+      break;
+  }
 };
-
-
-
-
-
-

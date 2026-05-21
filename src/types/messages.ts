@@ -7,12 +7,21 @@ export type UIToPluginMessage =
   | { type: "UNMARK_NODE"; nodeId: string }
   | { type: "SELECT_NODE"; nodeId: string }
   | { type: "LOAD_MARKED" }
+  | { type: "REORDER_ITEMS"; itemIds: string[] }
+  | { type: "CREATE_SECTION"; name: string }
+  | { type: "DELETE_SECTION"; sectionId: string }
+  | { type: "RENAME_SECTION"; sectionId: string; name: string }
+  | { type: "MOVE_NODE_TO_SECTION"; nodeId: string; sectionId: string | null; index: number }
+  | { type: "REORDER_NODES_IN_SECTION"; sectionId: string; nodeIds: string[] }
+  | { type: "SAVE_EXPORT_OPTIONS"; options: ExportOptions }
+  // Legacy
   | { type: "REORDER_NODES"; nodeIds: string[] };
 
 // ─── Message types (Plugin → UI) ────────────────────────────────────────────
 
 export type PluginToUIMessage =
   | { type: "MARKED_NODES_UPDATE"; nodes: MarkedNode[] }
+  | { type: "STATE_UPDATE"; nodes: MarkedNode[]; sections: NodeSection[]; itemOrder: string[]; exportOptions: ExportOptions }
   | { type: "ERROR"; message: string }
   | { type: "NOTIFY"; message: string };
 
@@ -21,16 +30,32 @@ export type PluginToUIMessage =
 export interface MarkedNode {
   id: string;
   name: string;
-  /** "TEXT" | "FRAME" | "GROUP" | "COMPONENT" | etc. */
   nodeType: string;
-  /** Resolved text content (empty string for non-text containers) */
   previewText: string;
-  /** For non-text nodes: list of child text nodes found recursively */
   childTextNodes?: ChildTextNode[];
+}
+
+export interface NodeSection {
+  id: string;
+  name: string;
+  nodeIds: string[];
+  collapsed?: boolean;
 }
 
 export interface ChildTextNode {
   id: string;
   name: string;
   content: string;
+}
+
+export type TopLevelItem =
+  | { kind: "node"; id: string }
+  | { kind: "section"; id: string };
+
+
+
+export interface ExportOptions {
+  includeLayerNames: boolean;
+  splitBySections: boolean;
+  // splitByFrame: boolean  -- reserved, not implemented yet
 }

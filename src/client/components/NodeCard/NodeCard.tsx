@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import type { MarkedNode } from "@ctypes/messages";
+import { useDnd } from "@components/Dnd/Context";
 
 interface NodeCardProps {
 	node: MarkedNode;
 	index: number;
 	onUnmark: (id: string) => void;
 	onSelect: (id: string) => void;
-	isDragging: boolean;
-	onDragStart: (e: React.DragEvent, id: string) => void;
-	onDragOver: (e: React.DragEvent, id: string) => void;
-	onDragEnd: () => void;
+	/** null = loose top-level card, string = inside a section */
+	sourceSectionId: string | null;
+	/** Called when pointer hovers this card inside a section body — signals "insert before me" */
+	onDragOverGap?: (beforeNodeId: string) => void;
 }
 
 export function NodeCard({
@@ -17,23 +18,54 @@ export function NodeCard({
 	index,
 	onUnmark,
 	onSelect,
-	isDragging,
-	onDragStart,
-	onDragOver,
-	onDragEnd,
+	sourceSectionId,
+	onDragOverGap,
 }: NodeCardProps): React.ReactElement {
 	const [hovered, setHovered] = useState(false);
+	const { dragging, startDrag, setDropZone, endDrag } = useDnd();
+
+	const isDragging = dragging?.kind === "node" && dragging.nodeId === node.id;
 
 	const previewLines: string[] = [];
+
+	// ── Drag source ──────────────────────────────────────────────────────────
+
+	const handleDragStart = (e: React.DragEvent) => {
+		e.dataTransfer.effectAllowed = "move";
+		e.stopPropagation(); // prevent section header from also firing
+		startDrag({ kind: "node", nodeId: node.id, sourceSectionId });
+	};
+
+	const handleDragOver = (e: React.DragEvent) => {
+		if (dragging?.kind !== "node") return;
+		e.preventDefault();
+		e.stopPropagation();
+		if (onDragOverGap) {
+			// Inside a section — parent SectionBody owns the drop zone state
+			onDragOverGap(node.id);
+		} else {
+			// Loose top-level card — signal reorder
+			setDropZone({ kind: "top-level", beforeId: node.id });
+		}
+	};
+
+	const handleDragEnd = () => endDrag();
+
+	const handleDrop = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		endDrag();
+	};
 
 	return (
 		<div
 			draggable
 			data-hovered={hovered}
 			data-dragging={isDragging}
-			onDragStart={(e) => onDragStart(e, node.id)}
-			onDragOver={(e) => onDragOver(e, node.id)}
-			onDragEnd={onDragEnd}
+			onDragStart={handleDragStart}
+			onDragOver={handleDragOver}
+			onDragEnd={handleDragEnd}
+			onDrop={handleDrop}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 			className="
@@ -69,7 +101,6 @@ export function NodeCard({
 				>
 					{hovered ? "⠿" : String(index + 1).padStart(2, "0")}
 				</span>
-
 				{/* Layer name */}
 				<span
 					className="
@@ -82,7 +113,6 @@ export function NodeCard({
 				>
 					{node.previewText}
 				</span>
-
 				{/* Actions */}
 				<div className="flex shrink-0 gap-1">
 					<ActionButton title="Focus layer in canvas" onClick={() => onSelect(node.id)}>
@@ -95,7 +125,6 @@ export function NodeCard({
 							/>
 						</svg>
 					</ActionButton>
-
 					<ActionButton title="Remove from export" onClick={() => onUnmark(node.id)} danger>
 						<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
 							<path
@@ -108,7 +137,6 @@ export function NodeCard({
 					</ActionButton>
 				</div>
 			</div>
-
 			{/* Preview lines */}
 			{previewLines.length > 0 && (
 				<div className="mt-1.5 ml-6 flex flex-col gap-0.5">
@@ -130,7 +158,6 @@ export function NodeCard({
 		</div>
 	);
 }
-
 
 interface ActionButtonProps {
 	title: string;
@@ -166,10 +193,8 @@ function ActionButton({
 				border-transparent
 				text-[var(--text-muted)]
 				transition-all
-
 				hover:bg-[var(--surface-3)]
 				hover:text-[var(--text-primary)]
-
 				data-[danger=true]:hover:bg-[var(--danger-dim)]
 				data-[danger=true]:hover:text-[var(--danger)]
 			"
