@@ -63,7 +63,7 @@ export function NodeCard({
 						color: "var(--text-primary)",
 					}}
 				>
-					{node.name}
+					{node.previewText}
 				</span>
 
 				{/* Actions */}
