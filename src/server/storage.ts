@@ -26,10 +26,6 @@ export async function getSections(): Promise<NodeSection[]> {
 }
 
 export async function saveSections(sections: NodeSection[]): Promise<void> {
-
-	// DEBUG
-	console.log("Saving Sections");
-	console.log(sections);
 	await figma.clientStorage.setAsync(SECTIONS_KEY, sections);
 }
 
