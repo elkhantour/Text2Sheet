@@ -10,7 +10,7 @@ root.render(<Theme
 	accentColor="mint"
 	grayColor="gray"
 	panelBackground="solid"
-	scaling="100%"
+	scaling="90%"
 	appearance="dark"
 	radius="large"
 >

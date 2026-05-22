@@ -27,7 +27,6 @@ function Stat({ label, value, accent }: { label: string; value: number; accent?:
 
 export function Footer({ nodes, sections, itemOrder, exportOptions, onSaveExportOptions }: FooterProps): React.ReactElement {
 	const [downloading, setDownloading] = useState(false);
-	const hasSections = sections.length > 0;
 	const rowCount = countExportableRows(nodes);
 	const canDownload = rowCount > 0;
 
@@ -47,7 +46,10 @@ export function Footer({ nodes, sections, itemOrder, exportOptions, onSaveExport
 	};
 
 	return (
-		<div className="footer flex shrink-0 flex-col gap-3 border-t border-[var(--border)] px-3 pt-6 pb-6">
+		<div className="footer flex shrink-0 flex-row justify-between items-center gap-3 border-t border-[var(--border)] px-3 pt-6 pb-6">
+
+			<Stat label="Text rows" value={rowCount} {...(canDownload ? { accent: true } : {})} />
+
 			<div className="flex flex-row rounded-sm overflow-hidden w-fit">
 				<Button onClick={handleDownload} disabled={!canDownload} radius="none">
 					{downloading
@@ -68,16 +70,14 @@ export function Footer({ nodes, sections, itemOrder, exportOptions, onSaveExport
 								label="Include layer names"
 								className="text-[var(--text-muted)]"
 								checked={exportOptions.includeLayerNames}
-								onChange={(e) => setOption("includeLayerNames", e.target.checked)}
+								onChange={(e) => setOption("includeLayerNames", e != 'indeterminate' ? e : false)}
 							/>
 
 							<Checkbox
 								label="Split by sections"
 								className="text-[var(--text-muted)]"
 								checked={exportOptions.splitBySections}
-								disabled={!hasSections}
-								title={!hasSections ? "Add at least one section to enable this" : undefined}
-								onChange={(e) => setOption("splitBySections", e.target.checked)}
+								onChange={(e) => setOption("splitBySections", e != 'indeterminate' ? e : false)}
 							/>
 
 							{/* Reserved — not implemented yet */}
@@ -85,8 +85,6 @@ export function Footer({ nodes, sections, itemOrder, exportOptions, onSaveExport
 								label="Split by frame"
 								className="text-[var(--text-muted)] opacity-40"
 								checked={false}
-								disabled
-								title="Coming soon"
 								onChange={() => {}}
 							/>
 
@@ -95,9 +93,6 @@ export function Footer({ nodes, sections, itemOrder, exportOptions, onSaveExport
 				</Dialog.Root>
 			</div>
 
-			<div style={{ display: "flex", gap: 12, paddingTop: 2, justifyContent: "space-between" }}>
-				<Stat label="Text rows" value={rowCount} {...(canDownload ? { accent: true } : {})} />
-			</div>
 		</div>
 	);
 }

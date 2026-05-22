@@ -1,8 +1,7 @@
 import React, { useState, useRef } from "react";
 import type { MarkedNode, NodeSection } from "@ctypes/messages";
 import { useDnd } from "@components/Dnd/Context";
-import { NodeCard } from "@components/NodeCard/NodeCard";
-import { DropIndicator } from "@components/Dnd/DropIndicator";
+import { SectionBody } from "./SectionBody";
 
 interface NodeSectionItemProps {
 	section: NodeSection;
@@ -29,7 +28,7 @@ export function NodeSectionItem({
 
 	const isDraggingThis = dragging?.kind === "section" && dragging.sectionId === section.id;
 	const isHeaderDropTarget =
-		activeDropZone?.kind === "section-header" && activeDropZone.sectionId === section.id;
+		(activeDropZone?.kind === "section-header" || activeDropZone?.kind === "section-body") && activeDropZone.sectionId === section.id;
 
 	const sectionNodes = section.nodeIds
 		.map((id) => nodeMap.get(id))
@@ -83,13 +82,12 @@ export function NodeSectionItem({
 
 	return (
 		<div
-			className={`rounded-md border transition-all ${
-				isDraggingThis
+			className={`rounded-md border transition-all ${isDraggingThis
 					? "opacity-40"
 					: isHeaderDropTarget
-					? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-					: "border-[var(--border-light)] bg-[var(--bg-secondary)]"
-			}`}
+						? "border-[var(--accent)] bg-[var(--accent-subtle)]"
+						: "border-[var(--border-light)] bg-[var(--bg-secondary)]"
+				}`}
 		>
 			{/* ── Header ── */}
 			<div
@@ -179,72 +177,3 @@ export function NodeSectionItem({
 	);
 }
 
-// ─── Section body with its own drop zones ────────────────────────────────────
-
-interface SectionBodyProps {
-	section: NodeSection;
-	sectionNodes: MarkedNode[];
-	onUnmark: (nodeId: string) => void;
-	onSelect: (nodeId: string) => void;
-}
-
-function SectionBody({ section, sectionNodes, onUnmark, onSelect }: SectionBodyProps) {
-	const { dragging, activeDropZone, setDropZone, endDrag } = useDnd();
-
-	const isNodeDrag = dragging?.kind === "node";
-
-	const isDropBeforeNode = (nodeId: string) =>
-		activeDropZone?.kind === "section-body" &&
-		activeDropZone.sectionId === section.id &&
-		activeDropZone.beforeNodeId === nodeId;
-
-	const isDropAtEnd =
-		activeDropZone?.kind === "section-body" &&
-		activeDropZone.sectionId === section.id &&
-		activeDropZone.beforeNodeId === null;
-
-	return (
-		<div
-			className={`flex flex-col gap-1 px-2 pb-2 ${sectionNodes.length === 0 ? "pt-1" : ""}`}
-			onDragOver={(e) => {
-				if (!isNodeDrag) return;
-				e.preventDefault();
-				// Only fire if we didn't land on a specific card gap
-				setDropZone({ kind: "section-body", sectionId: section.id, beforeNodeId: null });
-			}}
-			onDrop={(e) => { e.preventDefault(); endDrag(); }}
-		>
-			{sectionNodes.length === 0 && (
-				<div
-					className={`flex items-center justify-center h-8 rounded border border-dashed text-[10px]
-					            text-[var(--text-muted)] transition-colors ${
-						isDropAtEnd
-							? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-							: "border-[var(--border-light)]"
-					}`}
-				>
-					Drop cards here
-				</div>
-			)}
-
-			{sectionNodes.map((node, idx) => (
-				<React.Fragment key={node.id}>
-					{isDropBeforeNode(node.id) && <DropIndicator />}
-					<NodeCard
-						node={node}
-						index={idx}
-						onUnmark={onUnmark}
-						onSelect={onSelect}
-						sourceSectionId={section.id}
-						onDragOverGap={(beforeNodeId) =>
-							setDropZone({ kind: "section-body", sectionId: section.id, beforeNodeId })
-						}
-					/>
-				</React.Fragment>
-			))}
-
-			{/* Drop indicator at end */}
-			{isDropAtEnd && sectionNodes.length > 0 && <DropIndicator />}
-		</div>
-	);
-}
