@@ -4,6 +4,8 @@ import { Toolbar } from "@components/Toolbar/Toolbar";
 import { Footer } from "@components/Footer/Footer";
 import { Toast } from "@components/Toast/Toast";
 import { NodeSectionList } from "@components/NodeSectionList/NodeSectionList";
+import { useTabs } from "./hooks/useTabs";
+import { FrameTabs } from "@components/FrameTab/FrameTab";
 
 export function App(): React.ReactElement {
 	const {
@@ -27,6 +29,18 @@ export function App(): React.ReactElement {
 		exportOptions,
 		saveExportOptions,
 	} = usePlugin();
+
+
+	const {
+		tabs,
+		activeTabId,
+		setActiveTabId,
+		activeNodes,
+		activeSections,
+		activeItemOrder
+	} = useTabs(markedNodes, sections, itemOrder);
+
+
 	return (
 		<div className=" flex h-screen flex-col relative bg-[var(--bg)]">
 			<Toolbar
@@ -39,7 +53,14 @@ export function App(): React.ReactElement {
 
 			{isLoading ? (
 				<LoadingState />
-			) : (
+			) : (<>
+
+				<FrameTabs
+					tabs={tabs}
+					activeTabId={activeTabId}
+					onSelect={setActiveTabId}
+				/>
+
 				<NodeSectionList
 					nodes={markedNodes}
 					sections={sections}
@@ -53,6 +74,7 @@ export function App(): React.ReactElement {
 					onMoveNodeToSection={moveNodeToSection}
 					onReorderNodesInSection={reorderNodesInSection}
 				/>
+			</>
 			)}
 
 
@@ -62,6 +84,7 @@ export function App(): React.ReactElement {
 				itemOrder={itemOrder}
 				exportOptions={exportOptions}
 				onSaveExportOptions={saveExportOptions}
+				tabs={tabs}
 			/>
 
 			{toast && (

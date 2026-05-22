@@ -15,7 +15,7 @@ interface NodeSectionListProps {
 	itemOrder: string[];
 	onUnmark: (nodeId: string) => void;
 	onSelect: (nodeId: string) => void;
-	onCreateSection: (name: string) => void;
+	onCreateSection: (name: string, topFrameid: string) => void;
 	onDeleteSection: (sectionId: string) => void;
 	onRenameSection: (sectionId: string, name: string) => void;
 	onReorderItems: (itemIds: string[]) => void;

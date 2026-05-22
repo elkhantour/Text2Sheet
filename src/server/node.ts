@@ -6,13 +6,9 @@ import { getStoredIds, saveIds, getSections, saveSections, getItemOrder, saveIte
 
 export async function loadAndSendState(): Promise<void> {
 	const [storedIds, sections, itemOrder, exportOptions] = await Promise.all([
-		getStoredIds(),
-		getSections(),
-		getItemOrder(),
-		getExportOptions(),
+		getStoredIds(), getSections(), getItemOrder(), getExportOptions(),
 	]);
 
-	// ── Resolve & prune deleted nodes ────────────────────────────────────────
 	const validIds: string[] = [];
 	const markedNodes: MarkedNode[] = [];
 
@@ -25,42 +21,62 @@ export async function loadAndSendState(): Promise<void> {
 
 	if (validIds.length !== storedIds.length) await saveIds(validIds);
 
-	// ── Prune deleted nodes from sections ────────────────────────────────────
 	const validIdSet = new Set(validIds);
 	const cleanedSections = sections.map((s) => ({
 		...s,
 		nodeIds: s.nodeIds.filter((id) => validIdSet.has(id)),
 	}));
 
-	// ── Prune deleted nodes/sections from itemOrder ───────────────────────────
 	const sectionIdSet = new Set(cleanedSections.map((s) => s.id));
 	const cleanedOrder = itemOrder.filter((id) => validIdSet.has(id) || sectionIdSet.has(id));
 
-	// ── Append any untracked loose node ──────────────────────────────────────
 	const idsInSections = new Set(cleanedSections.flatMap((s) => s.nodeIds));
 	for (const id of validIds) {
 		if (!cleanedOrder.includes(id) && !idsInSections.has(id)) cleanedOrder.push(id);
 	}
 
-	sendToUI({ type: "STATE_UPDATE", nodes: markedNodes, sections: cleanedSections, itemOrder: cleanedOrder, exportOptions });
+	// if (
+	//   cleanedSections.some((s, i) => s.nodeIds.length !== sections[i]?.nodeIds.length) ||
+	//   cleanedOrder.length !== itemOrder.length
+	// ) {
+	//   await saveSections(cleanedSections);
+	//   await saveItemOrder(cleanedOrder);
+	// }
 
+	sendToUI({ type: "STATE_UPDATE", nodes: markedNodes, sections: cleanedSections, itemOrder: cleanedOrder, exportOptions });
 }
 
-// Legacy shim
 export async function loadAndSendMarkedNodes(): Promise<void> {
 	return loadAndSendState();
 }
 
-// ─── Node resolution (unchanged) ─────────────────────────────────────────────
+// ─── Node resolution ──────────────────────────────────────────────────────────
 
 export function resolveNode(node: BaseNode): MarkedNode[] {
+	const { id: topFrameId, name: topFrameName } = getTopFrame(node);
+
 	if (node.type === "TEXT") {
-		return [{ id: node.id, name: node.name, nodeType: node.type, previewText: node.characters }];
+		return [{ id: node.id, name: node.name, nodeType: node.type, previewText: node.characters, topFrameId, topFrameName }];
 	}
+
 	const childTextNodes = collectTextChildren(node);
 	return childTextNodes.map<MarkedNode>((child) => ({
-		id: child.id, name: child.name, nodeType: node.type, previewText: child.content,
+		id: child.id, name: child.name, nodeType: node.type,
+		previewText: child.content, topFrameId, topFrameName,
 	}));
+}
+
+/**
+	* Walks up the ancestor chain and returns the highest SceneNode that is still
+	* a direct child of a page (i.e. the top-level frame). Falls back to the node
+	* itself if it is already at the top level.
+	*/
+export function getTopFrame(node: BaseNode): { id: string; name: string } {
+	let current: BaseNode = node;
+	while (current.parent && current.parent.type !== "PAGE" && current.parent.type !== "DOCUMENT") {
+		current = current.parent;
+	}
+	return { id: current.id, name: current.name };
 }
 
 export function collectTextChildren(node: BaseNode): ChildTextNode[] {

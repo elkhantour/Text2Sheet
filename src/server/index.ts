@@ -12,7 +12,6 @@ import {
 } from "./handlers";
 
 figma.showUI(__html__, { width: PLUGIN_WIDTH, height: PLUGIN_HEIGHT, title: "Text2Sheet" });
-
 loadAndSendState();
 
 figma.ui.onmessage = async (msg: UIToPluginMessage) => {
@@ -22,8 +21,8 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "UNMARK_NODE": await handleUnmarkNode(msg.nodeId); break;
 		case "SELECT_NODE": await handleSelectNode(msg.nodeId); break;
 		case "LOAD_MARKED": await loadAndSendState(); break;
-		case "REORDER_NODES": await saveIds(msg.nodeIds); break; // legacy
-		case "CREATE_SECTION": await handleCreateSection(msg.name); break;
+		case "REORDER_NODES": await saveIds(msg.nodeIds); break;
+		case "CREATE_SECTION": await handleCreateSection(msg.name, msg.topFrameId); break;
 		case "DELETE_SECTION": await handleDeleteSection(msg.sectionId); break;
 		case "RENAME_SECTION": await handleRenameSection(msg.sectionId, msg.name); break;
 		case "REORDER_ITEMS": await handleReorderItems(msg.itemIds); break;
