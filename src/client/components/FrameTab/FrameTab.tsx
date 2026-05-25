@@ -1,5 +1,6 @@
 import React from "react";
 import type { FrameTab } from "@ctypes/messages";
+import { Text } from "@radix-ui/themes";
 
 interface FrameTabsProps {
   tabs: FrameTab[];
@@ -20,13 +21,13 @@ export function FrameTabs({ tabs, activeTabId, onSelect }: FrameTabsProps): Reac
             onClick={() => onSelect(tab.topFrameId)}
             data-active={isActive}
             className="
-              relative shrink-0 px-3 py-2 text-xs font-medium transition-colors
+              relative shrink-0 px-3 py-2 font-medium transition-colors
               text-[var(--text-muted)] hover:text-[var(--text-secondary)]
               data-[active=true]:text-[var(--text-primary)]
               whitespace-nowrap
             "
           >
-            {tab.topFrameName}
+            <Text size="2">{tab.topFrameName}</Text>
             {/* Active underline */}
             {isActive && (
               <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--accent)] rounded-t-full" />

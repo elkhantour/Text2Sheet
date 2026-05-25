@@ -1,6 +1,7 @@
 import type { ChildTextNode, MarkedNode } from "@ctypes/messages";
 import { sendToUI } from "./message";
 import { getStoredIds, saveIds, getSections, saveSections, getItemOrder, saveItemOrder, getExportOptions } from "./storage";
+import { ORPHAN_TAB_ID, ORPHAN_TAB_NAME } from "../lib/constants";
 
 // ─── Main state loader ────────────────────────────────────────────────────────
 
@@ -66,17 +67,18 @@ export function resolveNode(node: BaseNode): MarkedNode[] {
 	}));
 }
 
-/**
-	* Walks up the ancestor chain and returns the highest SceneNode that is still
-	* a direct child of a page (i.e. the top-level frame). Falls back to the node
-	* itself if it is already at the top level.
-	*/
 export function getTopFrame(node: BaseNode): { id: string; name: string } {
-	let current: BaseNode = node;
-	while (current.parent && current.parent.type !== "PAGE" && current.parent.type !== "DOCUMENT") {
-		current = current.parent;
-	}
-	return { id: current.id, name: current.name };
+  let current: BaseNode = node;
+  while (current.parent && current.parent.type !== "PAGE" && current.parent.type !== "DOCUMENT") {
+    current = current.parent;
+  }
+
+  const isOrphan = current.type !== "FRAME" && current.type !== "COMPONENT" && current.type !== "SECTION";
+  if (isOrphan) {
+    return { id: ORPHAN_TAB_ID, name: ORPHAN_TAB_NAME };
+  }
+
+  return { id: current.id, name: current.name };
 }
 
 export function collectTextChildren(node: BaseNode): ChildTextNode[] {

@@ -45,7 +45,7 @@ export async function saveItemOrder(order: string[]): Promise<void> {
 
 const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
 	includeLayerNames: false,
-	splitBySections: false,
+	splitBySections: true,
 	exportMode: "combined",
 };
 

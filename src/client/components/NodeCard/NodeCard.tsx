@@ -15,7 +15,6 @@ interface NodeCardProps {
 
 export function NodeCard({
 	node,
-	index,
 	onUnmark,
 	onSelect,
 	sourceSectionId,
@@ -89,17 +88,8 @@ export function NodeCard({
 			{/* Top row */}
 			<div className="flex items-center gap-2">
 				{/* Drag handle + index */}
-				<span
-					className="
-						w-4
-						shrink-0
-						text-center
-						font-mono
-						text-[10px]
-						text-[var(--text-muted)]
-					"
-				>
-					{hovered ? "⠿" : String(index + 1).padStart(2, "0")}
+				<span className="w-4 shrink-0 text-center font-mono text-[10px] text-[var(--text-muted)]">
+					⠿
 				</span>
 				{/* Layer name */}
 				<span
