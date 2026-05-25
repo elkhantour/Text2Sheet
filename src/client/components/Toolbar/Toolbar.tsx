@@ -34,7 +34,7 @@ export function Toolbar({
 	return (
 		<div className="flex justify-between w-full px-3 py-3 items-center">
 
-			<Button onClick={onMarkSelection} size="1"> <PlusIcon size={ICON_SIZE_SMALL} /> Add Selection</Button>
+			<Button onClick={onMarkSelection} size="2"> <PlusIcon size={ICON_SIZE_SMALL} /> Add Selection</Button>
 
 			<Dialog.Root>
 				<Dialog.Trigger>
@@ -76,7 +76,7 @@ export function Toolbar({
 
 						<Separator size="4" />
 
-						<Text color="red" size="1">Danger Zone</Text>
+						<Text color="red" size="1" ><b>Danger Zone</b></Text>
 						<Button color="red" onClick={hasNodes ? onClearAll : undefined} disabled={!hasNodes}>Clear All</Button>
 
 					</div>

@@ -71,7 +71,7 @@ export function Footer({
 				)}
 			</div>
 
-			<Button onClick={handleDownload} size="1" disabled={!canDownload}>
+			<Button onClick={handleDownload} size="2" disabled={!canDownload}>
 				{downloading
 					? <><Spinner />Exporting…</>
 					: <><FileDownIcon size={ICON_SIZE_SMALL} />{canDownload ? "Download CSV" : "No text to export"}</>

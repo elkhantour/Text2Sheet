@@ -7,8 +7,8 @@ import { NodeCard } from "@components/NodeCard/NodeCard";
 import { DropIndicator } from "@components/Dnd/DropIndicator";
 import { EmptyState } from "./EmptyState";
 import { removeNodeFromSource, reorderTopLevel } from "./Helpers";
-import { Button } from "@radix-ui/themes";
-import { PlugIcon, PlusIcon } from "lucide-react";
+import { Button, Text } from "@radix-ui/themes";
+import { PlusIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 
 interface NodeSectionListProps {
@@ -145,7 +145,8 @@ export function NodeSectionList({
 		<DndContext.Provider value={{ dragging, activeDropZone, startDrag, setDropZone, endDrag }}>
 			<div className="flex flex-1 flex-col overflow-hidden">
 				{/* Toolbar */}
-				<div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-light)]">
+				<div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)]">
+					<Text size="1" className="text-[var(--text-muted)]">{nodes.length} text layers</Text>
 					<Button size="1" variant="ghost" onClick={handleAddSection}>
 						<PlusIcon size={ICON_SIZE_SMALL} />
 						Add Section
