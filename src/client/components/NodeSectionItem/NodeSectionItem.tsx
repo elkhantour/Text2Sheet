@@ -134,13 +134,13 @@ export function NodeSectionItem({
 						onBlur={commitRename}
 						onKeyDown={handleNameKeyDown}
 						autoFocus
-						className="flex-1 min-w-0 bg-transparent text-xs font-medium text-[var(--text-primary)]
+						className="flex-1 min-w-0 bg-transparent cursor-text text-xs font-medium text-[var(--text-primary)]
 						           outline-none border-b border-[var(--accent)]"
 					/>
 				) : (
 					<span
 						onDoubleClick={() => setIsEditingName(true)}
-						className="flex-1 min-w-0 truncate text-xs font-medium text-[var(--text-secondary)]"
+						className="flex-1 min-w-0 truncate text-xs cursor-text font-medium text-[var(--text-secondary)]"
 					>
 						{section.name}
 					</span>

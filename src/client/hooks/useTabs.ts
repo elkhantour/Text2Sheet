@@ -17,10 +17,9 @@ export function useTabs(
 	const sectionMap = useMemo(() => new Map(sections.map((s) => [s.id, s])), [sections]);
 
 	const tabs: FrameTab[] = useMemo(() => {
-		const seen = new Map<string, string>(); // topFrameId → topFrameName
+		const seen = new Map<string, string>();
+		const firstAppearance = new Map<string, number>(); // topFrameId → first index in itemOrder
 
-		// Build a quick lookup: topFrameId → topFrameName from all nodes regardless of order
-		// This way an empty section can still resolve its frame name from any node on the same frame
 		const frameNameFromNodes = new Map<string, string>();
 		for (const node of nodes) {
 			if (!frameNameFromNodes.has(node.topFrameId)) {
@@ -28,33 +27,44 @@ export function useTabs(
 			}
 		}
 
-		for (const id of itemOrder) {
+		for (let i = 0; i < itemOrder.length; i++) {
+			const id = itemOrder[i];
+
 			const node = nodeMap.get(id);
-			if (node && !seen.has(node.topFrameId)) {
-				seen.set(node.topFrameId, node.topFrameName);
+			if (node) {
+				if (!seen.has(node.topFrameId)) {
+					seen.set(node.topFrameId, node.topFrameName);
+					firstAppearance.set(node.topFrameId, i);
+				}
 			}
 
 			const section = sectionMap.get(id);
-			if (section && !seen.has(section.topFrameId)) {
-				// First try nodes inside this section, then any node on the same frame, then skip (don't fall back to raw ID)
-				const nameFromSectionNodes = section.nodeIds
-					.map((nid) => nodeMap.get(nid))
-					.find((n) => n)?.topFrameName;
+			if (section) {
+				if (!seen.has(section.topFrameId)) {
+					const nameFromSectionNodes = section.nodeIds
+						.map((nid) => nodeMap.get(nid))
+						.find((n) => n)?.topFrameName;
 
-				const resolved = nameFromSectionNodes
-					?? frameNameFromNodes.get(section.topFrameId);
+					const resolved = nameFromSectionNodes
+						?? frameNameFromNodes.get(section.topFrameId);
 
-				if (resolved) seen.set(section.topFrameId, resolved);
-				// If still unresolved, skip — it'll get picked up once a node on that frame appears
+					if (resolved) {
+						seen.set(section.topFrameId, resolved);
+						firstAppearance.set(section.topFrameId, i);
+					}
+				}
 			}
 		}
 
 		return Array.from(seen.entries())
 			.map(([topFrameId, topFrameName]) => ({ topFrameId, topFrameName }))
-			.sort((a, b) => a.topFrameId === ORPHAN_TAB_ID ? 1 : b.topFrameId === ORPHAN_TAB_ID ? -1 : 0);
+			.sort((a, b) => {
+				if (a.topFrameId === ORPHAN_TAB_ID) return 1;
+				if (b.topFrameId === ORPHAN_TAB_ID) return -1;
+				return (firstAppearance.get(a.topFrameId) ?? 0) - (firstAppearance.get(b.topFrameId) ?? 0);
+			});
 
 	}, [nodes, sections, itemOrder, nodeMap, sectionMap]);
-
 	const [activeTabId, setActiveTabId] = useState<string | null>(null);
 
 	// Auto-select first tab, or reset if active tab disappears

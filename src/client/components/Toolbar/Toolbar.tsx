@@ -76,9 +76,11 @@ export function Toolbar({
 
 						<Separator size="4" />
 
-						<Text color="red" size="1" ><b>Danger Zone</b></Text>
-						<Button color="red" onClick={hasNodes ? onClearAll : undefined} disabled={!hasNodes}>Clear All</Button>
+						<div className="p-4 bg-red-950 border border-red-800 flex flex-col gap-4 justify-center rounded-md">
+							<Text color="red" size="1" ><b>Danger Zone</b></Text>
+							<Button color="red" onClick={hasNodes ? onClearAll : undefined} disabled={!hasNodes}>Clear All</Button>
 
+						</div>
 					</div>
 				</Dialog.Content>
 			</Dialog.Root>
