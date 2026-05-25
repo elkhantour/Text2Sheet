@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { MarkedNode, NodeSection, FrameTab } from "@ctypes/messages";
+import { ORPHAN_TAB_ID } from "../../lib/constants";
 
 /**
 	* Derives the ordered list of tabs from nodes + sections.
@@ -39,7 +40,9 @@ export function useTabs(
 		return Array.from(seen.entries()).map(([topFrameId, topFrameName]) => ({
 			topFrameId,
 			topFrameName,
-		}));
+		}))
+			// Put the Orphan tab at the end of the list
+			.sort((a, b) => a.topFrameId === ORPHAN_TAB_ID ? 1 : b.topFrameId === ORPHAN_TAB_ID ? -1 : 0);;
 
 	}, [nodes, sections, itemOrder, nodeMap, sectionMap]);
 
