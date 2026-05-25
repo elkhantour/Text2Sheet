@@ -32,7 +32,7 @@ export function buildTabCSVs(
 // ─── Flat ─────────────────────────────────────────────────────────────────────
 
 function buildFlatCSV(nodes: MarkedNode[], options: ExportOptions): string {
-	const rows: string[][] = [headerRow(options)];
+	const rows: string[][] = [];
 	for (const node of nodes) rows.push(...nodeRows(node, options));
 	return serialize(rows);
 }
@@ -48,25 +48,25 @@ function buildSectionedCSV(
 	const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 	const sectionMap = new Map(sections.map((s) => [s.id, s]));
 
-	const rows: string[][] = [headerRow(options)];
-	let firstBlock = true;
+	const rows: string[][] = [];
+	let isFirstLooseNode = true;
 
 	for (const id of itemOrder) {
 		const section = sectionMap.get(id);
 		if (section) {
-			if (!firstBlock) rows.push([]);
-			rows.push(sectionHeaderRow(section.name, options));
+			let isFirstNodeInSection = true;
 			for (const nodeId of section.nodeIds) {
 				const node = nodeMap.get(nodeId);
-				if (node) rows.push(...nodeRows(node, options));
+				if (!node) continue;
+				const label = isFirstNodeInSection ? section.name : "";
+				rows.push(...nodeRows(node, options, label));
+				isFirstNodeInSection = false;
 			}
-			firstBlock = false;
 		} else {
 			const node = nodeMap.get(id);
 			if (!node) continue;
-			if (!firstBlock) rows.push([]);
-			rows.push(...nodeRows(node, options));
-			firstBlock = false;
+			rows.push(...nodeRows(node, options, isFirstLooseNode ? "Ungrouped" : ""));
+			isFirstLooseNode = false;
 		}
 	}
 
@@ -86,7 +86,7 @@ export function downloadCombinedCSV(
 	const parts: string[] = [];
 	for (const { tab, csv } of tabCsvs) {
 		if (parts.length > 0) parts.push(""); // blank row between tabs
-		parts.push(`=== ${tab.topFrameName} ===`);
+		parts.push(sectionHeaderRow(tab.topFrameName, options).join(","));
 		parts.push(csv);
 	}
 	triggerDownload(parts.join("\r\n"), filename);
@@ -128,28 +128,35 @@ export async function downloadZippedCSVs(
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function headerRow(options: ExportOptions): string[] {
-	return options.includeLayerNames ? ["Layer Name", "Text Content"] : ["Text Content"];
-}
-
 function sectionHeaderRow(name: string, options: ExportOptions): string[] {
-	const label = escapeCsvCell(`=== ${name} ===`);
-	return options.includeLayerNames ? [label, ""] : [label];
+	const label = escapeCsvCell(name);
+	return (options.includeLayerNames || options.splitBySections) ? [label, ""] : [label];
 }
 
-function nodeRows(node: MarkedNode, options: ExportOptions): string[][] {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+
+function nodeRows(
+	node: MarkedNode,
+	options: ExportOptions,
+	sectionLabel = "",   // only non-empty on the first row of a section block
+): string[][] {
+	const label = escapeCsvCell(sectionLabel);
+
 	if (node.nodeType === "TEXT") {
 		return [options.includeLayerNames
-			? [escapeCsvCell(node.name), escapeCsvCell(node.previewText)]
-			: [escapeCsvCell(node.previewText)]];
+			? [label, escapeCsvCell(node.name), escapeCsvCell(node.previewText)]
+			: [label, escapeCsvCell(node.previewText)]];
 	}
+
 	if (node.childTextNodes?.length) {
-		return node.childTextNodes.map((child) =>
+		return node.childTextNodes.map((child, i) =>
 			options.includeLayerNames
-				? [escapeCsvCell(child.name), escapeCsvCell(child.content)]
-				: [escapeCsvCell(child.content)]
+				? [i === 0 ? label : "", escapeCsvCell(child.name), escapeCsvCell(child.content)]
+				: [i === 0 ? label : "", escapeCsvCell(child.content)]
 		);
 	}
+
 	return [];
 }
 
@@ -188,20 +195,6 @@ export function countExportableRows(nodes: MarkedNode[]): number {
 	return count;
 }
 
-// Legacy shim
-export function buildCSV(
-	nodes: MarkedNode[],
-	options: ExportOptions,
-	sections?: NodeSection[],
-	itemOrder?: string[],
-): string {
-	if (options.splitBySections && sections?.length && itemOrder) {
-		const tabSections = sections;
-		const tabOrder = itemOrder;
-		return buildSectionedCSV(nodes, tabSections, tabOrder, options);
-	}
-	return buildFlatCSV(nodes, options);
-}
 
 export function downloadCSV(csv: string, filename = `text2sheet_${today()}.csv`): void {
 	triggerDownload(csv, filename);
