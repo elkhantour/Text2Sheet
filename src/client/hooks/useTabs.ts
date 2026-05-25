@@ -16,33 +16,42 @@ export function useTabs(
 	const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
 	const sectionMap = useMemo(() => new Map(sections.map((s) => [s.id, s])), [sections]);
 
-	// Derive ordered, deduplicated tabs
 	const tabs: FrameTab[] = useMemo(() => {
 		const seen = new Map<string, string>(); // topFrameId → topFrameName
+
+		// Build a quick lookup: topFrameId → topFrameName from all nodes regardless of order
+		// This way an empty section can still resolve its frame name from any node on the same frame
+		const frameNameFromNodes = new Map<string, string>();
+		for (const node of nodes) {
+			if (!frameNameFromNodes.has(node.topFrameId)) {
+				frameNameFromNodes.set(node.topFrameId, node.topFrameName);
+			}
+		}
 
 		for (const id of itemOrder) {
 			const node = nodeMap.get(id);
 			if (node && !seen.has(node.topFrameId)) {
 				seen.set(node.topFrameId, node.topFrameName);
 			}
+
 			const section = sectionMap.get(id);
-			if (section) {
-				// Get frame name from section's nodes, or fall back to a node lookup
-				if (!seen.has(section.topFrameId)) {
-					const firstName = section.nodeIds
-						.map((nid) => nodeMap.get(nid))
-						.find((n) => n)?.topFrameName ?? section.topFrameId;
-					seen.set(section.topFrameId, firstName);
-				}
+			if (section && !seen.has(section.topFrameId)) {
+				// First try nodes inside this section, then any node on the same frame, then skip (don't fall back to raw ID)
+				const nameFromSectionNodes = section.nodeIds
+					.map((nid) => nodeMap.get(nid))
+					.find((n) => n)?.topFrameName;
+
+				const resolved = nameFromSectionNodes
+					?? frameNameFromNodes.get(section.topFrameId);
+
+				if (resolved) seen.set(section.topFrameId, resolved);
+				// If still unresolved, skip — it'll get picked up once a node on that frame appears
 			}
 		}
 
-		return Array.from(seen.entries()).map(([topFrameId, topFrameName]) => ({
-			topFrameId,
-			topFrameName,
-		}))
-			// Put the Orphan tab at the end of the list
-			.sort((a, b) => a.topFrameId === ORPHAN_TAB_ID ? 1 : b.topFrameId === ORPHAN_TAB_ID ? -1 : 0);;
+		return Array.from(seen.entries())
+			.map(([topFrameId, topFrameName]) => ({ topFrameId, topFrameName }))
+			.sort((a, b) => a.topFrameId === ORPHAN_TAB_ID ? 1 : b.topFrameId === ORPHAN_TAB_ID ? -1 : 0);
 
 	}, [nodes, sections, itemOrder, nodeMap, sectionMap]);
 

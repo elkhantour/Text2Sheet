@@ -88,7 +88,7 @@ export function NodeCard({
 			{/* Top row */}
 			<div className="flex items-center gap-2">
 				{/* Drag handle + index */}
-				<span className="w-4 shrink-0 text-center font-mono text-[10px] text-[var(--text-muted)]">
+				<span className="w-4 shrink-0 text-center font-mono text-[var(--text-muted)]">
 					⠿
 				</span>
 				{/* Layer name */}
