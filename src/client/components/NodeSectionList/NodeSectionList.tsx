@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import type { MarkedNode, NodeSection } from "@ctypes/messages";
+import type { FrameTab, MarkedNode, NodeSection } from "@ctypes/messages";
 import type { DragItem, DropZone } from "@components/Dnd/Context";
 import { DndContext } from "@components/Dnd/Context";
 import { NodeSectionItem } from "@components/NodeSectionItem/NodeSectionItem";
@@ -14,7 +14,6 @@ import { ICON_SIZE_SMALL } from "@utils/constants";
 interface NodeSectionListProps {
 	nodes: MarkedNode[];
 	sections: NodeSection[];
-	/** Ordered array of top-level ids — each is either a nodeId or a sectionId */
 	itemOrder: string[];
 	activeTabId: string | null;
 	onUnmark: (nodeId: string) => void;

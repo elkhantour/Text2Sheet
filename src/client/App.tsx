@@ -34,6 +34,8 @@ export function App(): React.ReactElement {
 		tabs,
 		activeTabId,
 		setActiveTabId,
+		activeNodes,
+		activeSections,
 	} = useTabs(markedNodes, sections, itemOrder);
 
 
@@ -52,7 +54,6 @@ export function App(): React.ReactElement {
 			{isLoading ? (
 				<LoadingState />
 			) : (<>
-
 				<FrameTabs
 					tabs={tabs}
 					activeTabId={activeTabId}
@@ -60,8 +61,8 @@ export function App(): React.ReactElement {
 				/>
 
 				<NodeSectionList
-					nodes={markedNodes}
-					sections={sections}
+					nodes={activeNodes}
+					sections={activeSections}
 					itemOrder={itemOrder}
 					activeTabId={activeTabId}
 					onUnmark={unmarkNode}

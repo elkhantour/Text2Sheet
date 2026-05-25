@@ -5,8 +5,8 @@ import {
 	countExportableRows,
 } from "../../utils/csv";
 
-import { Button } from "@radix-ui/themes";
-import { FileDownIcon, PlusIcon } from "lucide-react";
+import { Button, Text } from "@radix-ui/themes";
+import { FileDownIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 
 
@@ -22,10 +22,10 @@ interface FooterProps {
 function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
 	return (
 		<div className="flex items-baseline gap-1">
-			<span className={`text-[16px] font-bold leading-none font-[var(--font)] ${accent ? "text-[var(--accent)]" : "text-[var(--text-primary)]"}`}>
+			<Text size="2" className={`font-bold leading-none font-[var(--font)] ${accent ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}`}>
 				{value}
-			</span>
-			<span className="text-[12px] text-[var(--text-muted)]">{label}</span>
+			</Text>
+			<Text size="1" className={`${accent ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}`}>{label}</Text>
 		</div>
 	);
 }
@@ -35,15 +35,12 @@ export function Footer({
 	sections,
 	itemOrder,
 	tabs,
-	onMarkSelection,
 	exportOptions,
 }: FooterProps): React.ReactElement {
 	const [downloading, setDownloading] = useState(false);
 
 	const rowCount = countExportableRows(nodes);
 	const canDownload = rowCount > 0;
-	const hasMultipleTabs = tabs.length > 1;
-
 
 	const handleDownload = async () => {
 		if (!canDownload || downloading) return;
@@ -62,13 +59,13 @@ export function Footer({
 
 
 	return (
-		<div className="footer flex shrink-0 flex-row gap-3 justify-between border-t border-[var(--border)] px-3 pt-6 pb-6">
+		<div className="footer flex shrink-0 flex-row gap-3 items-center justify-between border-t border-[var(--border)] px-3 pt-6 pb-6">
 
-			<div style={{ display: "flex", gap: 12, paddingTop: 2, justifyContent: "space-between" }}>
-				<Stat label="Text rows" value={rowCount} {...(canDownload ? { accent: true } : {})} />
-				{hasMultipleTabs && (
-					<Stat label="frames" value={tabs.length} />
-				)}
+			<div className="flex justify-between gap-3 pt-0.5">
+				<Stat label="Rows" value={rowCount} {...(canDownload ? { accent: true } : {})} />
+
+				<Stat label="Pages" value={tabs.length} {...(canDownload ? { accent: true } : {})} />
+
 			</div>
 
 			<Button onClick={handleDownload} size="2" disabled={!canDownload}>
