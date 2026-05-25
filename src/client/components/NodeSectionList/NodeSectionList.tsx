@@ -7,12 +7,16 @@ import { NodeCard } from "@components/NodeCard/NodeCard";
 import { DropIndicator } from "@components/Dnd/DropIndicator";
 import { EmptyState } from "./EmptyState";
 import { removeNodeFromSource, reorderTopLevel } from "./Helpers";
+import { Button } from "@radix-ui/themes";
+import { PlugIcon, PlusIcon } from "lucide-react";
+import { ICON_SIZE_SMALL } from "@utils/constants";
 
 interface NodeSectionListProps {
 	nodes: MarkedNode[];
 	sections: NodeSection[];
 	/** Ordered array of top-level ids — each is either a nodeId or a sectionId */
 	itemOrder: string[];
+	activeTabId: string | null;
 	onUnmark: (nodeId: string) => void;
 	onSelect: (nodeId: string) => void;
 	onCreateSection: (name: string, topFrameid: string) => void;
@@ -27,6 +31,7 @@ export function NodeSectionList({
 	nodes,
 	sections,
 	itemOrder,
+	activeTabId,
 	onUnmark,
 	onSelect,
 	onCreateSection,
@@ -119,7 +124,9 @@ export function NodeSectionList({
 
 	const handleAddSection = () => {
 		const name = `Section ${sections.length + 1}`;
-		onCreateSection(name);
+		if (activeTabId) {
+			onCreateSection(name, activeTabId);
+		}
 	};
 
 	// ── Render ───────────────────────────────────────────────────────────────
@@ -139,19 +146,10 @@ export function NodeSectionList({
 			<div className="flex flex-1 flex-col overflow-hidden">
 				{/* Toolbar */}
 				<div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-light)]">
-					<span className="text-xs text-[var(--text-muted)]">
-						{nodes.length} layer{nodes.length !== 1 ? "s" : ""}
-					</span>
-					<button
-						onClick={handleAddSection}
-						className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium
-						           text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
-					>
-						<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-							<path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-						</svg>
+					<Button size="1" variant="ghost" onClick={handleAddSection}>
+						<PlusIcon size={ICON_SIZE_SMALL} />
 						Add Section
-					</button>
+					</Button>
 				</div>
 
 				{/* List */}

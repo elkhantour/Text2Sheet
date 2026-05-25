@@ -15,7 +15,6 @@ export function App(): React.ReactElement {
 		isLoading,
 		toast,
 		markSelection,
-		highlightMarked,
 		clearAll,
 		unmarkNode,
 		selectNode,
@@ -35,9 +34,6 @@ export function App(): React.ReactElement {
 		tabs,
 		activeTabId,
 		setActiveTabId,
-		activeNodes,
-		activeSections,
-		activeItemOrder
 	} = useTabs(markedNodes, sections, itemOrder);
 
 
@@ -45,9 +41,11 @@ export function App(): React.ReactElement {
 		<div className=" flex h-screen flex-col relative bg-[var(--bg)]">
 			<Toolbar
 				nodes={markedNodes}
-				onMarkSelection={markSelection}
-				onHighlightMarked={highlightMarked}
 				onClearAll={clearAll}
+				exportOptions={exportOptions}
+				onMarkSelection={markSelection}
+				onSaveExportOptions={saveExportOptions}
+				tabs={tabs}
 			/>
 
 
@@ -65,6 +63,7 @@ export function App(): React.ReactElement {
 					nodes={markedNodes}
 					sections={sections}
 					itemOrder={itemOrder}
+					activeTabId={activeTabId}
 					onUnmark={unmarkNode}
 					onSelect={selectNode}
 					onCreateSection={createSection}
@@ -83,7 +82,7 @@ export function App(): React.ReactElement {
 				sections={sections}
 				itemOrder={itemOrder}
 				exportOptions={exportOptions}
-				onSaveExportOptions={saveExportOptions}
+				onMarkSelection={markSelection}
 				tabs={tabs}
 			/>
 

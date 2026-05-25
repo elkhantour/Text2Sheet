@@ -44,6 +44,7 @@ module.exports = (env, argv) => [
 				"@components": path.resolve(__dirname, "src/client/components/"),
 				"@styles": path.resolve(__dirname, "src/client/styles/"),
 				"@ctypes": path.resolve(__dirname, "src/types/"),
+				"@utils": path.resolve(__dirname, "src/client/utils/"),
 			}
 		},
 		module: {

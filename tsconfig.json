@@ -23,6 +23,9 @@
 			],
 			"@ctypes/*": [
 				"src/types/*"
+			],
+			"@utils/*": [
+				"src/client/utils/*"
 			]
 		}
 	},
