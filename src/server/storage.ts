@@ -1,3 +1,4 @@
+import { DEFAULT_EXPORT_OPTIONS } from "../lib/constants";
 import { STORAGE_KEY } from "./constants";
 import type { NodeSection, ExportOptions } from "@ctypes/messages";
 
@@ -42,12 +43,6 @@ export async function saveItemOrder(order: string[]): Promise<void> {
 }
 
 // ─── Export options ───────────────────────────────────────────────────────────
-
-const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
-	includeLayerNames: false,
-	splitBySections: true,
-	exportMode: "combined",
-};
 
 export async function getExportOptions(): Promise<ExportOptions> {
 	const raw = await figma.clientStorage.getAsync(EXPORT_OPTIONS_KEY);

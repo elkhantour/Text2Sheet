@@ -59,8 +59,12 @@ export type TopLevelItem =
 	| { kind: "section"; id: string };
 
 
+export type ExportFormat = "xls" | "csv";
 
-export type ExportMode = "combined" | "zip";
+export type ExportMode = {
+	format: ExportFormat;
+	structure: "combined" | "zip";
+};
 
 export interface ExportOptions {
 	includeLayerNames: boolean;

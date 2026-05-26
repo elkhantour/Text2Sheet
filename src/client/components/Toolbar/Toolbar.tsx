@@ -58,21 +58,40 @@ export function Toolbar({
 							onChange={(e) => setOption("splitBySections", CheckboxStateToBool(e))}
 						/>
 
-						{/* Export mode — only relevant when there are multiple tabs */}
-						<div className={`flex flex-col gap-2 ${!hasMultipleTabs ? "opacity-40 pointer-events-none" : ""}`}>
-							<span className="text-xs">
-								Export format
-								{!hasMultipleTabs && <span className="ml-1 opacity-60">(multiple frames needed)</span>}
-							</span>
-							<SegmentedControl.Root
-								value={exportOptions.exportMode}
-								onValueChange={(v) => setOption("exportMode", v as ExportOptions["exportMode"])}
-								size="1"
-							>
-								<SegmentedControl.Item value="combined">Combined CSV</SegmentedControl.Item>
-								<SegmentedControl.Item value="zip">ZIP (one per frame)</SegmentedControl.Item>
-							</SegmentedControl.Root>
-						</div>
+						{/* Format Export (XLS / CSV)*/}
+						<SegmentedControl.Root
+							defaultValue={exportOptions.exportMode.format}
+							onValueChange={(v) => setOption("exportMode", {
+								...exportOptions.exportMode,
+								format: v as ExportOptions["exportMode"]["format"],
+							})}
+							size="1"
+						>
+							<SegmentedControl.Item value="xls">Excel</SegmentedControl.Item>
+							<SegmentedControl.Item value="csv">CSV</SegmentedControl.Item>
+						</SegmentedControl.Root>
+
+						{/* Export mode — only relevant when there are multiple tabs and if file format is CSV */}
+
+						{exportOptions.exportMode.format === "csv" &&
+							<div className={`flex flex-col gap-2 ${!hasMultipleTabs ? "opacity-40 pointer-events-none" : ""}`}>
+								<span className="text-xs">
+									Export format
+									{!hasMultipleTabs && <span className="ml-1 opacity-60">(multiple frames needed)</span>}
+								</span>
+								<SegmentedControl.Root
+									defaultValue={exportOptions.exportMode.structure}
+									onValueChange={(v) => setOption("exportMode", {
+										...exportOptions.exportMode,
+										structure: v as ExportOptions["exportMode"]["structure"],
+									})}
+									size="1"
+								>
+									<SegmentedControl.Item value="combined">Combined CSV</SegmentedControl.Item>
+									<SegmentedControl.Item value="zip">ZIP (one per frame)</SegmentedControl.Item>
+								</SegmentedControl.Root>
+							</div>
+						}
 
 						<Separator size="4" />
 
