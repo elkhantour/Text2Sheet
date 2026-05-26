@@ -38,3 +38,15 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 			break;
 	}
 };
+
+figma.currentPage.on("nodechange", (event) => {
+
+	const relevant = event.nodeChanges.some((change) =>
+		change.type === "PROPERTY_CHANGE" &&
+		(change.properties.includes("name") || change.properties.includes("characters")) &&
+		(change.node.type === "TEXT" || change.node.type === "FRAME" ||
+			change.node.type === "COMPONENT" || change.node.type === "SECTION")
+	);
+
+	if (relevant) loadAndSendState();
+});

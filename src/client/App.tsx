@@ -39,7 +39,6 @@ export function App(): React.ReactElement {
 	} = useTabs(markedNodes, sections, itemOrder);
 
 
-	console.log({ tabs });
 	return (
 		<div className=" flex h-screen flex-col relative bg-[var(--bg)]">
 			<Toolbar
