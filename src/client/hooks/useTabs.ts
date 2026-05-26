@@ -17,8 +17,6 @@ export function useTabs(
 	const sectionMap = useMemo(() => new Map(sections.map((s) => [s.id, s])), [sections]);
 
 	const tabs: FrameTab[] = useMemo(() => {
-		const seen = new Map<string, string>();
-		const firstAppearance = new Map<string, number>(); // topFrameId → first index in itemOrder
 
 		const frameNameFromNodes = new Map<string, string>();
 		for (const node of nodes) {
@@ -27,44 +25,16 @@ export function useTabs(
 			}
 		}
 
-		for (let i = 0; i < itemOrder.length; i++) {
-			const id = itemOrder[i];
-
-			const node = nodeMap.get(id);
-			if (node) {
-				if (!seen.has(node.topFrameId)) {
-					seen.set(node.topFrameId, node.topFrameName);
-					firstAppearance.set(node.topFrameId, i);
-				}
-			}
-
-			const section = sectionMap.get(id);
-			if (section) {
-				if (!seen.has(section.topFrameId)) {
-					const nameFromSectionNodes = section.nodeIds
-						.map((nid) => nodeMap.get(nid))
-						.find((n) => n)?.topFrameName;
-
-					const resolved = nameFromSectionNodes
-						?? frameNameFromNodes.get(section.topFrameId);
-
-					if (resolved) {
-						seen.set(section.topFrameId, resolved);
-						firstAppearance.set(section.topFrameId, i);
-					}
-				}
-			}
-		}
-
-		return Array.from(seen.entries())
+		return Array.from(frameNameFromNodes.entries())
 			.map(([topFrameId, topFrameName]) => ({ topFrameId, topFrameName }))
 			.sort((a, b) => {
 				if (a.topFrameId === ORPHAN_TAB_ID) return 1;
 				if (b.topFrameId === ORPHAN_TAB_ID) return -1;
-				return (firstAppearance.get(a.topFrameId) ?? 0) - (firstAppearance.get(b.topFrameId) ?? 0);
+				return 0;
 			});
 
 	}, [nodes, sections, itemOrder, nodeMap, sectionMap]);
+
 	const [activeTabId, setActiveTabId] = useState<string | null>(null);
 
 	// Auto-select first tab, or reset if active tab disappears
