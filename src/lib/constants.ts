@@ -7,7 +7,7 @@ export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
 	includeLayerNames: false,
 	splitBySections: true,
 	exportMode: {
-		format: "xls",
+		format: "csv",
 		structure: "combined",
 	},
 };
