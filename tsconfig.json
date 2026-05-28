@@ -26,6 +26,9 @@
 			],
 			"@utils/*": [
 				"src/client/utils/*"
+			],
+			"@hooks/*": [
+				"src/client/hooks/*"
 			]
 		}
 	},

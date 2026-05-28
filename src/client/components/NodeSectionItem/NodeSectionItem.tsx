@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import type { MarkedNode, NodeSection } from "@ctypes/messages";
 import { useDnd } from "@components/Dnd/Context";
 import { SectionBody } from "./SectionBody";
+import type { NodeSelectionState } from "@hooks/useNodeSelection";
 
 interface NodeSectionItemProps {
 	section: NodeSection;
@@ -10,6 +11,12 @@ interface NodeSectionItemProps {
 	onSelect: (nodeId: string) => void;
 	onDelete: () => void;
 	onRename: (name: string) => void;
+	// ── Selection + context menu ─────────────────────────────────────────────
+	selection: NodeSelectionState;
+	orderedNodeIds: string[];
+	sections: NodeSection[];
+	onMoveToSection: (nodeIds: string[], sectionId: string) => void;
+	onRemoveFromSection: (nodeIds: string[], sectionId: string) => void;
 }
 
 export function NodeSectionItem({
@@ -19,6 +26,11 @@ export function NodeSectionItem({
 	onSelect,
 	onDelete,
 	onRename,
+	selection,
+	orderedNodeIds,
+	sections,
+	onMoveToSection,
+	onRemoveFromSection,
 }: NodeSectionItemProps): React.ReactElement {
 	const { dragging, activeDropZone, startDrag, setDropZone, endDrag } = useDnd();
 	const [collapsed, setCollapsed] = useState(section.collapsed ?? false);
@@ -28,13 +40,14 @@ export function NodeSectionItem({
 
 	const isDraggingThis = dragging?.kind === "section" && dragging.sectionId === section.id;
 	const isHeaderDropTarget =
-		(activeDropZone?.kind === "section-header" || activeDropZone?.kind === "section-body") && activeDropZone.sectionId === section.id;
+		(activeDropZone?.kind === "section-header" || activeDropZone?.kind === "section-body") &&
+		activeDropZone.sectionId === section.id;
 
 	const sectionNodes = section.nodeIds
 		.map((id) => nodeMap.get(id))
 		.filter(Boolean) as MarkedNode[];
 
-	// ── Section drag (header handle) ─────────────────────────────────────────
+	// ── Section drag ─────────────────────────────────────────────────────────
 
 	const handleHeaderDragStart = (e: React.DragEvent) => {
 		e.dataTransfer.effectAllowed = "move";
@@ -42,8 +55,6 @@ export function NodeSectionItem({
 	};
 
 	const handleHeaderDragEnd = () => endDrag();
-
-	// ── Section header as drop target (append card) ───────────────────────────
 
 	const handleHeaderDragOver = (e: React.DragEvent) => {
 		if (dragging?.kind !== "node") return;
@@ -78,16 +89,15 @@ export function NodeSectionItem({
 		if (e.key === "Escape") { setDraftName(section.name); setIsEditingName(false); }
 	};
 
-	// ── Render ────────────────────────────────────────────────────────────────
-
 	return (
 		<div
-			className={`rounded-md border transition-all ${isDraggingThis
+			className={`rounded-md border transition-all ${
+				isDraggingThis
 					? "opacity-40"
 					: isHeaderDropTarget
 						? "border-[var(--accent)] bg-[var(--accent-subtle)]"
 						: "border-[var(--border-light)] bg-[var(--bg-secondary)]"
-				}`}
+			}`}
 		>
 			{/* ── Header ── */}
 			<div
@@ -100,10 +110,7 @@ export function NodeSectionItem({
 				className="flex items-center gap-1.5 px-2 py-1.5 cursor-grab active:cursor-grabbing select-none"
 			>
 				{/* Drag handle */}
-				<svg
-					width="12" height="12" viewBox="0 0 12 12" fill="none"
-					className="flex-shrink-0 text-[var(--text-muted)]"
-				>
+				<svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="flex-shrink-0 text-[var(--text-muted)]">
 					<circle cx="4" cy="3" r="1" fill="currentColor" />
 					<circle cx="8" cy="3" r="1" fill="currentColor" />
 					<circle cx="4" cy="6" r="1" fill="currentColor" />
@@ -134,8 +141,8 @@ export function NodeSectionItem({
 						onBlur={commitRename}
 						onKeyDown={handleNameKeyDown}
 						autoFocus
-						className="flex-1 min-w-0 bg-transparent cursor-text text-xs font-medium text-[var(--text-primary)]
-						           outline-none border-b border-[var(--accent)]"
+						className="flex-1 min-w-0 bg-transparent cursor-text text-xs font-medium
+						           text-[var(--text-primary)] outline-none border-b border-[var(--accent)]"
 					/>
 				) : (
 					<span
@@ -154,8 +161,8 @@ export function NodeSectionItem({
 				{/* Delete section */}
 				<button
 					onClick={(e) => { e.stopPropagation(); onDelete(); }}
-					className="flex-shrink-0 p-0.5 rounded text-[var(--text-muted)] hover:text-[var(--text-danger)]
-					           hover:bg-[var(--bg-danger-subtle)] transition-colors"
+					className="flex-shrink-0 p-0.5 rounded text-[var(--text-muted)]
+					           hover:text-[var(--text-danger)] hover:bg-[var(--bg-danger-subtle)] transition-colors"
 					title="Delete section"
 				>
 					<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -164,16 +171,20 @@ export function NodeSectionItem({
 				</button>
 			</div>
 
-			{/* ── Body (cards) ── */}
+			{/* ── Body ── */}
 			{!collapsed && (
 				<SectionBody
 					section={section}
 					sectionNodes={sectionNodes}
 					onUnmark={onUnmark}
 					onSelect={onSelect}
+					selection={selection}
+					orderedNodeIds={orderedNodeIds}
+					sections={sections}
+					onMoveToSection={onMoveToSection}
+					onRemoveFromSection={onRemoveFromSection}
 				/>
 			)}
 		</div>
 	);
 }
-

@@ -45,6 +45,7 @@ module.exports = (env, argv) => [
 				"@styles": path.resolve(__dirname, "src/client/styles/"),
 				"@ctypes": path.resolve(__dirname, "src/types/"),
 				"@utils": path.resolve(__dirname, "src/client/utils/"),
+				"@hooks": path.resolve(__dirname, "src/client/hooks/"),
 			}
 		},
 		module: {

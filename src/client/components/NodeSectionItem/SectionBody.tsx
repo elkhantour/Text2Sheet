@@ -2,16 +2,33 @@ import { useDnd } from "@components/Dnd/Context";
 import { DropIndicator } from "@components/Dnd/DropIndicator";
 import { NodeCard } from "@components/NodeCard/NodeCard";
 import { MarkedNode, NodeSection } from "@ctypes/messages";
-import React from "react"
+import type { NodeSelectionState } from "@hooks/useNodeSelection";
+import React from "react";
 
 interface SectionBodyProps {
 	section: NodeSection;
 	sectionNodes: MarkedNode[];
 	onUnmark: (nodeId: string) => void;
 	onSelect: (nodeId: string) => void;
+	// ── Selection + context menu ─────────────────────────────────────────────
+	selection: NodeSelectionState;
+	orderedNodeIds: string[];
+	sections: NodeSection[];
+	onMoveToSection: (nodeIds: string[], sectionId: string) => void;
+	onRemoveFromSection: (nodeIds: string[], sectionId: string) => void;
 }
 
-export function SectionBody({ section, sectionNodes, onUnmark, onSelect }: SectionBodyProps) {
+export function SectionBody({
+	section,
+	sectionNodes,
+	onUnmark,
+	onSelect,
+	selection,
+	orderedNodeIds,
+	sections,
+	onMoveToSection,
+	onRemoveFromSection,
+}: SectionBodyProps) {
 	const { dragging, activeDropZone, setDropZone, endDrag } = useDnd();
 
 	const isNodeDrag = dragging?.kind === "node";
@@ -32,16 +49,12 @@ export function SectionBody({ section, sectionNodes, onUnmark, onSelect }: Secti
 			onDragOver={(e) => {
 				if (!isNodeDrag) return;
 				e.preventDefault();
-				// Only fire if we didn't land on a specific card gap
 				setDropZone({ kind: "section-body", sectionId: section.id, beforeNodeId: null });
 			}}
 			onDrop={(e) => { e.preventDefault(); endDrag(); }}
 		>
 			{sectionNodes.length === 0 && (
-				<div
-					className={`flex items-center justify-center h-8 rounded border border-dashed text-[10px]
-					            text-[var(--text-muted)] transition-colors`}
-				>
+				<div className="flex items-center justify-center h-8 rounded border border-dashed text-[10px] text-[var(--text-muted)] transition-colors">
 					Drop cards here
 				</div>
 			)}
@@ -58,11 +71,15 @@ export function SectionBody({ section, sectionNodes, onUnmark, onSelect }: Secti
 						onDragOverGap={(beforeNodeId) =>
 							setDropZone({ kind: "section-body", sectionId: section.id, beforeNodeId })
 						}
+						selection={selection}
+						orderedNodeIds={orderedNodeIds}
+						sections={sections}
+						onMoveToSection={onMoveToSection}
+						onRemoveFromSection={onRemoveFromSection}
 					/>
 				</React.Fragment>
 			))}
 
-			{/* Drop indicator at end */}
 			{isDropAtEnd && sectionNodes.length > 0 && <DropIndicator />}
 		</div>
 	);
