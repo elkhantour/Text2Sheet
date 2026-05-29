@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import type { MarkedNode, NodeSection } from "@ctypes/messages";
+import type { MarkedNode } from "@ctypes/messages";
 import { useDnd } from "@components/Dnd/Context";
-import { NodeContextMenu } from "@components/NodeCard/NodeContextMenu";
 import type { NodeSelectionState } from "@hooks/useNodeSelection";
 
 interface NodeCardProps {
@@ -17,10 +16,6 @@ interface NodeCardProps {
 	selection: NodeSelectionState;
 	/** Flat ordered list of all visible node IDs — used for range select */
 	orderedNodeIds: string[];
-	// ── Context menu actions ─────────────────────────────────────────────────
-	sections: NodeSection[];
-	onMoveToSection: (nodeIds: string[], sectionId: string) => void;
-	onRemoveFromSection: (nodeIds: string[], sectionId: string) => void;
 }
 
 export function NodeCard({
@@ -31,9 +26,6 @@ export function NodeCard({
 	onDragOverGap,
 	selection,
 	orderedNodeIds,
-	sections,
-	onMoveToSection,
-	onRemoveFromSection,
 }: NodeCardProps): React.ReactElement {
 	const [hovered, setHovered] = useState(false);
 	const { dragging, startDrag, setDropZone, endDrag } = useDnd();
@@ -83,21 +75,6 @@ export function NodeCard({
 	const handleDragEnd = () => endDrag();
 	const handleDrop = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); endDrag(); };
 
-	// ── Context menu actions ─────────────────────────────────────────────────
-
-	// Affected IDs: whole selection if this card is in it, else just this card
-	const affectedIds = (ids: Set<string>) =>
-		ids.has(node.id) ? [...ids] : [node.id];
-
-	const handleMoveToSection = (sectionId: string) => {
-		onMoveToSection(affectedIds(selection.selectedIds), sectionId);
-	};
-
-	const handleRemoveFromSection = () => {
-		if (!sourceSectionId) return;
-		onRemoveFromSection(affectedIds(selection.selectedIds), sourceSectionId);
-	};
-
 	const handleUnmark = (id: string) => {
 		// If the card is part of a selection, remove all selected
 		const ids = selection.selectedIds.has(id)
@@ -109,28 +86,21 @@ export function NodeCard({
 	// ── Render ───────────────────────────────────────────────────────────────
 
 	return (
-		<NodeContextMenu
-			nodeId={node.id}
-			sourceSectionId={sourceSectionId}
-			selectedIds={selection.selectedIds}
-			sections={sections}
-			onUnmark={handleUnmark}
-			onMoveToSection={handleMoveToSection}
-			onRemoveFromSection={handleRemoveFromSection}
-		>
-			<div
-				draggable
-				data-hovered={hovered}
-				data-dragging={isDragging}
-				data-selected={isSelected}
-				onClick={handleClick}
-				onDragStart={handleDragStart}
-				onDragOver={handleDragOver}
-				onDragEnd={handleDragEnd}
-				onDrop={handleDrop}
-				onMouseEnter={() => setHovered(true)}
-				onMouseLeave={() => setHovered(false)}
-				className="
+
+		<div
+			draggable
+			data-hovered={hovered}
+			data-dragging={isDragging}
+			data-selected={isSelected}
+			onClick={handleClick}
+			onDragStart={handleDragStart}
+			onDragOver={handleDragOver}
+			onDragEnd={handleDragEnd}
+			onDrop={handleDrop}
+			onContextMenu={selection.contextMenu.open}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+			className="
 					group select-none rounded-md border px-3 py-2.5
 					transition-all duration-150 cursor-grab
 					border-[var(--border)] bg-[var(--surface)]
@@ -141,44 +111,42 @@ export function NodeCard({
 					data-[dragging=true]:border-[var(--accent)]
 					data-[dragging=true]:opacity-40
 				"
-			>
-				{/* Top row */}
-				<div className="flex items-center gap-2">
-					<span className="w-4 shrink-0 text-center font-mono text-[var(--text-muted)]">⠿</span>
+		>
+			{/* Top row */}
+			<div className="flex items-center gap-2">
+				<span className="w-4 shrink-0 text-center font-mono text-[var(--text-muted)]">⠿</span>
 
-					<span className={`flex-1 truncate text-xs font-medium transition-colors ${
-						isSelected ? "text-[var(--accent)]" : "text-[var(--text-primary)]"
+				<span className={`flex-1 truncate text-xs font-medium transition-colors ${isSelected ? "text-[var(--accent)]" : "text-[var(--text-primary)]"
 					}`}>
-						{node.previewText}
-					</span>
+					{node.previewText}
+				</span>
 
-					<div className="flex shrink-0 gap-1">
-						<ActionButton title="Focus layer in canvas" onClick={() => onSelect(node.id)}>
-							<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-								<path d="M1 1h3.5M1 1v3.5M11 1h-3.5M11 1v3.5M1 11h3.5M1 11v-3.5M11 11h-3.5M11 11v-3.5"
-									stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-							</svg>
-						</ActionButton>
-						<ActionButton title="Remove from export" onClick={() => handleUnmark(node.id)} danger>
-							<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-								<path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-							</svg>
-						</ActionButton>
-					</div>
+				<div className="flex shrink-0 gap-1">
+					<ActionButton title="Focus layer in canvas" onClick={() => onSelect(node.id)}>
+						<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+							<path d="M1 1h3.5M1 1v3.5M11 1h-3.5M11 1v3.5M1 11h3.5M1 11v-3.5M11 11h-3.5M11 11v-3.5"
+								stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+						</svg>
+					</ActionButton>
+					<ActionButton title="Remove from export" onClick={() => handleUnmark(node.id)} danger>
+						<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+							<path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+						</svg>
+					</ActionButton>
 				</div>
-
-				{/* Preview lines */}
-				{previewLines.length > 1 && (
-					<div className="mt-1.5 ml-6 flex flex-col gap-0.5">
-						{previewLines.map((line, i) => (
-							<div key={i} className="truncate font-mono text-[11px] text-[var(--text-muted)]">
-								{line}
-							</div>
-						))}
-					</div>
-				)}
 			</div>
-		</NodeContextMenu>
+
+			{/* Preview lines */}
+			{previewLines.length > 1 && (
+				<div className="mt-1.5 ml-6 flex flex-col gap-0.5">
+					{previewLines.map((line, i) => (
+						<div key={i} className="truncate font-mono text-[11px] text-[var(--text-muted)]">
+							{line}
+						</div>
+					))}
+				</div>
+			)}
+		</div>
 	);
 }
 

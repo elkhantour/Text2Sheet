@@ -7,11 +7,18 @@ export interface NodeSelectionState {
 	rangeSelect: (id: string, orderedIds: string[]) => void;
 	clearSelection: () => void;
 	isSelected: (id: string) => boolean;
+	contextMenu: {
+		isOpen: boolean;
+		position: { x: number; y: number } | undefined;
+		open: (event: React.MouseEvent) => void,
+		close: () => void;
+	}
 }
 
 export function useNodeSelection(activeTabId: string | null): NodeSelectionState {
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+	const [openContextMenu, setOpenContextMenu] = useState<boolean>(false);
 
 	// Clear selection on tab change
 	useEffect(() => {
@@ -71,5 +78,25 @@ export function useNodeSelection(activeTabId: string | null): NodeSelectionState
 		[selectedIds],
 	);
 
-	return { selectedIds, select, toggle, rangeSelect, clearSelection, isSelected };
+	const contextMenu = {
+		isOpen: openContextMenu,
+		position: { x: 0, y: 0 },
+		open: useCallback((e: React.MouseEvent) => {
+			setOpenContextMenu(true);
+			contextMenu.position = { x: e.clientX, y: e.clientY };
+		}, []),
+		close: useCallback(() => {
+			setOpenContextMenu(false);
+		}, [openContextMenu]),
+	};
+
+	return {
+		selectedIds,
+		select,
+		toggle,
+		rangeSelect,
+		clearSelection,
+		isSelected,
+		contextMenu,
+	};
 }

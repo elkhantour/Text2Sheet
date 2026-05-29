@@ -14,8 +14,8 @@ interface SectionBodyProps {
 	selection: NodeSelectionState;
 	orderedNodeIds: string[];
 	sections: NodeSection[];
-	onMoveToSection: (nodeIds: string[], sectionId: string) => void;
-	onRemoveFromSection: (nodeIds: string[], sectionId: string) => void;
+	onMoveToSection: (nodeIds: Set<string>, sectionId: string) => void;
+	onRemoveFromSection: (nodeIds: Set<string>, sectionId: string) => void;
 }
 
 export function SectionBody({
@@ -73,9 +73,6 @@ export function SectionBody({
 						}
 						selection={selection}
 						orderedNodeIds={orderedNodeIds}
-						sections={sections}
-						onMoveToSection={onMoveToSection}
-						onRemoveFromSection={onRemoveFromSection}
 					/>
 				</React.Fragment>
 			))}

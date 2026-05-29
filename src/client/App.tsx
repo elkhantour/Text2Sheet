@@ -6,7 +6,6 @@ import { Toast } from "@components/Toast/Toast";
 import { NodeSectionList } from "@components/NodeSectionList/NodeSectionList";
 import { useTabs } from "./hooks/useTabs";
 import { FrameTabs } from "@components/FrameTab/FrameTab";
-import { useNodeSelection } from "@hooks/useNodeSelection";
 
 export function App(): React.ReactElement {
 	const {

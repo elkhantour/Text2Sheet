@@ -1,98 +1,90 @@
 import React, { useState } from "react";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Dialog from "@radix-ui/react-dialog";
 import type { NodeSection } from "@ctypes/messages";
+import { useNodeSelection } from "@hooks/useNodeSelection";
+import { ContextMenu } from "@radix-ui/themes";
 
 interface NodeContextMenuProps {
 	children: React.ReactNode;
-	nodeId: string;
-	sourceSectionId: string | null;
-	selectedIds: Set<string>;
+	activeTabId: string | null;
 	sections: NodeSection[];
 	onUnmark: (nodeId: string) => void;
-	onMoveToSection: (sectionId: string) => void;
-	onRemoveFromSection: () => void;
+	onMoveToSection: (nodeIds: Set<string>, sectionId: string) => void;
+	onRemoveFromSection: (nodeIds: Set<string>) => void;
+	isOpen: boolean;
+	position: { x: number; y: number } | undefined;
 }
 
 export function NodeContextMenu({
 	children,
-	nodeId,
-	sourceSectionId,
-	selectedIds,
+	activeTabId,
 	sections,
 	onUnmark,
 	onMoveToSection,
 	onRemoveFromSection,
 }: NodeContextMenuProps): React.ReactElement {
+
 	const [addToSectionOpen, setAddToSectionOpen] = useState(false);
+
+	const { selectedIds } = useNodeSelection(activeTabId);
 
 	// The set of nodes this action applies to:
 	// if right-clicked node is in selection → whole selection, else just this node
-	const affectedIds = selectedIds.has(nodeId) ? selectedIds : new Set([nodeId]);
-	const count = affectedIds.size;
+	//const affectedIds = selectedIds.has(nodeId) ? selectedIds : new Set([nodeId]);
+	const count = selectedIds.size;
 	const label = count > 1 ? `${count} nodes` : "node";
 
 	return (
 		<>
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger asChild>
+			<ContextMenu.Root>
+				<ContextMenu.Trigger>
 					{children}
-				</DropdownMenu.Trigger>
-
-				<DropdownMenu.Portal>
-					<DropdownMenu.Content
+				</ContextMenu.Trigger>
+				<ContextMenu.Content className="z-50 min-w-[180px] rounded-lg border border-[var(--border-light)] bg-[var(--surface-2)] p-1 shadow-xl animate-in fade-in-0 zoom-in-95">
+					{/* Delete */}
+					<ContextMenu.Item
+						onSelect={() => {
+							for (const id of selectedIds) onUnmark(id);
+						}}
 						className="
-							z-50 min-w-[180px] rounded-lg border border-[var(--border-light)]
-							bg-[var(--surface-2)] p-1 shadow-xl
-							animate-in fade-in-0 zoom-in-95
-						"
-						sideOffset={4}
-						align="start"
-					>
-						{/* Delete */}
-						<DropdownMenu.Item
-							onSelect={() => {
-								for (const id of affectedIds) onUnmark(id);
-							}}
-							className="
 								flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
 								text-xs text-[var(--danger)] outline-none
 								hover:bg-[var(--danger-dim)]
 								focus:bg-[var(--danger-dim)]
 							"
-						>
-							<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-								<path d="M1.5 3h9M4.5 3V1.5h3V3M5 5.5v4M7 5.5v4M2 3l.5 7.5h7L10 3"
-									stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-							</svg>
-							Remove {label}
-						</DropdownMenu.Item>
+					>
+						<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+							<path d="M1.5 3h9M4.5 3V1.5h3V3M5 5.5v4M7 5.5v4M2 3l.5 7.5h7L10 3"
+								stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+						</svg>
+						Remove {label}
+					</ContextMenu.Item>
 
-						<DropdownMenu.Separator className="my-1 h-px bg-[var(--border)]" />
+					<ContextMenu.Separator className="my-1 h-px bg-[var(--border)]" />
 
-						{/* Add to section */}
-						<DropdownMenu.Item
-							onSelect={() => setAddToSectionOpen(true)}
-							disabled={sections.length === 0}
-							className="
+					{/* Add to section */}
+					<ContextMenu.Item
+						onSelect={() => setAddToSectionOpen(true)}
+						disabled={sections.length === 0}
+						className="
 								flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
 								text-xs text-[var(--text-secondary)] outline-none
 								hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)]
 								focus:bg-[var(--surface-3)]
 								data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40
 							"
-						>
-							<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-								<rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.3" />
-								<path d="M6 4v4M4 6h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-							</svg>
-							Add to section…
-						</DropdownMenu.Item>
+					>
+						<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+							<rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.3" />
+							<path d="M6 4v4M4 6h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+						</svg>
+						Add to section…
+					</ContextMenu.Item>
 
-						{/* Remove from section */}
-						{sourceSectionId && (
+					{/* Remove from section */}
+					{/*sourceSectionId && (
 							<DropdownMenu.Item
-								onSelect={onRemoveFromSection}
+								onSelect={() => onRemoveFromSection(selectedIds)}
 								className="
 									flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
 									text-xs text-[var(--text-secondary)] outline-none
@@ -106,21 +98,21 @@ export function NodeContextMenu({
 								</svg>
 								Remove from section
 							</DropdownMenu.Item>
-						)}
-					</DropdownMenu.Content>
-				</DropdownMenu.Portal>
-			</DropdownMenu.Root>
+							)*/}
+				</ContextMenu.Content>
+			</ContextMenu.Root >
 
 			{/* Add to section modal */}
-			<AddToSectionDialog
+			< AddToSectionDialog
 				open={addToSectionOpen}
 				onOpenChange={setAddToSectionOpen}
 				sections={sections}
 				count={count}
 				onConfirm={(sectionId) => {
-					onMoveToSection(sectionId);
+					onMoveToSection(selectedIds, sectionId);
 					setAddToSectionOpen(false);
-				}}
+				}
+				}
 			/>
 		</>
 	);
