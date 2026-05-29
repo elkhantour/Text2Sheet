@@ -1,23 +1,28 @@
+import { usePlugin } from "@hooks/usePlugin";
 import React, { useEffect, useState } from "react";
 
-interface ToastProps {
-  message: string;
-  kind: "error" | "success" | "info";
-  onDismiss: () => void;
-}
 
-export function Toast({ message, kind, onDismiss }: ToastProps): React.ReactElement {
+export function Toast(): React.ReactElement {
 	const [visible, setVisible] = useState(false);
+
+	const {
+		dismissToast,
+		toast,
+	} = usePlugin();
+
 
 	useEffect(() => {
 		requestAnimationFrame(() => setVisible(true));
 	}, []);
 
+	if (!toast)
+		return <></>;
+
 	return (
 		<div
-			onClick={onDismiss}
+			onClick={dismissToast}
 			data-visible={visible}
-			data-kind={kind}
+			data-kind={toast.kind}
 			className="
 				absolute
 				bottom-[120px]
@@ -69,10 +74,10 @@ export function Toast({ message, kind, onDismiss }: ToastProps): React.ReactElem
 					font-bold
 				"
 			>
-				{kind === "error" ? "✕" : kind === "success" ? "✓" : "i"}
+				{toast.kind === "error" ? "✕" : toast.kind === "success" ? "✓" : "i"}
 			</span>
 
-			<span>{message}</span>
+			<span>{toast.message}</span>
 		</div>
 	);
 }

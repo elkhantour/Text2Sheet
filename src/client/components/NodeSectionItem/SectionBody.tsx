@@ -1,34 +1,19 @@
 import { useDnd } from "@components/Dnd/Context";
 import { DropIndicator } from "@components/Dnd/DropIndicator";
 import { NodeCard } from "@components/NodeCard/NodeCard";
-import { MarkedNode, NodeSection } from "@ctypes/messages";
-import type { NodeSelectionState } from "@hooks/useNodeSelection";
+import { NodeSection } from "@ctypes/messages";
 import React from "react";
 
 interface SectionBodyProps {
 	section: NodeSection;
-	sectionNodes: MarkedNode[];
-	onUnmark: (nodeId: string) => void;
-	onSelect: (nodeId: string) => void;
-	// ── Selection + context menu ─────────────────────────────────────────────
-	selection: NodeSelectionState;
-	orderedNodeIds: string[];
-	sections: NodeSection[];
-	onMoveToSection: (nodeIds: Set<string>, sectionId: string) => void;
-	onRemoveFromSection: (nodeIds: Set<string>, sectionId: string) => void;
 }
 
 export function SectionBody({
-	section,
-	sectionNodes,
-	onUnmark,
-	onSelect,
-	selection,
-	orderedNodeIds,
-	sections,
-	onMoveToSection,
-	onRemoveFromSection,
+	section
 }: SectionBodyProps) {
+
+	const sectionNodes = section.nodeIds;
+
 	const { dragging, activeDropZone, setDropZone, endDrag } = useDnd();
 
 	const isNodeDrag = dragging?.kind === "node";
@@ -60,19 +45,15 @@ export function SectionBody({
 			)}
 
 			{sectionNodes.map((node, idx) => (
-				<React.Fragment key={node.id}>
-					{isDropBeforeNode(node.id) && <DropIndicator />}
+				<React.Fragment key={node}>
+					{isDropBeforeNode(node) && <DropIndicator />}
 					<NodeCard
-						node={node}
+						nodeId={node}
 						index={idx}
-						onUnmark={onUnmark}
-						onSelect={onSelect}
 						sourceSectionId={section.id}
 						onDragOverGap={(beforeNodeId) =>
 							setDropZone({ kind: "section-body", sectionId: section.id, beforeNodeId })
 						}
-						selection={selection}
-						orderedNodeIds={orderedNodeIds}
 					/>
 				</React.Fragment>
 			))}

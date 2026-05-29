@@ -1,40 +1,40 @@
 import React from "react";
-import type { ExportOptions, FrameTab, MarkedNode } from "@ctypes/messages";
-import { Button, DropdownMenu, Dialog, SegmentedControl, Text, Separator } from "@radix-ui/themes";
+import type { ExportOptions } from "@ctypes/messages";
+import { Button, Dialog, SegmentedControl, Text, Separator } from "@radix-ui/themes";
 import { CheckboxStateToBool } from "@components/Checkbox/Utils";
 import Checkbox from "@components/Checkbox/Checkbox";
 import { PlusIcon, SettingsIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
+import { usePlugin } from "@hooks/usePlugin";
+import { useTabs } from "@hooks/useTabs";
 
 
-interface ToolbarProps {
-	nodes: MarkedNode[];
-	onClearAll: () => void;
-	exportOptions: ExportOptions;
-	onMarkSelection: () => void;
-	onSaveExportOptions: (options: ExportOptions) => void;
-	tabs: FrameTab[];
-}
+export function Toolbar(): React.ReactElement {
 
-export function Toolbar({
-	nodes,
-	onClearAll,
-	exportOptions,
-	onMarkSelection,
-	onSaveExportOptions,
-	tabs,
-}: ToolbarProps): React.ReactElement {
+	const {
+		markedNodes,
+		clearAll,
+		markSelection,
+		saveExportOptions,
+		exportOptions,
+		sections,
+		itemOrder,
+	} = usePlugin();
 
-	const hasNodes = nodes.length > 0;
+	const {
+		tabs
+	} = useTabs(markedNodes, sections, itemOrder);
+
+	const hasNodes = markedNodes.length > 0;
 	const setOption = <K extends keyof ExportOptions>(key: K, value: ExportOptions[K]) =>
-		onSaveExportOptions({ ...exportOptions, [key]: value });
+		saveExportOptions({ ...exportOptions, [key]: value });
 
 	const hasMultipleTabs = tabs.length > 1;
 
 	return (
 		<div className="flex justify-between w-full px-3 py-3 items-center">
 
-			<Button onClick={onMarkSelection} size="2"> <PlusIcon size={ICON_SIZE_SMALL} /> Add Selection</Button>
+			<Button onClick={markSelection} size="2"> <PlusIcon size={ICON_SIZE_SMALL} /> Add Selection</Button>
 
 			<Dialog.Root>
 				<Dialog.Trigger>
@@ -97,7 +97,7 @@ export function Toolbar({
 
 						<div className="p-4 bg-red-950 border border-red-800 flex flex-col gap-4 justify-center rounded-md">
 							<Text color="red" size="1" ><b>Danger Zone</b></Text>
-							<Button color="red" onClick={hasNodes ? onClearAll : undefined} disabled={!hasNodes}>Clear All</Button>
+							<Button color="red" onClick={hasNodes ? clearAll : undefined} disabled={!hasNodes}>Clear All</Button>
 
 						</div>
 					</div>

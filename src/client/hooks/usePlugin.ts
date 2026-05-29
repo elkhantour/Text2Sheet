@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useMemo } from "react";
 import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions } from "@ctypes/messages";
 import { DEFAULT_EXPORT_OPTIONS } from "../../lib/constants";
 
@@ -23,15 +23,19 @@ export interface PluginHookReturn {
 	moveNodeToSection: (nodeId: string, sectionId: string | null, index: number) => void;
 	reorderNodesInSection: (sectionId: string, nodeIds: string[]) => void;
 	saveExportOptions: (options: ExportOptions) => void;
+	getNodeFromId: (id: string) => MarkedNode | undefined;
+	getSectionFromId: (id: string) => NodeSection | undefined;
 }
 
 export function usePlugin(): PluginHookReturn {
+
 	const [markedNodes, setMarkedNodes] = useState<MarkedNode[]>([]);
 	const [sections, setSections] = useState<NodeSection[]>([]);
 	const [itemOrder, setItemOrder] = useState<string[]>([]);
 	const [exportOptions, setExportOptions] = useState<ExportOptions>(DEFAULT_EXPORT_OPTIONS);
 	const [isLoading, setIsLoading] = useState(true);
 	const [toast, setToast] = useState<PluginHookReturn["toast"]>(null);
+
 
 	useEffect(() => {
 		if (!toast) return;
@@ -70,6 +74,15 @@ export function usePlugin(): PluginHookReturn {
 		postMessage({ type: "SAVE_EXPORT_OPTIONS", options });
 	}, []);
 
+	const nodeMap = useMemo(() => {
+		return new Map(markedNodes.map((n) => [n.id, n]));
+	}, [markedNodes]);
+
+	const sectionMap = useMemo(() => {
+		return new Map(sections.map((s) => [s.id, s]));
+	}, [sections]);
+
+
 	return {
 		markedNodes, sections, itemOrder, exportOptions, isLoading, toast,
 		markSelection: useCallback(() => postMessage({ type: "MARK_SELECTION" }), []),
@@ -85,6 +98,8 @@ export function usePlugin(): PluginHookReturn {
 		moveNodeToSection: useCallback((nodeId, sectionId, index) => postMessage({ type: "MOVE_NODE_TO_SECTION", nodeId, sectionId, index }), []),
 		reorderNodesInSection: useCallback((sectionId, nodeIds) => postMessage({ type: "REORDER_NODES_IN_SECTION", sectionId, nodeIds }), []),
 		saveExportOptions,
+		getNodeFromId: useCallback((id) => nodeMap.get(id), [nodeMap]),
+		getSectionFromId: useCallback((id) => sectionMap.get(id), [sectionMap]),
 	};
 }
 

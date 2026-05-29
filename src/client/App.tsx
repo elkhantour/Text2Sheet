@@ -4,97 +4,27 @@ import { Toolbar } from "@components/Toolbar/Toolbar";
 import { Footer } from "@components/Footer/Footer";
 import { Toast } from "@components/Toast/Toast";
 import { NodeSectionList } from "@components/NodeSectionList/NodeSectionList";
-import { useTabs } from "./hooks/useTabs";
+
 import { FrameTabs } from "@components/FrameTab/FrameTab";
 
 export function App(): React.ReactElement {
-	const {
-		markedNodes,
-		sections,
-		itemOrder,
-		isLoading,
-		toast,
-		markSelection,
-		clearAll,
-		unmarkNode,
-		selectNode,
-		dismissToast,
-		createSection,
-		deleteSection,
-		renameSection,
-		reorderItems,
-		moveNodeToSection,
-		reorderNodesInSection,
-		exportOptions,
-		saveExportOptions,
-	} = usePlugin();
 
 
-	const {
-		tabs,
-		activeTabId,
-		setActiveTabId,
-		activeNodes,
-		activeSections,
-	} = useTabs(markedNodes, sections, itemOrder);
-
+	const { isLoading } = usePlugin();
 
 	return (
 		<div className=" flex h-screen flex-col relative bg-[var(--bg)]">
-			<Toolbar
-				nodes={markedNodes}
-				onClearAll={clearAll}
-				exportOptions={exportOptions}
-				onMarkSelection={markSelection}
-				onSaveExportOptions={saveExportOptions}
-				tabs={tabs}
-			/>
+	  <Toolbar />
+	  
+			{isLoading ? <LoadingState /> :
+				<>
+					<FrameTabs />
+					<NodeSectionList />
+				</>
+			}
 
-
-			{isLoading ? (
-				<LoadingState />
-			) : (<>
-				<FrameTabs
-					tabs={tabs}
-					activeTabId={activeTabId}
-					onSelect={setActiveTabId}
-				/>
-
-				<NodeSectionList
-					nodes={activeNodes}
-					tabs={tabs}
-					sections={activeSections}
-					itemOrder={itemOrder}
-					activeTabId={activeTabId}
-					onUnmark={unmarkNode}
-					onSelect={selectNode}
-					onCreateSection={createSection}
-					onDeleteSection={deleteSection}
-					onRenameSection={renameSection}
-					onReorderItems={reorderItems}
-					onMoveNodeToSection={moveNodeToSection}
-					onReorderNodesInSection={reorderNodesInSection}
-				/>
-			</>
-			)}
-
-
-			<Footer
-				nodes={markedNodes}
-				sections={sections}
-				itemOrder={itemOrder}
-				exportOptions={exportOptions}
-				onMarkSelection={markSelection}
-				tabs={tabs}
-			/>
-
-			{toast && (
-				<Toast
-					message={toast.message}
-					kind={toast.kind}
-					onDismiss={dismissToast}
-				/>
-			)}
+			<Footer />
+			<Toast />
 		</div>
 	);
 }

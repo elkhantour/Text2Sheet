@@ -2,41 +2,28 @@ import React, { useState, useRef } from "react";
 import type { MarkedNode, NodeSection } from "@ctypes/messages";
 import { useDnd } from "@components/Dnd/Context";
 import { SectionBody } from "./SectionBody";
-import type { NodeSelectionState } from "@hooks/useNodeSelection";
+import { usePlugin } from "@hooks/usePlugin";
+
 
 interface NodeSectionItemProps {
 	section: NodeSection;
-	nodeMap: Map<string, MarkedNode>;
-	onUnmark: (nodeId: string) => void;
-	onSelect: (nodeId: string) => void;
 	onDelete: () => void;
 	onRename: (name: string) => void;
-	// ── Selection + context menu ─────────────────────────────────────────────
-	selection: NodeSelectionState;
-	orderedNodeIds: string[];
-	sections: NodeSection[];
-	onMoveToSection: (nodeIds: Set<string>, sectionId: string) => void;
-	onRemoveFromSection: (nodeIds: Set<string>, sectionId: string) => void;
 }
 
 export function NodeSectionItem({
 	section,
-	nodeMap,
-	onUnmark,
-	onSelect,
 	onDelete,
 	onRename,
-	selection,
-	orderedNodeIds,
-	sections,
-	onMoveToSection,
-	onRemoveFromSection,
 }: NodeSectionItemProps): React.ReactElement {
+
 	const { dragging, activeDropZone, startDrag, setDropZone, endDrag } = useDnd();
 	const [collapsed, setCollapsed] = useState(section.collapsed ?? false);
 	const [isEditingName, setIsEditingName] = useState(false);
 	const [draftName, setDraftName] = useState(section.name);
 	const inputRef = useRef<HTMLInputElement>(null);
+
+	const { getNodeFromId } = usePlugin();
 
 	const isDraggingThis = dragging?.kind === "section" && dragging.sectionId === section.id;
 	const isHeaderDropTarget =
@@ -44,7 +31,7 @@ export function NodeSectionItem({
 		activeDropZone.sectionId === section.id;
 
 	const sectionNodes = section.nodeIds
-		.map((id) => nodeMap.get(id))
+		.map((id) => getNodeFromId(id))
 		.filter(Boolean) as MarkedNode[];
 
 	// ── Section drag ─────────────────────────────────────────────────────────
@@ -91,13 +78,12 @@ export function NodeSectionItem({
 
 	return (
 		<div
-			className={`rounded-md border transition-all ${
-				isDraggingThis
-					? "opacity-40"
-					: isHeaderDropTarget
-						? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-						: "border-[var(--border-light)] bg-[var(--bg-secondary)]"
-			}`}
+			className={`rounded-md border transition-all ${isDraggingThis
+				? "opacity-40"
+				: isHeaderDropTarget
+					? "border-[var(--accent)] bg-[var(--accent-subtle)]"
+					: "border-[var(--border-light)] bg-[var(--bg-secondary)]"
+				}`}
 		>
 			{/* ── Header ── */}
 			<div
@@ -172,19 +158,7 @@ export function NodeSectionItem({
 			</div>
 
 			{/* ── Body ── */}
-			{!collapsed && (
-				<SectionBody
-					section={section}
-					sectionNodes={sectionNodes}
-					onUnmark={onUnmark}
-					onSelect={onSelect}
-					selection={selection}
-					orderedNodeIds={orderedNodeIds}
-					sections={sections}
-					onMoveToSection={onMoveToSection}
-					onRemoveFromSection={onRemoveFromSection}
-				/>
-			)}
+			{!collapsed && <SectionBody section={section} />}
 		</div>
 	);
 }

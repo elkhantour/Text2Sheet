@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import type { MarkedNode, NodeSection, FrameTab, ExportOptions } from "@ctypes/messages";
 import { countExportableRows } from "../../utils/exports/commons";
 
 import { Button, Text } from "@radix-ui/themes";
@@ -7,16 +6,9 @@ import { FileDownIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 import { Spinner } from "./Spinner";
 import { export2File } from "@utils/exports/manager";
+import { usePlugin } from "@hooks/usePlugin";
+import { useTabs } from "@hooks/useTabs";
 
-
-interface FooterProps {
-	nodes: MarkedNode[];
-	sections: NodeSection[];
-	itemOrder: string[];
-	tabs: FrameTab[];
-	onMarkSelection: () => void;
-	exportOptions: ExportOptions;
-}
 
 function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
 	return (
@@ -29,23 +21,30 @@ function Stat({ label, value, accent }: { label: string; value: number; accent?:
 	);
 }
 
-export function Footer({
-	nodes,
-	sections,
-	itemOrder,
-	tabs,
-	exportOptions,
-}: FooterProps): React.ReactElement {
+export function Footer(): React.ReactElement {
+
+	const {
+		markedNodes,
+		itemOrder,
+		sections,
+		exportOptions,
+	} = usePlugin();
+
+	const {
+		tabs
+	} = useTabs(markedNodes, sections, itemOrder);
+
+
 	const [downloading, setDownloading] = useState(false);
 
-	const rowCount = countExportableRows(nodes);
+	const rowCount = countExportableRows(markedNodes);
 	const canDownload = rowCount > 0;
 
 	const handleDownload = async () => {
 		if (!canDownload || downloading) return;
 		setDownloading(true);
 
-		await export2File({ nodes, sections, itemOrder, tabs, exportOptions });
+		await export2File({ nodes: markedNodes, sections, itemOrder, tabs, exportOptions });
 		setTimeout(() => setDownloading(false), 800);
 	};
 
