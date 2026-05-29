@@ -173,7 +173,7 @@ export function NodeSectionList(): React.ReactElement {
 					className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2.5"
 					onMouseDown={handleListMouseDown}
 				>
-					{itemOrder.map((id, idx) => {
+					{itemOrder.map((id) => {
 						const section = getSectionFromId(id);
 						const node = getNodeFromId(id);
 
@@ -193,7 +193,6 @@ export function NodeSectionList(): React.ReactElement {
 								) : node ? (
 									<NodeCard
 										nodeId={id}
-										index={idx}
 										sourceSectionId={null}
 									/>
 								) : null}

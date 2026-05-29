@@ -44,12 +44,11 @@ export function SectionBody({
 				</div>
 			)}
 
-			{sectionNodes.map((node, idx) => (
+			{sectionNodes.map((node) => (
 				<React.Fragment key={node}>
 					{isDropBeforeNode(node) && <DropIndicator />}
 					<NodeCard
 						nodeId={node}
-						index={idx}
 						sourceSectionId={section.id}
 						onDragOverGap={(beforeNodeId) =>
 							setDropZone({ kind: "section-body", sectionId: section.id, beforeNodeId })

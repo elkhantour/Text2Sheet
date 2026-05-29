@@ -4,11 +4,10 @@ import { Toolbar } from "@components/Toolbar/Toolbar";
 import { Footer } from "@components/Footer/Footer";
 import { Toast } from "@components/Toast/Toast";
 import { NodeSectionList } from "@components/NodeSectionList/NodeSectionList";
-
 import { FrameTabs } from "@components/FrameTab/FrameTab";
+import { LoadingState } from "@components/Loading/Loading";
 
 export function App(): React.ReactElement {
-
 
 	const { isLoading } = usePlugin();
 
@@ -29,31 +28,3 @@ export function App(): React.ReactElement {
 	);
 }
 
-function LoadingState(): React.ReactElement {
-	return (
-		<div
-			style={{
-				flex: 1,
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				color: "var(--text-muted)",
-				fontSize: 12,
-				fontFamily: "var(--font)",
-				gap: 8,
-			}}
-		>
-			<svg
-				width="14"
-				height="14"
-				viewBox="0 0 14 14"
-				fill="none"
-				style={{ animation: "spin 0.8s linear infinite" }}
-			>
-				<style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-				<circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="20 10" />
-			</svg>
-			Loading…
-		</div>
-	);
-}
