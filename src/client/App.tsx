@@ -7,7 +7,7 @@ import { NodeSectionList } from "@components/NodeSectionList/NodeSectionList";
 import { FrameTabs } from "@components/FrameTab/FrameTab";
 import { LoadingState } from "@components/Loading/Loading";
 import { NodeSelectionProvider } from "@contexts/useNodeSelection";
-import { useTabs } from "@hooks/useTabs";
+import { TabsProvider } from "@contexts/useTabs";
 
 export function App(): React.ReactElement {
 
@@ -19,27 +19,25 @@ export function App(): React.ReactElement {
 		itemOrder,
 	} = usePlugin();
 
-	const {
-		activeTabId,
-	} = useTabs(markedNodes, sections, itemOrder);
-
 
 	return (
-		<div className=" flex h-screen flex-col relative bg-[var(--bg)]">
-			<Toolbar />
+		<TabsProvider nodes={markedNodes} sections={sections} itemOrder={itemOrder}>
+			<div className=" flex h-screen flex-col relative bg-[var(--bg)]">
+				<Toolbar />
 
-			{isLoading ? <LoadingState /> :
-				<>
-					<FrameTabs />
-					<NodeSelectionProvider activeTabId={activeTabId}>
-						<NodeSectionList />
-					</NodeSelectionProvider>
-				</>
-			}
+				{isLoading ? <LoadingState /> :
+					<>
+						<FrameTabs />
+						<NodeSelectionProvider>
+							<NodeSectionList />
+						</NodeSelectionProvider>
+					</>
+				}
 
-			<Footer />
-			<Toast />
-		</div>
+				<Footer />
+				<Toast />
+			</div>
+		</TabsProvider>
 	);
 }
 

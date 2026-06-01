@@ -1,5 +1,6 @@
 import React from "react";
 import { useState, useCallback, useEffect, useContext, createContext } from "react";
+import { useTabs } from "./useTabs";
 
 export interface NodeSelectionState {
 	selectedIds: Set<string>;
@@ -13,14 +14,14 @@ export interface NodeSelectionState {
 const NodeSelectionContext = createContext<NodeSelectionState | null>(null);
 
 export function NodeSelectionProvider({
-	activeTabId,
 	children,
 }: {
-	activeTabId: string | null;
 	children: React.ReactNode;
 }) {
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+
+	const { activeTabId } = useTabs();
 
 	useEffect(() => {
 		clearSelection();
@@ -70,14 +71,14 @@ export function NodeSelectionProvider({
 	);
 
 	return (<NodeSelectionContext.Provider value={{
-		 selectedIds,
-		 select,
-		 toggle,
-		 rangeSelect,
-		 clearSelection,
-		 isSelected
-		}}>
-	{ children }
+		selectedIds,
+		select,
+		toggle,
+		rangeSelect,
+		clearSelection,
+		isSelected
+	}}>
+		{children}
 	</NodeSelectionContext.Provider>
 	);
 }

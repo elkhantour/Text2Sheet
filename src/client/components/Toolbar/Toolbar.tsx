@@ -6,7 +6,7 @@ import Checkbox from "@components/Checkbox/Checkbox";
 import { PlusIcon, SettingsIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 import { usePlugin } from "@hooks/usePlugin";
-import { useTabs } from "@hooks/useTabs";
+import { useTabs } from "@contexts/useTabs";
 
 
 export function Toolbar(): React.ReactElement {
@@ -17,13 +17,9 @@ export function Toolbar(): React.ReactElement {
 		markSelection,
 		saveExportOptions,
 		exportOptions,
-		sections,
-		itemOrder,
 	} = usePlugin();
 
-	const {
-		tabs
-	} = useTabs(markedNodes, sections, itemOrder);
+	const { tabs } = useTabs();
 
 	const hasNodes = markedNodes.length > 0;
 	const setOption = <K extends keyof ExportOptions>(key: K, value: ExportOptions[K]) =>

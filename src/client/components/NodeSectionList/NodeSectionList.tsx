@@ -11,15 +11,12 @@ import { PlusIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 import { useNodeSelection } from "@contexts/useNodeSelection";
 import { usePlugin } from "@hooks/usePlugin";
-import { useTabs } from "@hooks/useTabs";
+import { useTabs } from "@contexts/useTabs";
 
 
 export function NodeSectionList(): React.ReactElement {
 
 	const {
-		markedNodes,
-		sections,
-		itemOrder,
 		createSection,
 		deleteSection,
 		renameSection,
@@ -30,9 +27,7 @@ export function NodeSectionList(): React.ReactElement {
 		getSectionFromId,
 	} = usePlugin();
 
-	const {
-		activeTabId,
-	} = useTabs(markedNodes, sections, itemOrder);
+	const { activeTabId, activeNodes, activeSections, activeItemOrder } = useTabs();
 
 
 	const [dragging, setDragging] = useState<DragItem | null>(null);
@@ -45,7 +40,7 @@ export function NodeSectionList(): React.ReactElement {
 	// Flat ordered list of all visible node IDs for range-select
 	const orderedNodeIds = useMemo(() => {
 		const ids: string[] = [];
-		for (const id of itemOrder) {
+		for (const id of activeItemOrder) {
 
 			const node = getNodeFromId(id);
 			if (node) {
@@ -56,7 +51,7 @@ export function NodeSectionList(): React.ReactElement {
 			}
 		}
 		return ids;
-	}, [itemOrder, markedNodes, sections]);
+	}, [activeItemOrder, activeNodes, activeSections]);
 
 
 	// ── Dnd ───────────────────────────────────────────────────────────────────
@@ -73,7 +68,7 @@ export function NodeSectionList(): React.ReactElement {
 
 		if (dragging.kind === "section") {
 			if (activeDropZone.kind === "top-level") {
-				const next = reorderTopLevel(itemOrder, dragging.sectionId, activeDropZone.beforeId);
+				const next = reorderTopLevel(activeItemOrder, dragging.sectionId, activeDropZone.beforeId);
 				reorderItems(next);
 			}
 		} else if (dragging.kind === "node") {
@@ -84,7 +79,7 @@ export function NodeSectionList(): React.ReactElement {
 				if (!target) return cleanup();
 				if (sourceSectionId === activeDropZone.sectionId) return cleanup();
 				const newIds = [...target.nodeIds.filter((id) => id !== nodeId), nodeId];
-				removeNodeFromSource(nodeId, sourceSectionId, itemOrder, moveNodeToSection, reorderNodesInSection, reorderItems);
+				removeNodeFromSource(nodeId, sourceSectionId, activeItemOrder, moveNodeToSection, reorderNodesInSection, reorderItems);
 				moveNodeToSection(nodeId, activeDropZone.sectionId, newIds.length - 1);
 
 			} else if (activeDropZone.kind === "section-body") {
@@ -96,7 +91,7 @@ export function NodeSectionList(): React.ReactElement {
 					: filtered.length;
 				const finalIdx = insertIdx === -1 ? filtered.length : insertIdx;
 				if (sourceSectionId !== activeDropZone.sectionId) {
-					removeNodeFromSource(nodeId, sourceSectionId, itemOrder, moveNodeToSection, reorderNodesInSection, reorderItems);
+					removeNodeFromSource(nodeId, sourceSectionId, activeItemOrder, moveNodeToSection, reorderNodesInSection, reorderItems);
 				}
 				moveNodeToSection(nodeId, activeDropZone.sectionId, finalIdx);
 
@@ -105,7 +100,7 @@ export function NodeSectionList(): React.ReactElement {
 					moveNodeToSection(nodeId, null, 0);
 				}
 				const nextOrder = reorderTopLevel(
-					itemOrder.includes(nodeId) ? itemOrder : [...itemOrder, nodeId],
+					activeItemOrder.includes(nodeId) ? activeItemOrder : [...activeItemOrder, nodeId],
 					nodeId,
 					activeDropZone.beforeId,
 				);
@@ -118,12 +113,12 @@ export function NodeSectionList(): React.ReactElement {
 			setDragging(null);
 			setActiveDropZone(null);
 		}
-	}, [dragging, activeDropZone, itemOrder, sections, reorderItems, moveNodeToSection, reorderNodesInSection]);
+	}, [dragging, activeDropZone, activeItemOrder, activeSections, reorderItems, moveNodeToSection, reorderNodesInSection]);
 
 	// ── Add section ───────────────────────────────────────────────────────────
 
 	const handleAddSection = () => {
-		const name = `Section ${sections.length + 1}`;
+		const name = `Section ${activeSections.length + 1}`;
 		if (activeTabId) createSection(name, activeTabId);
 	};
 
@@ -137,7 +132,7 @@ export function NodeSectionList(): React.ReactElement {
 
 	// ── Render ────────────────────────────────────────────────────────────────
 
-	const isEmpty = markedNodes.length === 0 && sections.length === 0;
+	const isEmpty = activeNodes.length === 0 && activeSections.length === 0;
 
 	if (isEmpty) {
 		return (
@@ -153,7 +148,7 @@ export function NodeSectionList(): React.ReactElement {
 				{/* Toolbar */}
 				<div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)]">
 					<Text size="1" className="text-[var(--text-muted)]">
-						{markedNodes.length} text layers
+						{activeNodes.length} text layers
 						{selection.selectedIds.size > 0 && (
 							<span className="ml-1.5 text-[var(--accent)]">
 								· {selection.selectedIds.size} selected
@@ -171,7 +166,7 @@ export function NodeSectionList(): React.ReactElement {
 					className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2.5"
 					onMouseDown={handleListMouseDown}
 				>
-					{itemOrder.map((id) => {
+					{activeItemOrder.map((id) => {
 						const section = getSectionFromId(id);
 						const node = getNodeFromId(id);
 

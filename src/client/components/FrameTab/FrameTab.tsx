@@ -1,27 +1,14 @@
 import React from "react";
 import { Text } from "@radix-ui/themes";
 import { usePlugin } from "@hooks/usePlugin";
-import { useTabs } from "@hooks/useTabs";
-
-
+import { useTabs } from "@contexts/useTabs";
 
 export function FrameTabs(): React.ReactElement | null {
 
-	const {
-		markedNodes,
-		itemOrder,
-		sections,
-		selectNode,
-	} = usePlugin();
-
-	const {
-		tabs,
-		activeTabId,
-	} = useTabs(markedNodes, sections, itemOrder);
-
+	const { selectNode } = usePlugin();
+	const { tabs, activeTabId, setActiveTabId } = useTabs();
 
 	if (tabs.length === 0) return null;
-
 
 	return (
 		<div className="flex shrink-0 items-end gap-0 border-b border-[var(--border)] px-3 overflow-x-auto">
@@ -30,7 +17,8 @@ export function FrameTabs(): React.ReactElement | null {
 				return (
 					<button
 						key={tab.topFrameId}
-						onClick={() => selectNode(tab.topFrameId)}
+						onClick={() => setActiveTabId(tab.topFrameId)}
+						onDoubleClick={() => selectNode(tab.topFrameId)}
 						data-active={isActive}
 						className="
               relative shrink-0 px-3 py-2 font-medium transition-colors

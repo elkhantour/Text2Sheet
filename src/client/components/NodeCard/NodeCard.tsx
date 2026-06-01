@@ -4,6 +4,8 @@ import { useDnd } from "@components/Dnd/Context";
 import { useNodeSelection } from "@contexts/useNodeSelection";
 import { NodeContextMenu } from "./NodeContextMenu";
 import { usePlugin } from "@hooks/usePlugin";
+import { FrameIcon, XIcon } from "lucide-react";
+import { ICON_SIZE_EXTRA_SMALL, ICON_SIZE_SMALL } from "@utils/constants";
 
 interface NodeCardProps {
 	nodeId: string;
@@ -47,7 +49,6 @@ export function NodeCard({
 	// ── Click → selection ────────────────────────────────────────────────────
 
 	const handleClick = (e: React.MouseEvent) => {
-
 		e.stopPropagation();
 		if (e.shiftKey) {
 			selection.rangeSelect(nodeId, itemOrder);
@@ -61,13 +62,14 @@ export function NodeCard({
 				//selection.clearSelection();
 				selection.select(nodeId);
 			}
-
 		}
 	};
 
 	const handleContextMenu = (e: React.MouseEvent) => {
 		e.stopPropagation();
-		selection.select(nodeId);
+		if (!selection.isSelected(nodeId)) {
+			selection.toggle(nodeId);
+		}
 	};
 
 
@@ -106,7 +108,7 @@ export function NodeCard({
 	// ── Render ───────────────────────────────────────────────────────────────
 
 	return (
-		<NodeContextMenu key={`contextMenu` + nodeId}>
+		<NodeContextMenu>
 			<div
 				draggable
 				data-dragging={isDragging}
@@ -127,8 +129,7 @@ export function NodeCard({
 					data-[selected=true]:bg-[var(--accent-dim)]
 					data-[dragging=true]:border-[var(--accent)]
 					data-[dragging=true]:opacity-40
-				"
-			>
+				">
 				{/* Top row */}
 				<div className="flex items-center gap-2">
 					<span className="w-4 shrink-0 text-center font-mono text-[var(--text-muted)]">⠿</span>
@@ -140,15 +141,10 @@ export function NodeCard({
 
 					<div className="flex shrink-0 gap-1">
 						<ActionButton title="Focus layer in canvas" onClick={() => selectNode(nodeId)}>
-							<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-								<path d="M1 1h3.5M1 1v3.5M11 1h-3.5M11 1v3.5M1 11h3.5M1 11v-3.5M11 11h-3.5M11 11v-3.5"
-									stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-							</svg>
+							<FrameIcon size={ICON_SIZE_EXTRA_SMALL} />
 						</ActionButton>
 						<ActionButton title="Remove from export" onClick={() => handleUnmark(nodeId)} danger>
-							<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-								<path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-							</svg>
+							<XIcon size={ICON_SIZE_EXTRA_SMALL} />
 						</ActionButton>
 					</div>
 				</div>
@@ -164,7 +160,7 @@ export function NodeCard({
 					</div>
 				)}
 			</div>
-		</NodeContextMenu>
+		</NodeContextMenu >
 	);
 }
 

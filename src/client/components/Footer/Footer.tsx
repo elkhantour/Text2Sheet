@@ -7,8 +7,7 @@ import { ICON_SIZE_SMALL } from "@utils/constants";
 import { Spinner } from "./Spinner";
 import { export2File } from "@utils/exports/manager";
 import { usePlugin } from "@hooks/usePlugin";
-import { useTabs } from "@hooks/useTabs";
-
+import { useTabs } from "@contexts/useTabs";
 
 function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
 	return (
@@ -30,9 +29,7 @@ export function Footer(): React.ReactElement {
 		exportOptions,
 	} = usePlugin();
 
-	const {
-		tabs
-	} = useTabs(markedNodes, sections, itemOrder);
+	const { tabs } = useTabs();
 
 
 	const [downloading, setDownloading] = useState(false);
