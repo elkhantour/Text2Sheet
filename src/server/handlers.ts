@@ -39,6 +39,7 @@ export async function handleMarkSelection(): Promise<void> {
 	await saveItemOrder(itemOrder);
 	await loadAndSendState();
 	sendNotify(`Marked ${selectionTextNodeIds.length} layer${selectionTextNodeIds.length > 1 ? "s" : ""} for export.`);
+
 }
 
 export async function handleUnmarkNodeList(nodeIds: string[]): Promise<void> {

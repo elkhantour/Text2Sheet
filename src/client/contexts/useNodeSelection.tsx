@@ -22,14 +22,8 @@ export function NodeSelectionProvider({
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
 
-	const { getNodeFromId } = usePlugin();
-	const { activeTabId, setActiveTabId } = useTabs();
-
-	// DELETEME
-	//useEffect(() => {
-	//	clearSelection();
-	//}, [activeTabId]);
-
+	const { getNodeFromId, getSectionFromId } = usePlugin();
+	const { setActiveTabId } = useTabs();
 
 	useEffect(() => {
 		const handler = (event: MessageEvent) => {
@@ -56,6 +50,7 @@ export function NodeSelectionProvider({
 		return () => {
 			window.removeEventListener("message", handler);
 		};
+
 	}, [getNodeFromId]);
 
 	const select = useCallback((id: string) => {
@@ -74,15 +69,27 @@ export function NodeSelectionProvider({
 	}, []);
 
 	const rangeSelect = useCallback((id: string, orderedIds: string[]) => {
+
+		const flattenOrdered: string[] = [];
+
+		orderedIds.forEach(id => {
+			const section = getSectionFromId(id);
+			if (section) {
+				flattenOrdered.push(...section.nodeIds);
+			} else {
+				flattenOrdered.push(id);
+			}
+		});
+
 		if (!lastSelectedId) { select(id); return; }
 
-		const fromIdx = orderedIds.indexOf(lastSelectedId);
-		const toIdx = orderedIds.indexOf(id);
+		const fromIdx = flattenOrdered.indexOf(lastSelectedId);
+		const toIdx = flattenOrdered.indexOf(id);
 
 		if (fromIdx === -1 || toIdx === -1) { select(id); return; }
 
 		const [start, end] = fromIdx < toIdx ? [fromIdx, toIdx] : [toIdx, fromIdx];
-		const rangeIds = orderedIds.slice(start, end + 1);
+		const rangeIds = flattenOrdered.slice(start, end + 1);
 
 		setSelectedIds((prev) => {
 			const next = new Set(prev);

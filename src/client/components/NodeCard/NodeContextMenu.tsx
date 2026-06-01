@@ -27,8 +27,6 @@ export function NodeContextMenu({
 
 	const selection = useNodeSelection();
 
-	console.log(selection);
-
 	// TODO unify string[] and Set<string> for node Ids
 	const handleMoveToSection = useCallback((nodeIds: Set<string>, sectionId: string) => {
 		const target = getSectionFromId(sectionId);
