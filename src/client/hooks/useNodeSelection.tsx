@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from "react";
+import React from "react";
+import { useState, useCallback, useEffect, useContext, createContext } from "react";
 
 export interface NodeSelectionState {
 	selectedIds: Set<string>;
@@ -7,23 +8,22 @@ export interface NodeSelectionState {
 	rangeSelect: (id: string, orderedIds: string[]) => void;
 	clearSelection: () => void;
 	isSelected: (id: string) => boolean;
-	contextMenu: {
-		isOpen: boolean;
-		position: { x: number; y: number } | undefined;
-		open: (event: React.MouseEvent) => void,
-		close: () => void;
-	}
 }
 
-export function useNodeSelection(activeTabId: string | null): NodeSelectionState {
+const NodeSelectionContext = createContext<NodeSelectionState | null>(null);
+
+export function NodeSelectionProvider({
+	activeTabId,
+	children,
+}: {
+	activeTabId: string | null;
+	children: React.ReactNode;
+}) {
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
-	const [openContextMenu, setOpenContextMenu] = useState<boolean>(false);
 
-	// Clear selection on tab change
 	useEffect(() => {
-		setSelectedIds(new Set());
-		setLastSelectedId(null);
+		clearSelection();
 	}, [activeTabId]);
 
 	const select = useCallback((id: string) => {
@@ -34,29 +34,20 @@ export function useNodeSelection(activeTabId: string | null): NodeSelectionState
 	const toggle = useCallback((id: string) => {
 		setSelectedIds((prev) => {
 			const next = new Set(prev);
-			if (next.has(id)) {
-				next.delete(id);
-			} else {
-				next.add(id);
-			}
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
 			return next;
 		});
 		setLastSelectedId(id);
 	}, []);
 
 	const rangeSelect = useCallback((id: string, orderedIds: string[]) => {
-		if (!lastSelectedId) {
-			select(id);
-			return;
-		}
+		if (!lastSelectedId) { select(id); return; }
 
 		const fromIdx = orderedIds.indexOf(lastSelectedId);
 		const toIdx = orderedIds.indexOf(id);
 
-		if (fromIdx === -1 || toIdx === -1) {
-			select(id);
-			return;
-		}
+		if (fromIdx === -1 || toIdx === -1) { select(id); return; }
 
 		const [start, end] = fromIdx < toIdx ? [fromIdx, toIdx] : [toIdx, fromIdx];
 		const rangeIds = orderedIds.slice(start, end + 1);
@@ -78,25 +69,21 @@ export function useNodeSelection(activeTabId: string | null): NodeSelectionState
 		[selectedIds],
 	);
 
-	const contextMenu = {
-		isOpen: openContextMenu,
-		position: { x: 0, y: 0 },
-		open: useCallback((e: React.MouseEvent) => {
-			setOpenContextMenu(true);
-			contextMenu.position = { x: e.clientX, y: e.clientY };
-		}, []),
-		close: useCallback(() => {
-			setOpenContextMenu(false);
-		}, [openContextMenu]),
-	};
+	return (<NodeSelectionContext.Provider value={{
+		 selectedIds,
+		 select,
+		 toggle,
+		 rangeSelect,
+		 clearSelection,
+		 isSelected
+		}}>
+	{ children }
+	</NodeSelectionContext.Provider>
+	);
+}
 
-	return {
-		selectedIds,
-		select,
-		toggle,
-		rangeSelect,
-		clearSelection,
-		isSelected,
-		contextMenu,
-	};
+export function useNodeSelection(): NodeSelectionState {
+	const ctx = useContext(NodeSelectionContext);
+	if (!ctx) throw new Error("useNodeSelection must be used within a NodeSelectionProvider");
+	return ctx;
 }

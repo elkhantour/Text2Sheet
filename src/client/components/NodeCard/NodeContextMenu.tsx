@@ -1,38 +1,55 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import type { NodeSection } from "@ctypes/messages";
 import { useNodeSelection } from "@hooks/useNodeSelection";
 import { ContextMenu } from "@radix-ui/themes";
+import { usePlugin } from "@hooks/usePlugin";
+import { useTabs } from "@hooks/useTabs";
+import { TrashIcon } from "lucide-react";
+import { ICON_SIZE_SMALL } from "@utils/constants";
 
 interface NodeContextMenuProps {
 	children: React.ReactNode;
-	activeTabId: string | null;
-	sections: NodeSection[];
-	onUnmark: (nodeId: string) => void;
-	onMoveToSection: (nodeIds: Set<string>, sectionId: string) => void;
-	onRemoveFromSection: (nodeIds: Set<string>) => void;
-	isOpen: boolean;
-	position: { x: number; y: number } | undefined;
 }
 
 export function NodeContextMenu({
 	children,
-	activeTabId,
-	sections,
-	onUnmark,
-	onMoveToSection,
-	onRemoveFromSection,
 }: NodeContextMenuProps): React.ReactElement {
 
 	const [addToSectionOpen, setAddToSectionOpen] = useState(false);
 
-	const { selectedIds } = useNodeSelection(activeTabId);
+	const {
+		unmarkNode,
+		sections,
+		moveNodeToSection,
+		getSectionFromId,
+	} = usePlugin();
+
+	const selection = useNodeSelection();
+
+	const onMoveToSection = useCallback((nodeIds: Set<string>, sectionId: string) => {
+		const target = getSectionFromId(sectionId);
+		if (!target) return;
+		for (const nodeId of nodeIds) {
+			moveNodeToSection(nodeId, sectionId, target.nodeIds.length);
+		}
+		selection.clearSelection();
+	}, [sections, moveNodeToSection, selection]);
+
+	const onRemoveFromSection = useCallback((nodeIds: Set<string>) => {
+		for (const nodeId of nodeIds) {
+			moveNodeToSection(nodeId, null, 0);
+		}
+		selection.clearSelection();
+	}, [moveNodeToSection, selection]);
 
 	// The set of nodes this action applies to:
 	// if right-clicked node is in selection → whole selection, else just this node
 	//const affectedIds = selectedIds.has(nodeId) ? selectedIds : new Set([nodeId]);
-	const count = selectedIds.size;
+	const count = selection.selectedIds.size;
 	const label = count > 1 ? `${count} nodes` : "node";
+
+	console.log(selection);
 
 	return (
 		<>
@@ -44,7 +61,7 @@ export function NodeContextMenu({
 					{/* Delete */}
 					<ContextMenu.Item
 						onSelect={() => {
-							for (const id of selectedIds) onUnmark(id);
+							for (const id of selection.selectedIds) unmarkNode(id);
 						}}
 						className="
 								flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
@@ -53,10 +70,7 @@ export function NodeContextMenu({
 								focus:bg-[var(--danger-dim)]
 							"
 					>
-						<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-							<path d="M1.5 3h9M4.5 3V1.5h3V3M5 5.5v4M7 5.5v4M2 3l.5 7.5h7L10 3"
-								stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-						</svg>
+						<TrashIcon size={ICON_SIZE_SMALL} />
 						Remove {label}
 					</ContextMenu.Item>
 
@@ -103,13 +117,13 @@ export function NodeContextMenu({
 			</ContextMenu.Root >
 
 			{/* Add to section modal */}
-			< AddToSectionDialog
+			<AddToSectionDialog
 				open={addToSectionOpen}
 				onOpenChange={setAddToSectionOpen}
 				sections={sections}
 				count={count}
 				onConfirm={(sectionId) => {
-					onMoveToSection(selectedIds, sectionId);
+					onMoveToSection(selection.selectedIds, sectionId);
 					setAddToSectionOpen(false);
 				}
 				}

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React from "react";
 import type { MarkedNode } from "@ctypes/messages";
 import { useDnd } from "@components/Dnd/Context";
 import { useNodeSelection } from "@hooks/useNodeSelection";
@@ -23,29 +23,20 @@ export function NodeCard({
 
 	const {
 		unmarkNode,
-		markedNodes,
 		selectNode,
 		itemOrder,
-		sections,
-		moveNodeToSection,
-		getSectionFromId,
 		getNodeFromId,
 	} = usePlugin();
 
+	const selection = useNodeSelection();
 
-	const {
-		activeTabId
-	} = useTabs(markedNodes, sections, itemOrder);
+	const selected = selection.isSelected(nodeId);
 
-	const selection = useNodeSelection(activeTabId);
-
-	const [hovered, setHovered] = useState(false);
 	const { dragging, startDrag, setDropZone, endDrag } = useDnd();
 
 	const node: MarkedNode | undefined = getNodeFromId(nodeId);
 
 	const isDragging = dragging?.kind === "node" && dragging.nodeId === nodeId;
-	const isSelected = selection.isSelected(nodeId);
 
 	const previewLines: string[] =
 		node && node.nodeType !== "TEXT" && node.childTextNodes?.length
@@ -57,15 +48,30 @@ export function NodeCard({
 	// ── Click → selection ────────────────────────────────────────────────────
 
 	const handleClick = (e: React.MouseEvent) => {
+
 		e.stopPropagation();
 		if (e.shiftKey) {
 			selection.rangeSelect(nodeId, itemOrder);
 		} else if (e.metaKey || e.ctrlKey) {
 			selection.toggle(nodeId);
 		} else {
-			selection.select(nodeId);
+
+			if (selection.isSelected(nodeId)) {
+				selection.toggle(nodeId);
+			} else {
+				//selection.clearSelection();
+				selection.select(nodeId);
+			}
+
 		}
 	};
+
+	const handleContextMenu = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		selection.select(nodeId);
+	};
+
+
 
 	// ── Drag source ──────────────────────────────────────────────────────────
 
@@ -97,57 +103,27 @@ export function NodeCard({
 		for (const nodeId of ids) unmarkNode(nodeId);
 	};
 
-	// ── Context menu actions ──────────────────────────────────────────────────
-
-	const handleMoveToSection = useCallback((nodeIds: Set<string>, sectionId: string) => {
-		const target = getSectionFromId(sectionId);
-		if (!target) return;
-		for (const nodeId of nodeIds) {
-			moveNodeToSection(nodeId, sectionId, target.nodeIds.length);
-		}
-		selection.clearSelection();
-	}, [sections, moveNodeToSection, selection]);
-
-	const handleRemoveFromSection = useCallback((nodeIds: Set<string>) => {
-		for (const nodeId of nodeIds) {
-			moveNodeToSection(nodeId, null, 0);
-		}
-		selection.clearSelection();
-	}, [moveNodeToSection, selection]);
-
 
 	// ── Render ───────────────────────────────────────────────────────────────
 
 	return (
-		<NodeContextMenu
-			activeTabId={activeTabId}
-			sections={sections}
-			onUnmark={() => {}} // TODO: handleUnmark from NodeCard.tsx
-			onMoveToSection={handleMoveToSection}
-			onRemoveFromSection={handleRemoveFromSection}
-			isOpen={selection.contextMenu.isOpen}
-			position={selection.contextMenu.position}
-		>
-
+		<NodeContextMenu key={`contextMenu` + nodeId}>
 			<div
 				draggable
-				data-hovered={hovered}
 				data-dragging={isDragging}
-				data-selected={isSelected}
+				data-selected={selected}
 				onClick={handleClick}
 				onDragStart={handleDragStart}
 				onDragOver={handleDragOver}
 				onDragEnd={handleDragEnd}
 				onDrop={handleDrop}
-				onContextMenu={selection.contextMenu.open}
-				onMouseEnter={() => setHovered(true)}
-				onMouseLeave={() => setHovered(false)}
+				onContextMenu={handleContextMenu}
 				className="
 					group select-none rounded-md border px-3 py-2.5
 					transition-all duration-150 cursor-grab
 					border-[var(--border)] bg-[var(--surface)]
-					data-[hovered=true]:border-[var(--border-light)]
-					data-[hovered=true]:bg-[var(--surface-2)]
+					hover:border-[var(--border-light)]
+					hover:bg-[var(--surface-2)]
 					data-[selected=true]:border-[var(--accent)]
 					data-[selected=true]:bg-[var(--accent-dim)]
 					data-[dragging=true]:border-[var(--accent)]
@@ -158,7 +134,7 @@ export function NodeCard({
 				<div className="flex items-center gap-2">
 					<span className="w-4 shrink-0 text-center font-mono text-[var(--text-muted)]">⠿</span>
 
-					<span className={`flex-1 truncate text-xs font-medium transition-colors ${isSelected ? "text-[var(--accent)]" : "text-[var(--text-primary)]"
+					<span className={`flex-1 truncate text-xs font-medium transition-colors ${selected ? "text-[var(--accent)]" : "text-[var(--text-primary)]"
 						}`}>
 						{node?.previewText}
 					</span>
