@@ -26,12 +26,11 @@ export function App(): React.ReactElement {
 				<Toolbar />
 
 				{isLoading ? <LoadingState /> :
-					<>
+					<NodeSelectionProvider>
 						<FrameTabs />
-						<NodeSelectionProvider>
-							<NodeSectionList />
-						</NodeSelectionProvider>
-					</>
+						<NodeSectionList />
+					</NodeSelectionProvider>
+
 				}
 
 				<Footer />

@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useCallback, useEffect, useContext, createContext } from "react";
 import { useTabs } from "./useTabs";
+import { usePlugin } from "@hooks/usePlugin";
 
 export interface NodeSelectionState {
 	selectedIds: Set<string>;
@@ -21,25 +22,41 @@ export function NodeSelectionProvider({
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
 
-	const { activeTabId } = useTabs();
+	const { getNodeFromId } = usePlugin();
+	const { activeTabId, setActiveTabId } = useTabs();
+
+	// DELETEME
+	//useEffect(() => {
+	//	clearSelection();
+	//}, [activeTabId]);
+
 
 	useEffect(() => {
-		clearSelection();
-	}, [activeTabId]);
-
-
-	useEffect(() => {
-		window.onmessage = (event) => {
+		const handler = (event: MessageEvent) => {
 			const msg = event.data.pluginMessage;
 
 			switch (msg.type) {
 				case "SELECT_NODES":
-					console.log(msg);
-					setSelectedIds(new Set([...msg.nodeIds]));
+
+					if (msg.nodeIds.length > 0) {
+						const node = getNodeFromId(msg.nodeIds[0]);
+
+						if (node) {
+							setActiveTabId(node.topFrameId);
+						}
+					}
+
+					setSelectedIds(new Set(msg.nodeIds));
 					break;
 			}
 		};
-	}, []);
+
+		window.addEventListener("message", handler);
+
+		return () => {
+			window.removeEventListener("message", handler);
+		};
+	}, [getNodeFromId]);
 
 	const select = useCallback((id: string) => {
 		setSelectedIds(new Set([id]));

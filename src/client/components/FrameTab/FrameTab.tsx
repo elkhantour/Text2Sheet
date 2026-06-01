@@ -2,11 +2,13 @@ import React from "react";
 import { Text } from "@radix-ui/themes";
 import { usePlugin } from "@hooks/usePlugin";
 import { useTabs } from "@contexts/useTabs";
+import { useNodeSelection } from "@contexts/useNodeSelection";
 
 export function FrameTabs(): React.ReactElement | null {
 
 	const { selectNode } = usePlugin();
 	const { tabs, activeTabId, setActiveTabId } = useTabs();
+	const selection = useNodeSelection();
 
 	if (tabs.length === 0) return null;
 
@@ -17,7 +19,10 @@ export function FrameTabs(): React.ReactElement | null {
 				return (
 					<button
 						key={tab.topFrameId}
-						onClick={() => setActiveTabId(tab.topFrameId)}
+						onClick={() => {
+							setActiveTabId(tab.topFrameId);
+							selection.clearSelection();
+						}}
 						onDoubleClick={() => selectNode(tab.topFrameId)}
 						data-active={isActive}
 						className="
