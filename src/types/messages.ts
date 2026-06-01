@@ -5,6 +5,7 @@ export type UIToPluginMessage =
 	| { type: "HIGHLIGHT_MARKED" }
 	| { type: "CLEAR_ALL" }
 	| { type: "UNMARK_NODE"; nodeId: string }
+	| { type: "UNMARK_NODE_LIST"; nodeIdList: string[] }
 	| { type: "SELECT_NODE"; nodeId: string }
 	| { type: "LOAD_MARKED" }
 	| { type: "REORDER_ITEMS"; itemIds: string[] }

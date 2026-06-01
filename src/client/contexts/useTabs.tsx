@@ -67,9 +67,6 @@ export function TabsProvider({
 		return itemOrder.filter((id) => activeNodeIds.has(id) || activeSectionIds.has(id));
 	}, [itemOrder, activeNodes, activeSections]);
 
-	console.log(tabs);
-	console.log(activeNodes);
- 
 	return (
 		<TabsContext.Provider value={{
 			tabs,

@@ -5,10 +5,18 @@ import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { loadAndSendState } from "./node";
 import { saveIds, saveSections, saveItemOrder } from "./storage";
 import {
-	handleHighlightMarked, handleMarkSelection, handleSelectNode, handleUnmarkNode,
-	handleCreateSection, handleDeleteSection, handleRenameSection,
-	handleReorderItems, handleMoveNodeToSection, handleReorderNodesInSection,
+	handleHighlightMarked,
+	handleMarkSelection,
+	handleSelectNode,
+	handleUnmarkNode,
+	handleCreateSection,
+	handleDeleteSection,
+	handleRenameSection,
+	handleReorderItems,
+	handleMoveNodeToSection,
+	handleReorderNodesInSection,
 	handleSaveExportOptions,
+	handleUnmarkNodeList,
 } from "./handlers";
 
 figma.showUI(__html__, { width: PLUGIN_WIDTH, height: PLUGIN_HEIGHT, title: "Text2Sheet" });
@@ -19,6 +27,7 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "MARK_SELECTION": await handleMarkSelection(); break;
 		case "HIGHLIGHT_MARKED": await handleHighlightMarked(); break;
 		case "UNMARK_NODE": await handleUnmarkNode(msg.nodeId); break;
+		case "UNMARK_NODE_LIST": await handleUnmarkNodeList(msg.nodeIdList); break;
 		case "SELECT_NODE": await handleSelectNode(msg.nodeId); break;
 		case "LOAD_MARKED": await loadAndSendState(); break;
 		case "REORDER_NODES": await saveIds(msg.nodeIds); break;

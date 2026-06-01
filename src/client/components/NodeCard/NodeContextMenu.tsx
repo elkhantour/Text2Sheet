@@ -19,12 +19,15 @@ export function NodeContextMenu({
 
 	const {
 		unmarkNode,
+		unmarkNodeList,
 		sections,
 		moveNodeToSection,
 		getSectionFromId,
 	} = usePlugin();
 
 	const selection = useNodeSelection();
+
+	console.log(selection);
 
 	const handleMoveToSection = useCallback((nodeIds: Set<string>, sectionId: string) => {
 		const target = getSectionFromId(sectionId);
@@ -43,7 +46,7 @@ export function NodeContextMenu({
 	}, [moveNodeToSection, selection]);
 
 	const handleUnmarkNodes = () => {
-		for (const id of selection.selectedIds) unmarkNode(id);
+		unmarkNodeList(Array.from(selection.selectedIds));
 		selection.clearSelection();
 	}
 

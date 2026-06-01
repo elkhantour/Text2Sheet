@@ -14,6 +14,7 @@ export interface PluginHookReturn {
 	highlightMarked: () => void;
 	clearAll: () => void;
 	unmarkNode: (nodeId: string) => void;
+	unmarkNodeList: (nodeId: string[]) => void;
 	selectNode: (nodeId: string) => void;
 	dismissToast: () => void;
 	createSection: (name: string, topFrameId: string) => void;
@@ -89,6 +90,7 @@ export function usePlugin(): PluginHookReturn {
 		highlightMarked: useCallback(() => postMessage({ type: "HIGHLIGHT_MARKED" }), []),
 		clearAll: useCallback(() => postMessage({ type: "CLEAR_ALL" }), []),
 		unmarkNode: useCallback((nodeId) => postMessage({ type: "UNMARK_NODE", nodeId }), []),
+		unmarkNodeList: useCallback((nodeIdList) => postMessage({ type: "UNMARK_NODE_LIST", nodeIdList }), []),
 		selectNode: useCallback((nodeId) => postMessage({ type: "SELECT_NODE", nodeId }), []),
 		dismissToast: useCallback(() => setToast(null), []),
 		createSection: useCallback((name, topFrameId) => postMessage({ type: "CREATE_SECTION", name, topFrameId }), []),

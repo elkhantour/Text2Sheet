@@ -33,7 +33,6 @@ export function NodeSectionList(): React.ReactElement {
 	const [dragging, setDragging] = useState<DragItem | null>(null);
 	const [activeDropZone, setActiveDropZone] = useState<DropZone | null>(null);
 
-
 	// ── Selection ─────────────────────────────────────────────────────────────
 	const selection = useNodeSelection();
 
