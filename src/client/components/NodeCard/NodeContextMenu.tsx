@@ -4,8 +4,9 @@ import type { NodeSection } from "@ctypes/messages";
 import { useNodeSelection } from "@contexts/useNodeSelection";
 import { ContextMenu } from "@radix-ui/themes";
 import { usePlugin } from "@hooks/usePlugin";
-import { PlusSquareIcon, TrashIcon } from "lucide-react";
+import { MinusSquareIcon, PlusSquareIcon, TrashIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
+import { useTabs } from "@contexts/useTabs";
 
 interface NodeContextMenuProps {
 	children: React.ReactNode;
@@ -59,21 +60,6 @@ export function NodeContextMenu({
 					{children}
 				</ContextMenu.Trigger>
 				<ContextMenu.Content className="z-50 min-w-[180px] rounded-lg border border-[var(--border-light)] bg-[var(--surface-2)] p-1 shadow-xl animate-in fade-in-0 zoom-in-95">
-					{/* Delete */}
-					<ContextMenu.Item
-						onSelect={handleUnmarkNodes}
-						className="
-								flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
-								text-xs text-[var(--danger)] outline-none
-								hover:bg-[var(--danger-dim)]
-								focus:bg-[var(--danger-dim)]
-							"
-					>
-						<TrashIcon size={ICON_SIZE_SMALL} />
-						Remove {label}
-					</ContextMenu.Item>
-
-					<ContextMenu.Separator className="my-1 h-px bg-[var(--border)]" />
 
 					{/* Add to section */}
 					<ContextMenu.Item
@@ -92,23 +78,36 @@ export function NodeContextMenu({
 					</ContextMenu.Item>
 
 					{/* Remove from section */}
-					{/*sourceSectionId && (
-							<DropdownMenu.Item
-								onSelect={() => handleRemoveFromSection(selectedIds)}
-								className="
+					{<ContextMenu.Item
+						onSelect={() => handleRemoveFromSection(selection.selectedIds)}
+						className="
 									flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
 									text-xs text-[var(--text-secondary)] outline-none
 									hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)]
 									focus:bg-[var(--surface-3)]
 								"
-							>
-								<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-									<rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.3" />
-									<path d="M3.5 6h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-								</svg>
-								Remove from section
-							</DropdownMenu.Item>
-							)*/}
+					>
+						<MinusSquareIcon size={ICON_SIZE_SMALL} />
+						Remove from section
+					</ContextMenu.Item>
+					}
+
+					<ContextMenu.Separator className="my-1 h-px bg-[var(--border)]" />
+
+					{/* Delete */}
+					<ContextMenu.Item
+						onSelect={handleUnmarkNodes}
+						className="
+								flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
+								text-xs text-[var(--danger)] outline-none
+								hover:bg-[var(--danger-dim)]
+								focus:bg-[var(--danger-dim)]
+							"
+					>
+						<TrashIcon size={ICON_SIZE_SMALL} />
+						Remove {label}
+					</ContextMenu.Item>
+
 				</ContextMenu.Content>
 			</ContextMenu.Root >
 
@@ -116,7 +115,6 @@ export function NodeContextMenu({
 			<AddToSectionDialog
 				open={addToSectionOpen}
 				onOpenChange={setAddToSectionOpen}
-				sections={sections}
 				count={count}
 				onConfirm={(sectionId) => {
 					handleMoveToSection(selection.selectedIds, sectionId);
@@ -133,7 +131,6 @@ export function NodeContextMenu({
 interface AddToSectionDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	sections: NodeSection[];
 	count: number;
 	onConfirm: (sectionId: string) => void;
 }
@@ -141,10 +138,12 @@ interface AddToSectionDialogProps {
 function AddToSectionDialog({
 	open,
 	onOpenChange,
-	sections,
 	count,
 	onConfirm,
 }: AddToSectionDialogProps): React.ReactElement {
+
+	const { activeSections } = useTabs();
+
 	return (
 		<Dialog.Root open={open} onOpenChange={onOpenChange}>
 			<Dialog.Portal>
@@ -166,7 +165,7 @@ function AddToSectionDialog({
 					</Dialog.Description>
 
 					<div className="flex flex-col gap-1">
-						{sections.map((section) => (
+						{activeSections.map((section) => (
 							<button
 								key={section.id}
 								onClick={() => onConfirm(section.id)}

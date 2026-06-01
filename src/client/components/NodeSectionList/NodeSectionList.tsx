@@ -36,7 +36,7 @@ export function NodeSectionList(): React.ReactElement {
 	// ── Selection ─────────────────────────────────────────────────────────────
 	const selection = useNodeSelection();
 
-	// Flat ordered list of all visible node IDs for range-select
+	// DELETEME Flat ordered list of all visible node IDs for range-select
 	const orderedNodeIds = useMemo(() => {
 		const ids: string[] = [];
 		for (const id of activeItemOrder) {
@@ -53,6 +53,7 @@ export function NodeSectionList(): React.ReactElement {
 	}, [activeItemOrder, activeNodes, activeSections]);
 
 
+	// TODO: Move this whole chunk within a DragAndDrop decicated component
 	// ── Dnd ───────────────────────────────────────────────────────────────────
 
 	const startDrag = useCallback((item: DragItem) => setDragging(item), []);

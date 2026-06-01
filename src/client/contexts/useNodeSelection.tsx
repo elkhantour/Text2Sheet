@@ -27,6 +27,20 @@ export function NodeSelectionProvider({
 		clearSelection();
 	}, [activeTabId]);
 
+
+	useEffect(() => {
+		window.onmessage = (event) => {
+			const msg = event.data.pluginMessage;
+
+			switch (msg.type) {
+				case "SELECT_NODES":
+					console.log(msg);
+					setSelectedIds(new Set([...msg.nodeIds]));
+					break;
+			}
+		};
+	}, []);
+
 	const select = useCallback((id: string) => {
 		setSelectedIds(new Set([id]));
 		setLastSelectedId(id);

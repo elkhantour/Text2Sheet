@@ -1,4 +1,4 @@
-import { sendError, sendNotify } from "./message";
+import { sendError, sendNotify, sendToUI } from "./message";
 import { loadAndSendState } from "./node";
 import { getStoredIds, saveIds, getSections, saveSections, getItemOrder, saveItemOrder, saveExportOptions } from "./storage";
 import { ExportOptions } from "@ctypes/messages";
@@ -161,4 +161,35 @@ export async function handleReorderNodesInSection(sectionId: string, nodeIds: st
 
 export async function handleSaveExportOptions(options: ExportOptions): Promise<void> {
 	await saveExportOptions(options);
+}
+
+
+export async function handleSyncSelectionToUI() {
+	const storedIds = new Set(await getStoredIds());
+
+	const selectedStoredIds: string[] = [];
+
+	function visit(node: SceneNode) {
+		if (storedIds.has(node.id)) {
+			selectedStoredIds.push(node.id);
+		}
+
+		if ("children" in node) {
+			for (const child of node.children) {
+				visit(child);
+			}
+		}
+	}
+
+	for (const node of figma.currentPage.selection) {
+		visit(node);
+	}
+
+
+
+	sendToUI({
+		type: "SELECT_NODES",
+		nodeIds: selectedStoredIds,
+	});
+
 }

@@ -1,6 +1,6 @@
 /// <reference types="@figma/plugin-typings" />
 import type { UIToPluginMessage } from "@ctypes/messages";
-import { sendNotify } from "./message";
+import { sendNotify, sendToUI } from "./message";
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { loadAndSendState } from "./node";
 import { saveIds, saveSections, saveItemOrder } from "./storage";
@@ -16,6 +16,7 @@ import {
 	handleSaveExportOptions,
 	handleUnmarkNodeList,
 	handleMoveNodeListToSection,
+	handleSyncSelectionToUI,
 } from "./handlers";
 
 figma.showUI(__html__, { width: PLUGIN_WIDTH, height: PLUGIN_HEIGHT, title: "Text2Sheet" });
@@ -56,4 +57,9 @@ figma.currentPage.on("nodechange", (event) => {
 	);
 
 	if (relevant) loadAndSendState();
+});
+
+figma.on("selectionchange", () => {
+	// on selection, select the highlighted frames
+	handleSyncSelectionToUI();
 });

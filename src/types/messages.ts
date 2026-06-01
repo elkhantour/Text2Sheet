@@ -23,7 +23,8 @@ export type PluginToUIMessage =
 	| { type: "MARKED_NODES_UPDATE"; nodes: MarkedNode[] }
 	| { type: "STATE_UPDATE"; nodes: MarkedNode[]; sections: NodeSection[]; itemOrder: string[]; exportOptions: ExportOptions }
 	| { type: "ERROR"; message: string }
-	| { type: "NOTIFY"; message: string };
+	| { type: "NOTIFY"; message: string }
+	| { type: "SELECT_NODES"; nodeIds: string[] };
 
 // ─── Data shapes ─────────────────────────────────────────────────────────────
 
