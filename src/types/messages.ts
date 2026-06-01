@@ -4,15 +4,14 @@ export type UIToPluginMessage =
 	| { type: "MARK_SELECTION" }
 	| { type: "HIGHLIGHT_MARKED" }
 	| { type: "CLEAR_ALL" }
-	| { type: "UNMARK_NODE"; nodeId: string }
-	| { type: "UNMARK_NODE_LIST"; nodeIdList: string[] }
+	| { type: "UNMARK_NODES"; nodeIds: string[] }
 	| { type: "SELECT_NODE"; nodeId: string }
 	| { type: "LOAD_MARKED" }
 	| { type: "REORDER_ITEMS"; itemIds: string[] }
 	| { type: "CREATE_SECTION"; name: string, topFrameId: string }
 	| { type: "DELETE_SECTION"; sectionId: string }
 	| { type: "RENAME_SECTION"; sectionId: string; name: string }
-	| { type: "MOVE_NODE_TO_SECTION"; nodeId: string; sectionId: string | null; index: number }
+	| { type: "MOVE_NODES_TO_SECTION"; nodeIds: string[]; sectionId: string | null; index: number }
 	| { type: "REORDER_NODES_IN_SECTION"; sectionId: string; nodeIds: string[] }
 	| { type: "SAVE_EXPORT_OPTIONS"; options: ExportOptions }
 	// Legacy

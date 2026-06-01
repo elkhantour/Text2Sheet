@@ -1,6 +1,14 @@
 import type { ChildTextNode, MarkedNode } from "@ctypes/messages";
 import { sendToUI } from "./message";
-import { getStoredIds, saveIds, getSections, saveSections, getItemOrder, saveItemOrder, getExportOptions } from "./storage";
+import {
+	getStoredIds,
+	saveIds,
+	getSections,
+	saveSections,
+	getItemOrder,
+	saveItemOrder,
+	getExportOptions
+} from "./storage";
 import { ORPHAN_TAB_ID, ORPHAN_TAB_NAME } from "../lib/constants";
 
 // ─── Main state loader ────────────────────────────────────────────────────────
@@ -68,17 +76,17 @@ export function resolveNode(node: BaseNode): MarkedNode[] {
 }
 
 export function getTopFrame(node: BaseNode): { id: string; name: string } {
-  let current: BaseNode = node;
-  while (current.parent && current.parent.type !== "PAGE" && current.parent.type !== "DOCUMENT") {
-    current = current.parent;
-  }
+	let current: BaseNode = node;
+	while (current.parent && current.parent.type !== "PAGE" && current.parent.type !== "DOCUMENT") {
+		current = current.parent;
+	}
 
-  const isOrphan = current.type !== "FRAME" && current.type !== "COMPONENT" && current.type !== "SECTION";
-  if (isOrphan) {
-    return { id: ORPHAN_TAB_ID, name: ORPHAN_TAB_NAME };
-  }
+	const isOrphan = current.type !== "FRAME" && current.type !== "COMPONENT" && current.type !== "SECTION";
+	if (isOrphan) {
+		return { id: ORPHAN_TAB_ID, name: ORPHAN_TAB_NAME };
+	}
 
-  return { id: current.id, name: current.name };
+	return { id: current.id, name: current.name };
 }
 
 export function collectTextChildren(node: BaseNode): ChildTextNode[] {

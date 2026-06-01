@@ -3,7 +3,7 @@ import { createContext, useContext } from "react";
 // ─── Drag item descriptors ────────────────────────────────────────────────────
 
 export type DragItem =
-	| { kind: "node"; nodeId: string; sourceSectionId: string | null }
+	| { kind: "nodes"; nodeIds: string[]; sourceSectionId: string | null }
 	| { kind: "section"; sectionId: string };
 
 // ─── Drop zone descriptors ────────────────────────────────────────────────────

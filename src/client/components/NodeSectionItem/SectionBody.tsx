@@ -16,7 +16,7 @@ export function SectionBody({
 
 	const { dragging, activeDropZone, setDropZone, endDrag } = useDnd();
 
-	const isNodeDrag = dragging?.kind === "node";
+	const isNodeDrag = dragging?.kind === "nodes";
 
 	const isDropBeforeNode = (nodeId: string) =>
 		activeDropZone?.kind === "section-body" &&

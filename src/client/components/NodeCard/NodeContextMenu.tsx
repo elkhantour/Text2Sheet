@@ -18,10 +18,9 @@ export function NodeContextMenu({
 	const [addToSectionOpen, setAddToSectionOpen] = useState(false);
 
 	const {
-		unmarkNode,
-		unmarkNodeList,
+		unmarkNodes,
 		sections,
-		moveNodeToSection,
+		moveNodesToSection,
 		getSectionFromId,
 	} = usePlugin();
 
@@ -29,24 +28,21 @@ export function NodeContextMenu({
 
 	console.log(selection);
 
+	// TODO unify string[] and Set<string> for node Ids
 	const handleMoveToSection = useCallback((nodeIds: Set<string>, sectionId: string) => {
 		const target = getSectionFromId(sectionId);
 		if (!target) return;
-		for (const nodeId of nodeIds) {
-			moveNodeToSection(nodeId, sectionId, target.nodeIds.length);
-		}
+		moveNodesToSection(Array.from(nodeIds), sectionId, target.nodeIds.length);
 		selection.clearSelection();
-	}, [sections, moveNodeToSection, selection]);
+	}, [sections, moveNodesToSection, selection]);
 
 	const handleRemoveFromSection = useCallback((nodeIds: Set<string>) => {
-		for (const nodeId of nodeIds) {
-			moveNodeToSection(nodeId, null, 0);
-		}
+		moveNodesToSection(Array.from(nodeIds), null, 0);
 		selection.clearSelection();
-	}, [moveNodeToSection, selection]);
+	}, [moveNodesToSection, selection]);
 
 	const handleUnmarkNodes = () => {
-		unmarkNodeList(Array.from(selection.selectedIds));
+		unmarkNodes(Array.from(selection.selectedIds));
 		selection.clearSelection();
 	}
 

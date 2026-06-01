@@ -13,15 +13,14 @@ export interface PluginHookReturn {
 	markSelection: () => void;
 	highlightMarked: () => void;
 	clearAll: () => void;
-	unmarkNode: (nodeId: string) => void;
-	unmarkNodeList: (nodeId: string[]) => void;
+	unmarkNodes: (nodeId: string[]) => void;
 	selectNode: (nodeId: string) => void;
 	dismissToast: () => void;
 	createSection: (name: string, topFrameId: string) => void;
 	deleteSection: (sectionId: string) => void;
 	renameSection: (sectionId: string, name: string) => void;
 	reorderItems: (itemIds: string[]) => void;
-	moveNodeToSection: (nodeId: string, sectionId: string | null, index: number) => void;
+	moveNodesToSection: (nodeIds: string[], sectionId: string | null, index: number) => void;
 	reorderNodesInSection: (sectionId: string, nodeIds: string[]) => void;
 	saveExportOptions: (options: ExportOptions) => void;
 	getNodeFromId: (id: string) => MarkedNode | undefined;
@@ -89,15 +88,14 @@ export function usePlugin(): PluginHookReturn {
 		markSelection: useCallback(() => postMessage({ type: "MARK_SELECTION" }), []),
 		highlightMarked: useCallback(() => postMessage({ type: "HIGHLIGHT_MARKED" }), []),
 		clearAll: useCallback(() => postMessage({ type: "CLEAR_ALL" }), []),
-		unmarkNode: useCallback((nodeId) => postMessage({ type: "UNMARK_NODE", nodeId }), []),
-		unmarkNodeList: useCallback((nodeIdList) => postMessage({ type: "UNMARK_NODE_LIST", nodeIdList }), []),
+		unmarkNodes: useCallback((nodeIds) => postMessage({ type: "UNMARK_NODES", nodeIds }), []),
 		selectNode: useCallback((nodeId) => postMessage({ type: "SELECT_NODE", nodeId }), []),
 		dismissToast: useCallback(() => setToast(null), []),
 		createSection: useCallback((name, topFrameId) => postMessage({ type: "CREATE_SECTION", name, topFrameId }), []),
 		deleteSection: useCallback((sectionId) => postMessage({ type: "DELETE_SECTION", sectionId }), []),
 		renameSection: useCallback((sectionId, name) => postMessage({ type: "RENAME_SECTION", sectionId, name }), []),
 		reorderItems: useCallback((itemIds) => postMessage({ type: "REORDER_ITEMS", itemIds }), []),
-		moveNodeToSection: useCallback((nodeId, sectionId, index) => postMessage({ type: "MOVE_NODE_TO_SECTION", nodeId, sectionId, index }), []),
+		moveNodesToSection: useCallback((nodeIds, sectionId, index) => postMessage({ type: "MOVE_NODES_TO_SECTION", nodeIds, sectionId, index }), []),
 		reorderNodesInSection: useCallback((sectionId, nodeIds) => postMessage({ type: "REORDER_NODES_IN_SECTION", sectionId, nodeIds }), []),
 		saveExportOptions,
 		getNodeFromId: useCallback((id) => nodeMap.get(id), [nodeMap]),

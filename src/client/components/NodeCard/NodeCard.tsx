@@ -5,7 +5,7 @@ import { useNodeSelection } from "@contexts/useNodeSelection";
 import { NodeContextMenu } from "./NodeContextMenu";
 import { usePlugin } from "@hooks/usePlugin";
 import { FrameIcon, XIcon } from "lucide-react";
-import { ICON_SIZE_EXTRA_SMALL, ICON_SIZE_SMALL } from "@utils/constants";
+import { ICON_SIZE_EXTRA_SMALL } from "@utils/constants";
 
 interface NodeCardProps {
 	nodeId: string;
@@ -23,7 +23,7 @@ export function NodeCard({
 }: NodeCardProps): React.ReactElement {
 
 	const {
-		unmarkNode,
+		unmarkNodes,
 		selectNode,
 		itemOrder,
 		getNodeFromId,
@@ -37,7 +37,7 @@ export function NodeCard({
 
 	const node: MarkedNode | undefined = getNodeFromId(nodeId);
 
-	const isDragging = dragging?.kind === "node" && dragging.nodeId === nodeId;
+	const isDragging = dragging?.kind === "nodes" && dragging.nodeIds[0] === nodeId;
 
 	const previewLines: string[] =
 		node && node.nodeType !== "TEXT" && node.childTextNodes?.length
@@ -79,11 +79,12 @@ export function NodeCard({
 	const handleDragStart = (e: React.DragEvent) => {
 		e.dataTransfer.effectAllowed = "move";
 		e.stopPropagation();
-		startDrag({ kind: "node", nodeId: nodeId, sourceSectionId });
+		startDrag({ kind: "nodes", nodeIds: getDraggableNodes(nodeId), sourceSectionId });
+
 	};
 
 	const handleDragOver = (e: React.DragEvent) => {
-		if (dragging?.kind !== "node") return;
+		if (dragging?.kind !== "nodes") return;
 		e.preventDefault();
 		e.stopPropagation();
 		if (onDragOverGap) {
@@ -98,12 +99,13 @@ export function NodeCard({
 
 	const handleUnmark = (id: string) => {
 		// If the card is part of a selection, remove all selected
-		const ids = selection.selectedIds.has(id)
-			? [...selection.selectedIds]
-			: [id];
-		for (const nodeId of ids) unmarkNode(nodeId);
+		unmarkNodes(getDraggableNodes(id));
 	};
 
+	// ── Helper ───────────────────────────────────────────────────────────────
+	const getDraggableNodes = (id: string) => selection.selectedIds.has(id)
+		? [...selection.selectedIds]
+		: [id];
 
 	// ── Render ───────────────────────────────────────────────────────────────
 

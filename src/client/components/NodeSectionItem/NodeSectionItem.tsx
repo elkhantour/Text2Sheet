@@ -44,7 +44,7 @@ export function NodeSectionItem({
 	const handleHeaderDragEnd = () => endDrag();
 
 	const handleHeaderDragOver = (e: React.DragEvent) => {
-		if (dragging?.kind !== "node") return;
+		if (dragging?.kind !== "nodes") return;
 		e.preventDefault();
 		e.stopPropagation();
 		setDropZone({ kind: "section-header", sectionId: section.id });

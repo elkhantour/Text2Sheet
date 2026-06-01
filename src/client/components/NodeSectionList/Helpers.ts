@@ -9,11 +9,12 @@ export function reorderTopLevel(order: string[], dragId: string, beforeId: strin
 	return next;
 }
 
+// TODO: clean
 export function removeNodeFromSource(
 	nodeId: string,
 	sourceSectionId: string | null,
 	itemOrder: string[],
-	onMoveNodeToSection: (nodeId: string, sectionId: string | null, index: number) => void,
+	onMoveNodeToSection: (nodeIds: string[], sectionId: string | null, index: number) => void,
 	onReorderNodesInSection: (sectionId: string, nodeIds: string[]) => void,
 	onReorderItems: (itemIds: string[]) => void,
 ) {

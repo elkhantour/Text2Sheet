@@ -1,7 +1,6 @@
 import { sendError, sendNotify } from "./message";
 import { loadAndSendState } from "./node";
 import { getStoredIds, saveIds, getSections, saveSections, getItemOrder, saveItemOrder, saveExportOptions } from "./storage";
-import { getTopFrame } from "./node";
 import { ExportOptions } from "@ctypes/messages";
 
 // ─── Existing handlers ────────────────────────────────────────────────────────
@@ -42,24 +41,14 @@ export async function handleMarkSelection(): Promise<void> {
 	sendNotify(`Marked ${selectionTextNodeIds.length} layer${selectionTextNodeIds.length > 1 ? "s" : ""} for export.`);
 }
 
-export async function handleUnmarkNode(nodeId: string): Promise<void> {
-	const [storedIds, sections, itemOrder] = await Promise.all([getStoredIds(), getSections(), getItemOrder()]);
-	await Promise.all([
-		saveIds(storedIds.filter((id) => id !== nodeId)),
-		saveSections(sections.map((s) => ({ ...s, nodeIds: s.nodeIds.filter((id) => id !== nodeId) }))),
-		saveItemOrder(itemOrder.filter((id) => id !== nodeId)),
-	]);
-	await loadAndSendState();
-}
-
-export async function handleUnmarkNodeList(nodeIdList: string[]): Promise<void> {
+export async function handleUnmarkNodeList(nodeIds: string[]): Promise<void> {
 	const [storedIds, sections, itemOrder] = await Promise.all([
 		getStoredIds(),
 		getSections(),
 		getItemOrder(),
 	]);
 
-	const idSet = new Set(nodeIdList);
+	const idSet = new Set(nodeIds);
 
 	await Promise.all([
 		saveIds(storedIds.filter(id => !idSet.has(id))),
@@ -120,22 +109,47 @@ export async function handleReorderItems(itemIds: string[]): Promise<void> {
 	await loadAndSendState();
 }
 
-export async function handleMoveNodeToSection(nodeId: string, sectionId: string | null, index: number): Promise<void> {
-	const [sections, itemOrder] = await Promise.all([getSections(), getItemOrder()]);
-	const cleanedSections = sections.map((s) => ({ ...s, nodeIds: s.nodeIds.filter((id) => id !== nodeId) }));
-	const cleanedOrder = itemOrder.filter((id) => id !== nodeId);
+export async function handleMoveNodeListToSection(
+	nodeIds: string[],
+	sectionId: string | null,
+	index: number
+): Promise<void> {
+	const [sections, itemOrder] = await Promise.all([
+		getSections(),
+		getItemOrder(),
+	]);
+
+	const idSet = new Set(nodeIds);
+
+	// remove all nodes from current locations
+	const cleanedSections = sections.map((s) => ({
+		...s,
+		nodeIds: s.nodeIds.filter((id) => !idSet.has(id)),
+	}));
+
+	const cleanedOrder = itemOrder.filter((id) => !idSet.has(id));
 
 	if (sectionId === null) {
-		cleanedOrder.splice(index, 0, nodeId);
-		await saveSections(cleanedSections);
-		await saveItemOrder(cleanedOrder);
+		// insert into root order
+		cleanedOrder.splice(index, 0, ...nodeIds);
+
+		await Promise.all([
+			saveSections(cleanedSections),
+			saveItemOrder(cleanedOrder),
+		]);
 	} else {
 		const target = cleanedSections.find((s) => s.id === sectionId);
 		if (!target) return;
-		target.nodeIds.splice(index, 0, nodeId);
-		await saveSections(cleanedSections);
-		await saveItemOrder(cleanedOrder);
+
+		// insert into section
+		target.nodeIds.splice(index, 0, ...nodeIds);
+
+		await Promise.all([
+			saveSections(cleanedSections),
+			saveItemOrder(cleanedOrder),
+		]);
 	}
+
 	await loadAndSendState();
 }
 

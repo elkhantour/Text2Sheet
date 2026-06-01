@@ -21,7 +21,7 @@ export function NodeSectionList(): React.ReactElement {
 		deleteSection,
 		renameSection,
 		reorderItems,
-		moveNodeToSection,
+		moveNodesToSection,
 		reorderNodesInSection,
 		getNodeFromId,
 		getSectionFromId,
@@ -70,39 +70,60 @@ export function NodeSectionList(): React.ReactElement {
 				const next = reorderTopLevel(activeItemOrder, dragging.sectionId, activeDropZone.beforeId);
 				reorderItems(next);
 			}
-		} else if (dragging.kind === "node") {
-			const { nodeId, sourceSectionId } = dragging;
+		} else if (dragging.kind === "nodes") {
+			const { nodeIds, sourceSectionId } = dragging;
 
 			if (activeDropZone.kind === "section-header") {
 				const target = getSectionFromId(activeDropZone.sectionId);
 				if (!target) return cleanup();
 				if (sourceSectionId === activeDropZone.sectionId) return cleanup();
-				const newIds = [...target.nodeIds.filter((id) => id !== nodeId), nodeId];
-				removeNodeFromSource(nodeId, sourceSectionId, activeItemOrder, moveNodeToSection, reorderNodesInSection, reorderItems);
-				moveNodeToSection(nodeId, activeDropZone.sectionId, newIds.length - 1);
+
+				let newIndex = 0;
+				for (const nodeId of nodeIds) {
+					removeNodeFromSource(nodeId, sourceSectionId, activeItemOrder, moveNodesToSection, reorderNodesInSection, reorderItems);
+					newIndex = target.nodeIds.filter((id) => !nodeIds.includes(id)).length;
+				}
+
+				moveNodesToSection(nodeIds, activeDropZone.sectionId, newIndex);
 
 			} else if (activeDropZone.kind === "section-body") {
 				const target = getSectionFromId(activeDropZone.sectionId);
 				if (!target) return cleanup();
-				const filtered = target.nodeIds.filter((id) => id !== nodeId);
+
+				const filteredTargetIds = target.nodeIds.filter((id) => !nodeIds.includes(id));
 				const insertIdx = activeDropZone.beforeNodeId
-					? filtered.indexOf(activeDropZone.beforeNodeId)
-					: filtered.length;
-				const finalIdx = insertIdx === -1 ? filtered.length : insertIdx;
-				if (sourceSectionId !== activeDropZone.sectionId) {
-					removeNodeFromSource(nodeId, sourceSectionId, activeItemOrder, moveNodeToSection, reorderNodesInSection, reorderItems);
+					? filteredTargetIds.indexOf(activeDropZone.beforeNodeId)
+					: filteredTargetIds.length;
+				const baseIdx = insertIdx === -1 ? filteredTargetIds.length : insertIdx;
+
+				for (let i = 0; i < nodeIds.length; i++) {
+					const nodeId = nodeIds[i];
+					if (sourceSectionId !== activeDropZone.sectionId) {
+						removeNodeFromSource(nodeId, sourceSectionId, activeItemOrder, moveNodesToSection, reorderNodesInSection, reorderItems);
+					}
 				}
-				moveNodeToSection(nodeId, activeDropZone.sectionId, finalIdx);
+
+				moveNodesToSection(nodeIds, activeDropZone.sectionId, baseIdx);
 
 			} else if (activeDropZone.kind === "top-level") {
-				if (sourceSectionId !== null) {
-					moveNodeToSection(nodeId, null, 0);
+
+				moveNodesToSection(nodeIds, null, 0);
+				// Insert all dragged nodes before the target, preserving their relative order
+				let order = activeItemOrder;
+				for (const nodeId of nodeIds) {
+					if (!order.includes(nodeId)) order = [...order, nodeId];
 				}
-				const nextOrder = reorderTopLevel(
-					activeItemOrder.includes(nodeId) ? activeItemOrder : [...activeItemOrder, nodeId],
-					nodeId,
-					activeDropZone.beforeId,
-				);
+				// Remove all dragged nodes first, then re-insert at target position as a block
+				const withoutDragged = order.filter((id) => !nodeIds.includes(id));
+				const insertAt = activeDropZone.beforeId
+					? withoutDragged.indexOf(activeDropZone.beforeId)
+					: withoutDragged.length;
+				const finalIdx = insertAt === -1 ? withoutDragged.length : insertAt;
+				const nextOrder = [
+					...withoutDragged.slice(0, finalIdx),
+					...nodeIds,
+					...withoutDragged.slice(finalIdx),
+				];
 				reorderItems(nextOrder);
 			}
 		}
@@ -112,7 +133,7 @@ export function NodeSectionList(): React.ReactElement {
 			setDragging(null);
 			setActiveDropZone(null);
 		}
-	}, [dragging, activeDropZone, activeItemOrder, activeSections, reorderItems, moveNodeToSection, reorderNodesInSection]);
+	}, [dragging, activeDropZone, activeItemOrder, activeSections, reorderItems, moveNodesToSection, reorderNodesInSection]);
 
 	// ── Add section ───────────────────────────────────────────────────────────
 

@@ -8,15 +8,14 @@ import {
 	handleHighlightMarked,
 	handleMarkSelection,
 	handleSelectNode,
-	handleUnmarkNode,
 	handleCreateSection,
 	handleDeleteSection,
 	handleRenameSection,
 	handleReorderItems,
-	handleMoveNodeToSection,
 	handleReorderNodesInSection,
 	handleSaveExportOptions,
 	handleUnmarkNodeList,
+	handleMoveNodeListToSection,
 } from "./handlers";
 
 figma.showUI(__html__, { width: PLUGIN_WIDTH, height: PLUGIN_HEIGHT, title: "Text2Sheet" });
@@ -26,8 +25,7 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 	switch (msg.type) {
 		case "MARK_SELECTION": await handleMarkSelection(); break;
 		case "HIGHLIGHT_MARKED": await handleHighlightMarked(); break;
-		case "UNMARK_NODE": await handleUnmarkNode(msg.nodeId); break;
-		case "UNMARK_NODE_LIST": await handleUnmarkNodeList(msg.nodeIdList); break;
+		case "UNMARK_NODES": await handleUnmarkNodeList(msg.nodeIds); break;
 		case "SELECT_NODE": await handleSelectNode(msg.nodeId); break;
 		case "LOAD_MARKED": await loadAndSendState(); break;
 		case "REORDER_NODES": await saveIds(msg.nodeIds); break;
@@ -35,7 +33,7 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "DELETE_SECTION": await handleDeleteSection(msg.sectionId); break;
 		case "RENAME_SECTION": await handleRenameSection(msg.sectionId, msg.name); break;
 		case "REORDER_ITEMS": await handleReorderItems(msg.itemIds); break;
-		case "MOVE_NODE_TO_SECTION": await handleMoveNodeToSection(msg.nodeId, msg.sectionId, msg.index); break;
+		case "MOVE_NODES_TO_SECTION": await handleMoveNodeListToSection(msg.nodeIds, msg.sectionId, msg.index); break;
 		case "REORDER_NODES_IN_SECTION": await handleReorderNodesInSection(msg.sectionId, msg.nodeIds); break;
 		case "SAVE_EXPORT_OPTIONS": await handleSaveExportOptions(msg.options); break;
 		case "CLEAR_ALL":
