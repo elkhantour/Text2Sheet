@@ -29,6 +29,9 @@
 			],
 			"@hooks/*": [
 				"src/client/hooks/*"
+			],
+			"@contexts/*": [
+				"src/client/contexts/*"
 			]
 		}
 	},

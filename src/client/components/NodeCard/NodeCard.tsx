@@ -1,10 +1,9 @@
 import React from "react";
 import type { MarkedNode } from "@ctypes/messages";
 import { useDnd } from "@components/Dnd/Context";
-import { useNodeSelection } from "@hooks/useNodeSelection";
+import { useNodeSelection } from "@contexts/useNodeSelection";
 import { NodeContextMenu } from "./NodeContextMenu";
 import { usePlugin } from "@hooks/usePlugin";
-import { useTabs } from "@hooks/useTabs";
 
 interface NodeCardProps {
 	nodeId: string;

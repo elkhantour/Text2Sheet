@@ -1,11 +1,10 @@
 import React, { useCallback, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import type { NodeSection } from "@ctypes/messages";
-import { useNodeSelection } from "@hooks/useNodeSelection";
+import { useNodeSelection } from "@contexts/useNodeSelection";
 import { ContextMenu } from "@radix-ui/themes";
 import { usePlugin } from "@hooks/usePlugin";
-import { useTabs } from "@hooks/useTabs";
-import { TrashIcon } from "lucide-react";
+import { PlusSquareIcon, TrashIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 
 interface NodeContextMenuProps {
@@ -27,7 +26,7 @@ export function NodeContextMenu({
 
 	const selection = useNodeSelection();
 
-	const onMoveToSection = useCallback((nodeIds: Set<string>, sectionId: string) => {
+	const handleMoveToSection = useCallback((nodeIds: Set<string>, sectionId: string) => {
 		const target = getSectionFromId(sectionId);
 		if (!target) return;
 		for (const nodeId of nodeIds) {
@@ -36,20 +35,23 @@ export function NodeContextMenu({
 		selection.clearSelection();
 	}, [sections, moveNodeToSection, selection]);
 
-	const onRemoveFromSection = useCallback((nodeIds: Set<string>) => {
+	const handleRemoveFromSection = useCallback((nodeIds: Set<string>) => {
 		for (const nodeId of nodeIds) {
 			moveNodeToSection(nodeId, null, 0);
 		}
 		selection.clearSelection();
 	}, [moveNodeToSection, selection]);
 
+	const handleUnmarkNodes = () => {
+		for (const id of selection.selectedIds) unmarkNode(id);
+		selection.clearSelection();
+	}
+
 	// The set of nodes this action applies to:
 	// if right-clicked node is in selection → whole selection, else just this node
 	//const affectedIds = selectedIds.has(nodeId) ? selectedIds : new Set([nodeId]);
 	const count = selection.selectedIds.size;
 	const label = count > 1 ? `${count} nodes` : "node";
-
-	console.log(selection);
 
 	return (
 		<>
@@ -60,9 +62,7 @@ export function NodeContextMenu({
 				<ContextMenu.Content className="z-50 min-w-[180px] rounded-lg border border-[var(--border-light)] bg-[var(--surface-2)] p-1 shadow-xl animate-in fade-in-0 zoom-in-95">
 					{/* Delete */}
 					<ContextMenu.Item
-						onSelect={() => {
-							for (const id of selection.selectedIds) unmarkNode(id);
-						}}
+						onSelect={handleUnmarkNodes}
 						className="
 								flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
 								text-xs text-[var(--danger)] outline-none
@@ -88,17 +88,14 @@ export function NodeContextMenu({
 								data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40
 							"
 					>
-						<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-							<rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.3" />
-							<path d="M6 4v4M4 6h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-						</svg>
+						<PlusSquareIcon size={ICON_SIZE_SMALL} />
 						Add to section…
 					</ContextMenu.Item>
 
 					{/* Remove from section */}
 					{/*sourceSectionId && (
 							<DropdownMenu.Item
-								onSelect={() => onRemoveFromSection(selectedIds)}
+								onSelect={() => handleRemoveFromSection(selectedIds)}
 								className="
 									flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
 									text-xs text-[var(--text-secondary)] outline-none
@@ -123,7 +120,7 @@ export function NodeContextMenu({
 				sections={sections}
 				count={count}
 				onConfirm={(sectionId) => {
-					onMoveToSection(selection.selectedIds, sectionId);
+					handleMoveToSection(selection.selectedIds, sectionId);
 					setAddToSectionOpen(false);
 				}
 				}

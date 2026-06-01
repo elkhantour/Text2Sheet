@@ -9,7 +9,7 @@ import { removeNodeFromSource, reorderTopLevel } from "./Helpers";
 import { Button, Text } from "@radix-ui/themes";
 import { PlusIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
-import { NodeSelectionProvider, useNodeSelection } from "@hooks/useNodeSelection";
+import { useNodeSelection } from "@contexts/useNodeSelection";
 import { usePlugin } from "@hooks/usePlugin";
 import { useTabs } from "@hooks/useTabs";
 
@@ -149,67 +149,67 @@ export function NodeSectionList(): React.ReactElement {
 
 	return (
 		<DndContext.Provider value={{ dragging, activeDropZone, startDrag, setDropZone, endDrag }}>
-				<div className="flex flex-1 flex-col overflow-hidden">
-					{/* Toolbar */}
-					<div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)]">
-						<Text size="1" className="text-[var(--text-muted)]">
-							{markedNodes.length} text layers
-							{selection.selectedIds.size > 0 && (
-								<span className="ml-1.5 text-[var(--accent)]">
-									· {selection.selectedIds.size} selected
-								</span>
-							)}
-						</Text>
-						<Button size="1" variant="ghost" onClick={handleAddSection}>
-							<PlusIcon size={ICON_SIZE_SMALL} />
-							Add Section
-						</Button>
-					</div>
-
-					{/* List */}
-					<div
-						className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2.5"
-						onMouseDown={handleListMouseDown}
-					>
-						{itemOrder.map((id) => {
-							const section = getSectionFromId(id);
-							const node = getNodeFromId(id);
-
-							const isDropTargetBefore =
-								activeDropZone?.kind === "top-level" && activeDropZone.beforeId === id;
-
-							return (
-								<React.Fragment key={id}>
-									{isDropTargetBefore && <DropIndicator />}
-
-									{section ? (
-										<NodeSectionItem
-											section={section}
-											onDelete={() => deleteSection(section.id)}
-											onRename={(name) => renameSection(section.id, name)}
-										/>
-									) : node ? (
-										<NodeCard
-											nodeId={id}
-											sourceSectionId={null}
-										/>
-									) : null}
-								</React.Fragment>
-							);
-						})}
-
-						{activeDropZone?.kind === "top-level" && activeDropZone.beforeId === null && (
-							<DropIndicator />
+			<div className="flex flex-1 flex-col overflow-hidden">
+				{/* Toolbar */}
+				<div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)]">
+					<Text size="1" className="text-[var(--text-muted)]">
+						{markedNodes.length} text layers
+						{selection.selectedIds.size > 0 && (
+							<span className="ml-1.5 text-[var(--accent)]">
+								· {selection.selectedIds.size} selected
+							</span>
 						)}
-
-						<div
-							className="flex-1 min-h-[40px]"
-							onDragOver={(e) => { e.preventDefault(); setDropZone({ kind: "top-level", beforeId: null }); }}
-							onDragLeave={() => setDropZone(null)}
-							onMouseDown={() => selection.clearSelection()}
-						/>
-					</div>
+					</Text>
+					<Button size="1" variant="ghost" onClick={handleAddSection}>
+						<PlusIcon size={ICON_SIZE_SMALL} />
+						Add Section
+					</Button>
 				</div>
+
+				{/* List */}
+				<div
+					className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2.5"
+					onMouseDown={handleListMouseDown}
+				>
+					{itemOrder.map((id) => {
+						const section = getSectionFromId(id);
+						const node = getNodeFromId(id);
+
+						const isDropTargetBefore =
+							activeDropZone?.kind === "top-level" && activeDropZone.beforeId === id;
+
+						return (
+							<React.Fragment key={id}>
+								{isDropTargetBefore && <DropIndicator />}
+
+								{section ? (
+									<NodeSectionItem
+										section={section}
+										onDelete={() => deleteSection(section.id)}
+										onRename={(name) => renameSection(section.id, name)}
+									/>
+								) : node ? (
+									<NodeCard
+										nodeId={id}
+										sourceSectionId={null}
+									/>
+								) : null}
+							</React.Fragment>
+						);
+					})}
+
+					{activeDropZone?.kind === "top-level" && activeDropZone.beforeId === null && (
+						<DropIndicator />
+					)}
+
+					<div
+						className="flex-1 min-h-[40px]"
+						onDragOver={(e) => { e.preventDefault(); setDropZone({ kind: "top-level", beforeId: null }); }}
+						onDragLeave={() => setDropZone(null)}
+						onMouseDown={() => selection.clearSelection()}
+					/>
+				</div>
+			</div>
 		</DndContext.Provider>
 	);
 }

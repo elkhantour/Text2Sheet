@@ -46,6 +46,7 @@ module.exports = (env, argv) => [
 				"@ctypes": path.resolve(__dirname, "src/types/"),
 				"@utils": path.resolve(__dirname, "src/client/utils/"),
 				"@hooks": path.resolve(__dirname, "src/client/hooks/"),
+				"@contexts": path.resolve(__dirname, "src/client/contexts/"),
 			}
 		},
 		module: {
