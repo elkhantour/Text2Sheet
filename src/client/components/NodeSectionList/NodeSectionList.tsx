@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import type { DragItem, DropZone } from "@components/Dnd/Context";
 import { DndContext } from "@components/Dnd/Context";
 import { NodeSectionItem } from "@components/NodeSectionItem/NodeSectionItem";
@@ -29,6 +29,10 @@ export function NodeSectionList(): React.ReactElement {
 
 	const { activeTabId, activeNodes, activeSections, activeItemOrder } = useTabs();
 
+
+	const bodyRef = useRef<HTMLDivElement | null>(null);
+	const lastSectionCount = useRef<number>(0);
+	const lastTabId = useRef<string | null>(activeTabId);
 
 	const [dragging, setDragging] = useState<DragItem | null>(null);
 	const [activeDropZone, setActiveDropZone] = useState<DropZone | null>(null);
@@ -140,8 +144,24 @@ export function NodeSectionList(): React.ReactElement {
 
 	const handleAddSection = () => {
 		const name = `Section ${activeSections.length + 1}`;
-		if (activeTabId) createSection(name, activeTabId);
+		if (activeTabId) {
+			createSection(name, activeTabId);
+		}
 	};
+
+	useEffect(() => {
+		// scroll to the bottom if the number of section gets updated
+		if (lastTabId.current === activeTabId && lastSectionCount.current != activeSections.length)
+			if (bodyRef.current)
+				bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
+
+		lastSectionCount.current = activeSections.length;
+	}, [activeSections]);
+
+
+	useEffect(() => {
+		lastTabId.current = activeTabId;
+	}, [activeTabId]);
 
 	// ── Deselect on empty space click ─────────────────────────────────────────
 
@@ -186,6 +206,7 @@ export function NodeSectionList(): React.ReactElement {
 				<div
 					className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2.5"
 					onMouseDown={handleListMouseDown}
+					ref={bodyRef}
 				>
 					{activeItemOrder.map((id) => {
 						const section = getSectionFromId(id);
