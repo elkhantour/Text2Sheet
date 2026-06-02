@@ -80,7 +80,6 @@ export function NodeCard({
 		e.dataTransfer.effectAllowed = "move";
 		e.stopPropagation();
 		startDrag({ kind: "nodes", nodeIds: getDraggableNodes(nodeId), sourceSectionId });
-
 	};
 
 	const handleDragOver = (e: React.DragEvent) => {

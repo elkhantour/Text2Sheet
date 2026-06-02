@@ -3,6 +3,7 @@ import type { MarkedNode, NodeSection } from "@ctypes/messages";
 import { useDnd } from "@components/Dnd/Context";
 import { SectionBody } from "./SectionBody";
 import { usePlugin } from "@hooks/usePlugin";
+import { useSection } from "@contexts/useSection";
 
 
 interface NodeSectionItemProps {
@@ -22,6 +23,8 @@ export function NodeSectionItem({
 	const [isEditingName, setIsEditingName] = useState(false);
 	const [draftName, setDraftName] = useState(section.name);
 	const inputRef = useRef<HTMLInputElement>(null);
+
+	const { setActiveSection, isSectionActive } = useSection();
 
 	const { getNodeFromId } = usePlugin();
 
@@ -76,15 +79,27 @@ export function NodeSectionItem({
 		if (e.key === "Escape") { setDraftName(section.name); setIsEditingName(false); }
 	};
 
+	// ── Active state  ─────────────────────────────────────────────────────────
+	const handleOnClick = () => {
+		setActiveSection(isSectionActive(section.id) ? null : section.id);
+	};
+
 	return (
 		<div
-			className={`rounded-md border transition-all ${isDraggingThis
-				? "opacity-40"
-				: isHeaderDropTarget
-					? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-					: "border-[var(--border-light)] bg-[var(--bg-secondary)]"
-				}`}
-		>
+			data-active={isSectionActive(section.id)}
+			data-target={isHeaderDropTarget}
+			data-dragging={isDraggingThis}
+			onClick={handleOnClick}
+			className="
+	                 	rounded-md border transition-all
+                 		border-[var(--border-light)]
+                 		bg-[var(--bg-secondary)]
+                 		data-[target=true]:border-[var(--accent)]
+                 		data-[target=true]:bg-[var(--accent-subtle)]
+                 		data-[active=true]:border-[var(--accent)]
+                 		data-[active=true]:bg-[var(--accent-subtle)]
+                 		data-[dragging=true]:opacity-40
+                 	">
 			{/* ── Header ── */}
 			<div
 				draggable

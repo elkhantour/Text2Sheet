@@ -30,34 +30,47 @@ export function SectionBody({
 
 	return (
 		<div
-			className={`flex flex-col gap-1 px-2 pb-2 ${sectionNodes.length === 0 ? "pt-1" : ""}`}
+			data-empty={sectionNodes.length === 0}
+			className="
+                              flex
+                              flex-col
+                              gap-1
+                              px-2
+                              pb-2
+	                      data-[empty=true]:pt-1
+	                "
 			onDragOver={(e) => {
 				if (!isNodeDrag) return;
 				e.preventDefault();
 				setDropZone({ kind: "section-body", sectionId: section.id, beforeNodeId: null });
-			}}
+			}
+			}
 			onDrop={(e) => { e.preventDefault(); endDrag(); }}
 		>
-			{sectionNodes.length === 0 && (
-				<div className="flex items-center justify-center h-8 rounded border border-dashed text-[10px] text-[var(--text-muted)] transition-colors">
-					Drop cards here
-				</div>
-			)}
+			{
+				sectionNodes.length === 0 && (
+					<div className="flex items-center justify-center h-8 rounded border border-dashed text-[10px] text-[var(--text-muted)] transition-colors">
+						Drop cards here
+					</div>
+				)
+			}
 
-			{sectionNodes.map((node) => (
-				<React.Fragment key={node}>
-					{isDropBeforeNode(node) && <DropIndicator />}
-					<NodeCard
-						nodeId={node}
-						sourceSectionId={section.id}
-						onDragOverGap={(beforeNodeId) =>
-							setDropZone({ kind: "section-body", sectionId: section.id, beforeNodeId })
-						}
-					/>
-				</React.Fragment>
-			))}
+			{
+				sectionNodes.map((node) => (
+					<React.Fragment key={node}>
+						{isDropBeforeNode(node) && <DropIndicator />}
+						<NodeCard
+							nodeId={node}
+							sourceSectionId={section.id}
+							onDragOverGap={(beforeNodeId) =>
+								setDropZone({ kind: "section-body", sectionId: section.id, beforeNodeId })
+							}
+						/>
+					</React.Fragment>
+				))
+			}
 
 			{isDropAtEnd && sectionNodes.length > 0 && <DropIndicator />}
-		</div>
+		</div >
 	);
 }

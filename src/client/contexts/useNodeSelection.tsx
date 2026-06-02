@@ -10,6 +10,8 @@ export interface NodeSelectionState {
 	rangeSelect: (id: string, orderedIds: string[]) => void;
 	clearSelection: () => void;
 	isSelected: (id: string) => boolean;
+	toggleLinkSelection: () => void;
+	isLinkSelection: boolean;
 }
 
 const NodeSelectionContext = createContext<NodeSelectionState | null>(null);
@@ -21,6 +23,7 @@ export function NodeSelectionProvider({
 }) {
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+	const [isLinkSelection, setIsLinkSelection] = useState<boolean>(false);
 
 	const { getNodeFromId, getSectionFromId } = usePlugin();
 	const { setActiveTabId } = useTabs();
@@ -45,13 +48,15 @@ export function NodeSelectionProvider({
 			}
 		};
 
-		window.addEventListener("message", handler);
+		if (isLinkSelection) {
+			window.addEventListener("message", handler);
+		}
 
 		return () => {
 			window.removeEventListener("message", handler);
 		};
 
-	}, [getNodeFromId]);
+	}, [getNodeFromId, isLinkSelection]);
 
 	const select = useCallback((id: string) => {
 		setSelectedIds(new Set([id]));
@@ -109,13 +114,19 @@ export function NodeSelectionProvider({
 		[selectedIds],
 	);
 
+	const toggleLinkSelection = useCallback(() => {
+		setIsLinkSelection(!isLinkSelection);
+	}, [isLinkSelection]);
+
 	return (<NodeSelectionContext.Provider value={{
 		selectedIds,
 		select,
 		toggle,
 		rangeSelect,
 		clearSelection,
-		isSelected
+		isSelected,
+		toggleLinkSelection,
+		isLinkSelection,
 	}}>
 		{children}
 	</NodeSelectionContext.Provider>

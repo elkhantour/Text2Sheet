@@ -8,6 +8,7 @@ import { FrameTabs } from "@components/FrameTab/FrameTab";
 import { LoadingState } from "@components/Loading/Loading";
 import { NodeSelectionProvider } from "@contexts/useNodeSelection";
 import { TabsProvider } from "@contexts/useTabs";
+import { SectionProvider } from "@contexts/useSection";
 
 export function App(): React.ReactElement {
 
@@ -22,20 +23,23 @@ export function App(): React.ReactElement {
 
 	return (
 		<TabsProvider nodes={markedNodes} sections={sections} itemOrder={itemOrder}>
-			<div className=" flex h-screen flex-col relative bg-[var(--bg)]">
-				<Toolbar />
+			<SectionProvider>
+				<NodeSelectionProvider>
+					<div className=" flex h-screen flex-col relative bg-[var(--bg)]">
+						<Toolbar />
 
-				{isLoading ? <LoadingState /> :
-					<NodeSelectionProvider>
-						<FrameTabs />
-						<NodeSectionList />
-					</NodeSelectionProvider>
+						{isLoading ? <LoadingState /> :
+							<>
+								<FrameTabs />
+								<NodeSectionList />
+							</>
+						}
 
-				}
-
-				<Footer />
-				<Toast />
-			</div>
+						<Footer />
+						<Toast />
+					</div>
+				</NodeSelectionProvider>
+			</SectionProvider>
 		</TabsProvider>
 	);
 }

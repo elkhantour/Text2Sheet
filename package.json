@@ -29,6 +29,7 @@
   "dependencies": {
     "@radix-ui/react-scroll-area": "^1.2.0",
     "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-tooltip": "^1.1.2",
     "@radix-ui/themes": "^3.3.0",
     "exceljs": "^4.4.0",
