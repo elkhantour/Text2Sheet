@@ -70,6 +70,9 @@ export function NodeSelectionProvider({
 
 	const rangeSelect = useCallback((id: string, orderedIds: string[]) => {
 
+		if (!lastSelectedId) { select(id); return; }
+
+		// flatten the ordered ids
 		const flattenOrdered: string[] = [];
 
 		orderedIds.forEach(id => {
@@ -80,8 +83,6 @@ export function NodeSelectionProvider({
 				flattenOrdered.push(id);
 			}
 		});
-
-		if (!lastSelectedId) { select(id); return; }
 
 		const fromIdx = flattenOrdered.indexOf(lastSelectedId);
 		const toIdx = flattenOrdered.indexOf(id);
