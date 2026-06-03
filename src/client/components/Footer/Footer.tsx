@@ -45,8 +45,6 @@ export function Footer(): React.ReactElement {
 		setTimeout(() => setDownloading(false), 800);
 	};
 
-	console.log(exportOptions);
-
 	const fileExtension = exportOptions.exportMode.format === "csv" ? "CSV" : "Excel";
 
 	return (
