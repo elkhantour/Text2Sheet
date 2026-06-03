@@ -1,6 +1,6 @@
 /// <reference types="@figma/plugin-typings" />
 import type { UIToPluginMessage } from "@ctypes/messages";
-import { sendNotify, sendToUI } from "./message";
+import { sendNotify } from "./message";
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { loadAndSendState } from "./node";
 import { saveIds, saveSections, saveItemOrder } from "./storage";

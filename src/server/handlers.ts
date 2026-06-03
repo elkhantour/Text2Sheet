@@ -169,6 +169,7 @@ export async function handleReorderNodesInSection(sectionId: string, nodeIds: st
 
 export async function handleSaveExportOptions(options: ExportOptions): Promise<void> {
 	await saveExportOptions(options);
+	await loadAndSendState();
 }
 
 
