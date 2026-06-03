@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { MarkedNode, NodeSection, FrameTab } from "@ctypes/messages";
 import { ORPHAN_TAB_ID } from "../../lib/constants";
 
 interface TabsContextValue {
 	tabs: FrameTab[];
-	activeTabId: string | null;
-	setActiveTabId: (id: string) => void;
+	activeTab: FrameTab | null;
+	setActiveTab: (id: string) => void;
 	activeNodes: MarkedNode[];
 	activeSections: NodeSection[];
 	activeItemOrder: string[];
@@ -29,36 +29,45 @@ export function TabsProvider({
 
 	const tabs: FrameTab[] = useMemo(() => {
 		const frameNameFromNodes = new Map<string, string>();
+
 		for (const node of nodes) {
 			if (!frameNameFromNodes.has(node.topFrameId)) {
 				frameNameFromNodes.set(node.topFrameId, node.topFrameName);
 			}
 		}
+
+		for (const section of sections) {
+			if (!frameNameFromNodes.has(section.topFrameId)) {
+				frameNameFromNodes.set(section.topFrameId, section.topFrameName);
+			}
+		}
+
 		return Array.from(frameNameFromNodes.entries())
-			.map(([topFrameId, topFrameName]) => ({ topFrameId, topFrameName }))
+			.map(([topFrameId, topFrameName]) => ({ id: topFrameId, name: topFrameName }))
 			.sort((a, b) => {
-				if (a.topFrameId === ORPHAN_TAB_ID) return 1;
-				if (b.topFrameId === ORPHAN_TAB_ID) return -1;
+				if (a.id === ORPHAN_TAB_ID) return 1;
+				if (b.id === ORPHAN_TAB_ID) return -1;
 				return 0;
 			});
 	}, [nodes, sections, itemOrder, nodeMap, sectionMap]);
 
-	const [activeTabId, setActiveTabId] = useState<string | null>(null);
+	const [activeTab, setActiveTab] = useState<FrameTab>(tabs[0]);
 
-	const resolvedActiveTabId = useMemo(() => {
-		if (tabs.length === 0) return null;
-		if (activeTabId && tabs.some((t) => t.topFrameId === activeTabId)) return activeTabId;
-		return tabs[0].topFrameId;
-	}, [tabs, activeTabId]);
+	const resolvedActiveTab = useMemo(() => {
+
+		if (activeTab && tabs.some((t) => t.id === activeTab.id)) return activeTab;
+		return tabs[0];
+
+	}, [tabs, activeTab]);
 
 	const activeNodes = useMemo(
-		() => nodes.filter((n) => n.topFrameId === resolvedActiveTabId),
-		[nodes, resolvedActiveTabId],
+		() => nodes.filter((n) => n.topFrameId === resolvedActiveTab.id),
+		[nodes, resolvedActiveTab],
 	);
 
 	const activeSections = useMemo(
-		() => sections.filter((s) => s.topFrameId === resolvedActiveTabId),
-		[sections, resolvedActiveTabId],
+		() => sections.filter((s) => s.topFrameId === resolvedActiveTab.id),
+		[sections, resolvedActiveTab],
 	);
 
 	const activeItemOrder = useMemo(() => {
@@ -70,8 +79,13 @@ export function TabsProvider({
 	return (
 		<TabsContext.Provider value={{
 			tabs,
-			activeTabId: resolvedActiveTabId,
-			setActiveTabId,
+			activeTab: resolvedActiveTab,
+			setActiveTab: useCallback((id: string) => {
+				const tab = tabs.find((t) => t.id === id);
+				if (tab) {
+					setActiveTab(tab);
+				}
+			}, [tabs]),
 			activeNodes,
 			activeSections,
 			activeItemOrder,

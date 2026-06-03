@@ -12,8 +12,8 @@ export function buildTabCSVs(
 	tabs: FrameTab[],
 ): Array<{ tab: FrameTab; csv: string }> {
 	return tabs.map((tab) => {
-		const tabNodes = nodes.filter((n) => n.topFrameId === tab.topFrameId);
-		const tabSections = sections.filter((s) => s.topFrameId === tab.topFrameId);
+		const tabNodes = nodes.filter((n) => n.topFrameId === tab.id);
+		const tabSections = sections.filter((s) => s.topFrameId === tab.id);
 		const tabNodeIds = new Set(tabNodes.map((n) => n.id));
 		const tabSectionIds = new Set(tabSections.map((s) => s.id));
 		const tabOrder = itemOrder.filter((id) => tabNodeIds.has(id) || tabSectionIds.has(id));
@@ -79,7 +79,7 @@ export function downloadCombinedCSV(
 	const parts: string[] = [];
 	for (const { tab, csv } of tabCsvs) {
 		if (parts.length > 0) parts.push("");
-		parts.push(sectionHeaderRow(tab.topFrameName, options).join(","));
+		parts.push(sectionHeaderRow(tab.name, options).join(","));
 		parts.push(csv);
 	}
 	triggerDownload(parts.join("\r\n"), filename);
@@ -103,7 +103,7 @@ export async function downloadZippedCSVs(
 	const bom = "\uFEFF";
 
 	for (const { tab, csv } of tabCsvs) {
-		zip.file(`${sanitizeFilename(tab.topFrameName)}.csv`, bom + csv);
+		zip.file(`${sanitizeFilename(tab.name)}.csv`, bom + csv);
 	}
 
 	const blob = await zip.generateAsync({ type: "blob" });

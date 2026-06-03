@@ -37,13 +37,13 @@ export async function downloadXLS(
 	workbook.created = new Date();
 
 	for (const tab of tabs) {
-		const tabNodes = nodes.filter((n) => n.topFrameId === tab.topFrameId);
-		const tabSections = sections.filter((s) => s.topFrameId === tab.topFrameId);
+		const tabNodes = nodes.filter((n) => n.topFrameId === tab.id);
+		const tabSections = sections.filter((s) => s.topFrameId === tab.id);
 		const tabNodeIds = new Set(tabNodes.map((n) => n.id));
 		const tabSectionIds = new Set(tabSections.map((s) => s.id));
 		const tabOrder = itemOrder.filter((id) => tabNodeIds.has(id) || tabSectionIds.has(id));
 
-		const sheetName = sanitizeFilename(tab.topFrameName).slice(0, 31); // Excel sheet name limit
+		const sheetName = sanitizeFilename(tab.name).slice(0, 31); // Excel sheet name limit
 		const sheet = workbook.addWorksheet(sheetName);
 
 		buildSheet(sheet, tabNodes, tabSections, tabOrder, options);

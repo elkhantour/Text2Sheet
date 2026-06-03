@@ -86,9 +86,9 @@ export async function handleReorder(nodeIds: string[]): Promise<void> {
 
 // ─── Section handlers ─────────────────────────────────────────────────────────
 
-export async function handleCreateSection(name: string, topFrameId: string): Promise<void> {
+export async function handleCreateSection(name: string, topFrameId: string, topFrameName: string): Promise<void> {
 	const [sections, itemOrder] = await Promise.all([getSections(), getItemOrder()]);
-	const newSection = { id: `section_${Date.now()}`, name, nodeIds: [] as string[], topFrameId };
+	const newSection = { id: `section_${Date.now()}`, name, nodeIds: [] as string[], topFrameId, topFrameName };
 	await saveSections([...sections, newSection]);
 	await saveItemOrder([...itemOrder, newSection.id]);
 	await loadAndSendState();

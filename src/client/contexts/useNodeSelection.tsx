@@ -27,7 +27,7 @@ export function NodeSelectionProvider({
 	const [isLinkSelection, setIsLinkSelection] = useState<boolean>(false);
 
 	const { getNodeFromId, getSectionFromId } = usePlugin();
-	const { setActiveTabId } = useTabs();
+	const { setActiveTab } = useTabs();
 
 	useEffect(() => {
 		const handler = (event: MessageEvent) => {
@@ -40,7 +40,7 @@ export function NodeSelectionProvider({
 						const node = getNodeFromId(msg.nodeIds[0]);
 
 						if (node) {
-							setActiveTabId(node.topFrameId);
+							setActiveTab(node.topFrameId);
 						}
 					}
 

@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import type { NodeSection } from "@ctypes/messages";
 import { useNodeSelection } from "@contexts/useNodeSelection";
 import { ContextMenu } from "@radix-ui/themes";
 import { usePlugin } from "@hooks/usePlugin";
@@ -20,11 +19,11 @@ export function NodeContextMenu({
 
 	const {
 		unmarkNodes,
-		sections,
 		moveNodesToSection,
 		getSectionFromId,
 	} = usePlugin();
 
+	const { activeSections } = useTabs();
 	const selection = useNodeSelection();
 
 	// TODO unify string[] and Set<string> for node Ids
@@ -33,7 +32,7 @@ export function NodeContextMenu({
 		if (!target) return;
 		moveNodesToSection(Array.from(nodeIds), sectionId, target.nodeIds.length);
 		selection.clearSelection();
-	}, [sections, moveNodesToSection, selection]);
+	}, [activeSections, moveNodesToSection, selection]);
 
 	const handleRemoveFromSection = useCallback((nodeIds: Set<string>) => {
 		moveNodesToSection(Array.from(nodeIds), null, 0);
@@ -62,7 +61,7 @@ export function NodeContextMenu({
 					{/* Add to section */}
 					<ContextMenu.Item
 						onSelect={() => setAddToSectionOpen(true)}
-						disabled={sections.length === 0}
+						disabled={activeSections.length === 0}
 						className="
 								flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
 								text-xs text-[var(--text-secondary)] outline-none
@@ -78,11 +77,13 @@ export function NodeContextMenu({
 					{/* Remove from section */}
 					{<ContextMenu.Item
 						onSelect={() => handleRemoveFromSection(selection.selectedIds)}
+						disabled={activeSections.length === 0}
 						className="
 									flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
 									text-xs text-[var(--text-secondary)] outline-none
 									hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)]
-									focus:bg-[var(--surface-3)]
+                                                                         focus:bg-[var(--surface-3)]
+                                                                         data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40
 								"
 					>
 						<MinusSquareIcon size={ICON_SIZE_SMALL} />

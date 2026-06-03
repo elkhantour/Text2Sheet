@@ -25,14 +25,15 @@ export function NodeSectionList(): React.ReactElement {
 		reorderNodesInSection,
 		getNodeFromId,
 		getSectionFromId,
+		sections,
 	} = usePlugin();
 
-	const { activeTabId, activeNodes, activeSections, activeItemOrder } = useTabs();
+	const { activeTab, activeNodes, activeSections, activeItemOrder } = useTabs();
 
 
 	const bodyRef = useRef<HTMLDivElement | null>(null);
 	const lastSectionCount = useRef<number>(0);
-	const lastTabId = useRef<string | null>(activeTabId);
+	const lastTabId = useRef<string | null>(activeTab ? activeTab.id : null);
 
 	const [dragging, setDragging] = useState<DragItem | null>(null);
 	const [activeDropZone, setActiveDropZone] = useState<DropZone | null>(null);
@@ -144,14 +145,14 @@ export function NodeSectionList(): React.ReactElement {
 
 	const handleAddSection = () => {
 		const name = `Section ${activeSections.length + 1}`;
-		if (activeTabId) {
-			createSection(name, activeTabId);
+		if (activeTab) {
+			createSection(name, activeTab);
 		}
 	};
 
 	useEffect(() => {
 		// scroll to the bottom if the number of section gets updated
-		if (lastTabId.current === activeTabId && lastSectionCount.current != activeSections.length)
+		if (activeTab && lastTabId.current === activeTab.id && lastSectionCount.current != activeSections.length)
 			if (bodyRef.current)
 				bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
 
@@ -160,8 +161,9 @@ export function NodeSectionList(): React.ReactElement {
 
 
 	useEffect(() => {
-		lastTabId.current = activeTabId;
-	}, [activeTabId]);
+		if (!activeTab) return;
+		lastTabId.current = activeTab.id;
+	}, [activeTab]);
 
 	// ── Deselect on empty space click ─────────────────────────────────────────
 

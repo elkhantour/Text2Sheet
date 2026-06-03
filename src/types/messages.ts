@@ -8,7 +8,7 @@ export type UIToPluginMessage =
 	| { type: "SELECT_NODE"; nodeId: string }
 	| { type: "LOAD_MARKED" }
 	| { type: "REORDER_ITEMS"; itemIds: string[] }
-	| { type: "CREATE_SECTION"; name: string, topFrameId: string }
+	| { type: "CREATE_SECTION"; name: string, topFrameId: string, topFrameName: string }
 	| { type: "DELETE_SECTION"; sectionId: string }
 	| { type: "RENAME_SECTION"; sectionId: string; name: string }
 	| { type: "MOVE_NODES_TO_SECTION"; nodeIds: string[]; sectionId: string | null; index: number }
@@ -50,6 +50,7 @@ export interface NodeSection {
 	collapsed?: boolean;
 	/** The top-level frame this section belongs to (set at creation) */
 	topFrameId: string;
+	topFrameName: string;
 }
 
 export interface ChildTextNode {
@@ -79,6 +80,6 @@ export interface ExportOptions {
 
 /** A derived tab — not stored, computed from nodes + sections */
 export interface FrameTab {
-	topFrameId: string;
-	topFrameName: string;
+	id: string;
+	name: string;
 }

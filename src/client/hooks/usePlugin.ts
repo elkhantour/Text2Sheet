@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useMemo } from "react";
-import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions } from "@ctypes/messages";
+import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions, FrameTab } from "@ctypes/messages";
 import { DEFAULT_EXPORT_OPTIONS } from "../../lib/constants";
 
 
@@ -16,7 +16,7 @@ export interface PluginHookReturn {
 	unmarkNodes: (nodeId: string[]) => void;
 	selectNode: (nodeId: string) => void;
 	dismissToast: () => void;
-	createSection: (name: string, topFrameId: string) => void;
+	createSection: (name: string, tab: FrameTab) => void;
 	deleteSection: (sectionId: string) => void;
 	renameSection: (sectionId: string, name: string) => void;
 	reorderItems: (itemIds: string[]) => void;
@@ -96,7 +96,7 @@ export function usePlugin(): PluginHookReturn {
 		unmarkNodes: useCallback((nodeIds) => postMessage({ type: "UNMARK_NODES", nodeIds }), []),
 		selectNode: useCallback((nodeId) => postMessage({ type: "SELECT_NODE", nodeId }), []),
 		dismissToast: useCallback(() => setToast(null), []),
-		createSection: useCallback((name, topFrameId) => postMessage({ type: "CREATE_SECTION", name, topFrameId }), []),
+		createSection: useCallback((name, tab) => postMessage({ type: "CREATE_SECTION", name, topFrameId: tab.id, topFrameName: tab.name }), []),
 		deleteSection: useCallback((sectionId) => postMessage({ type: "DELETE_SECTION", sectionId }), []),
 		renameSection: useCallback((sectionId, name) => postMessage({ type: "RENAME_SECTION", sectionId, name }), []),
 		reorderItems: useCallback((itemIds) => postMessage({ type: "REORDER_ITEMS", itemIds }), []),
