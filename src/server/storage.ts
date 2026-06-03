@@ -1,10 +1,6 @@
 import { DEFAULT_EXPORT_OPTIONS } from "../lib/constants";
-import { STORAGE_KEY } from "./constants";
+import { EXPORT_OPTIONS_KEY, ITEM_ORDER_KEY, SECTIONS_KEY, STORAGE_KEY } from "./constants";
 import type { NodeSection, ExportOptions } from "@ctypes/messages";
-
-const SECTIONS_KEY = "sections";
-const ITEM_ORDER_KEY = "itemOrder";
-const EXPORT_OPTIONS_KEY = "exportOptions";
 
 // ─── Node IDs ─────────────────────────────────────────────────────────────────
 

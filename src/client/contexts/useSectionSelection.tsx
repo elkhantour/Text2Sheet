@@ -6,14 +6,14 @@ export interface SectionContextValue {
 	isSectionActive: (sectionId: string) => boolean;
 }
 
-export const SectionContext = createContext<SectionContextValue | null>(null);
+export const SectionSelectionContext = createContext<SectionContextValue | null>(null);
 
 
 interface Props {
 	children: React.ReactNode;
 }
 
-export function SectionProvider({ children }: Props) {
+export function SectionSelectionProvider({ children }: Props) {
 	const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
 
 	const setActiveSection = useCallback((sectionId: string | null) => {
@@ -35,18 +35,18 @@ export function SectionProvider({ children }: Props) {
 	);
 
 	return (
-		<SectionContext.Provider value={value}>
+		<SectionSelectionContext.Provider value={value}>
 			{children}
-		</SectionContext.Provider>
+		</SectionSelectionContext.Provider>
 	);
 }
 
-export function useSection() {
-	const context = useContext(SectionContext);
+export function useSectionSelection() {
+	const context = useContext(SectionSelectionContext);
 
 	if (!context) {
 		throw new Error(
-			"useSection must be used within a SectionProvider"
+			"useSectionSelection must be used within a SectionSelectionProvider"
 		);
 	}
 

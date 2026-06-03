@@ -14,8 +14,10 @@ export type UIToPluginMessage =
 	| { type: "MOVE_NODES_TO_SECTION"; nodeIds: string[]; sectionId: string | null; index: number }
 	| { type: "REORDER_NODES_IN_SECTION"; sectionId: string; nodeIds: string[] }
 	| { type: "SAVE_EXPORT_OPTIONS"; options: ExportOptions }
+	| { type: "RESIZE_WINDOW"; width: number; height: number; }
 	// Legacy
 	| { type: "REORDER_NODES"; nodeIds: string[] };
+
 
 // ─── Message types (Plugin → UI) ────────────────────────────────────────────
 
@@ -24,7 +26,8 @@ export type PluginToUIMessage =
 	| { type: "STATE_UPDATE"; nodes: MarkedNode[]; sections: NodeSection[]; itemOrder: string[]; exportOptions: ExportOptions }
 	| { type: "ERROR"; message: string }
 	| { type: "NOTIFY"; message: string }
-	| { type: "SELECT_NODES"; nodeIds: string[] };
+	| { type: "SELECT_NODES"; nodeIds: string[] }
+	| { type: "LATEST_ADDED_NODES"; nodeIds: string[] }
 
 // ─── Data shapes ─────────────────────────────────────────────────────────────
 

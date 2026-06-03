@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import type { ExportOptions } from "@ctypes/messages";
 import { Button, Dialog, SegmentedControl, Text, Separator } from "@radix-ui/themes";
 import { CheckboxStateToBool } from "@components/Checkbox/Utils";
@@ -9,7 +9,6 @@ import { usePlugin } from "@hooks/usePlugin";
 import { useTabs } from "@contexts/useTabs";
 import { Toggle } from "@radix-ui/react-toggle";
 import { useNodeSelection } from "@contexts/useNodeSelection";
-
 
 export function Toolbar(): React.ReactElement {
 
@@ -45,7 +44,8 @@ export function Toolbar(): React.ReactElement {
 						data-active={isLinkSelection}
 						className="
                                            		text-[var(--text-muted)]
-                                           		data-[active=true]:text-[var(--accent)]
+                                                        data-[active=true]:text-[var(--accent)]
+                                                        hover:text-[var(--accent-7)]
                                            	"
 					/>
 				</Toggle>
@@ -120,5 +120,6 @@ export function Toolbar(): React.ReactElement {
 		</div>
 	);
 }
+
 
 

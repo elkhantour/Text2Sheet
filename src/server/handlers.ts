@@ -1,3 +1,4 @@
+import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { sendError, sendNotify, sendToUI } from "./message";
 import { loadAndSendState } from "./node";
 import { getStoredIds, saveIds, getSections, saveSections, getItemOrder, saveItemOrder, saveExportOptions } from "./storage";
@@ -16,6 +17,7 @@ export async function handleHighlightMarked(): Promise<void> {
 }
 
 export async function handleMarkSelection(): Promise<void> {
+
 	const selection = figma.currentPage.selection;
 	if (selection.length === 0) { sendError("Select at least one layer in the canvas first."); return; }
 
@@ -28,6 +30,7 @@ export async function handleMarkSelection(): Promise<void> {
 	};
 	selection.forEach((sel) => getChildTextNodes(sel));
 
+
 	for (const id of selectionTextNodeIds) {
 		if (!storedIds.includes(id)) {
 			storedIds.push(id);
@@ -35,12 +38,16 @@ export async function handleMarkSelection(): Promise<void> {
 		}
 	}
 
+	sendToUI({ type: "LATEST_ADDED_NODES", nodeIds: selectionTextNodeIds });
+
 	await saveIds(storedIds);
 	await saveItemOrder(itemOrder);
 	await loadAndSendState();
 	sendNotify(`Marked ${selectionTextNodeIds.length} layer${selectionTextNodeIds.length > 1 ? "s" : ""} for export.`);
 
+
 }
+
 
 export async function handleUnmarkNodeList(nodeIds: string[]): Promise<void> {
 	const [storedIds, sections, itemOrder] = await Promise.all([
@@ -186,11 +193,12 @@ export async function handleSyncSelectionToUI() {
 		visit(node);
 	}
 
+	sendToUI({ type: "SELECT_NODES", nodeIds: selectedStoredIds });
+}
 
 
-	sendToUI({
-		type: "SELECT_NODES",
-		nodeIds: selectedStoredIds,
-	});
-
+export function handleResizeWindow(width: number, height: number) {
+	width = Math.max(Math.round(width), PLUGIN_WIDTH);
+	height = Math.max(Math.round(height), PLUGIN_HEIGHT);
+	figma.ui.resize(width, height);
 }

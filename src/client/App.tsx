@@ -8,7 +8,8 @@ import { FrameTabs } from "@components/FrameTab/FrameTab";
 import { LoadingState } from "@components/Loading/Loading";
 import { NodeSelectionProvider } from "@contexts/useNodeSelection";
 import { TabsProvider } from "@contexts/useTabs";
-import { SectionProvider } from "@contexts/useSection";
+import { SectionSelectionProvider } from "@contexts/useSectionSelection";
+import Resizer from "@components/Resizer/Resizer";
 
 export function App(): React.ReactElement {
 
@@ -23,7 +24,7 @@ export function App(): React.ReactElement {
 
 	return (
 		<TabsProvider nodes={markedNodes} sections={sections} itemOrder={itemOrder}>
-			<SectionProvider>
+			<SectionSelectionProvider>
 				<NodeSelectionProvider>
 					<div className=" flex h-screen flex-col relative bg-[var(--bg)]">
 						<Toolbar />
@@ -37,9 +38,10 @@ export function App(): React.ReactElement {
 
 						<Footer />
 						<Toast />
+						<Resizer />
 					</div>
 				</NodeSelectionProvider>
-			</SectionProvider>
+			</SectionSelectionProvider>
 		</TabsProvider>
 	);
 }

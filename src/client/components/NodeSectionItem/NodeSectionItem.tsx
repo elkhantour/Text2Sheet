@@ -3,8 +3,8 @@ import type { MarkedNode, NodeSection } from "@ctypes/messages";
 import { useDnd } from "@components/Dnd/Context";
 import { SectionBody } from "./SectionBody";
 import { usePlugin } from "@hooks/usePlugin";
-import { useSection } from "@contexts/useSection";
-
+import { ChevronDown, GripVertical, XIcon } from "lucide-react";
+import { ICON_SIZE_EXTRA_SMALL } from "@utils/constants";
 
 interface NodeSectionItemProps {
 	section: NodeSection;
@@ -23,8 +23,6 @@ export function NodeSectionItem({
 	const [isEditingName, setIsEditingName] = useState(false);
 	const [draftName, setDraftName] = useState(section.name);
 	const inputRef = useRef<HTMLInputElement>(null);
-
-	const { setActiveSection, isSectionActive } = useSection();
 
 	const { getNodeFromId } = usePlugin();
 
@@ -79,17 +77,11 @@ export function NodeSectionItem({
 		if (e.key === "Escape") { setDraftName(section.name); setIsEditingName(false); }
 	};
 
-	// ── Active state  ─────────────────────────────────────────────────────────
-	const handleOnClick = () => {
-		setActiveSection(isSectionActive(section.id) ? null : section.id);
-	};
 
 	return (
 		<div
-			data-active={isSectionActive(section.id)}
 			data-target={isHeaderDropTarget}
 			data-dragging={isDraggingThis}
-			onClick={handleOnClick}
 			className="
 	                 	rounded-md border transition-all
                  		border-[var(--border-light)]
@@ -110,27 +102,12 @@ export function NodeSectionItem({
 				onDrop={handleHeaderDrop}
 				className="flex items-center gap-1.5 px-2 py-1.5 cursor-grab active:cursor-grabbing select-none"
 			>
-				{/* Drag handle */}
-				<svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="flex-shrink-0 text-[var(--text-muted)]">
-					<circle cx="4" cy="3" r="1" fill="currentColor" />
-					<circle cx="8" cy="3" r="1" fill="currentColor" />
-					<circle cx="4" cy="6" r="1" fill="currentColor" />
-					<circle cx="8" cy="6" r="1" fill="currentColor" />
-					<circle cx="4" cy="9" r="1" fill="currentColor" />
-					<circle cx="8" cy="9" r="1" fill="currentColor" />
-				</svg>
-
-				{/* Collapse chevron */}
+				<GripVertical size={ICON_SIZE_EXTRA_SMALL} className="text-[var(--text-muted)]" />
 				<button
 					onClick={() => setCollapsed((c) => !c)}
 					className="flex-shrink-0 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
 				>
-					<svg
-						width="12" height="12" viewBox="0 0 12 12" fill="none"
-						className={`transition-transform ${collapsed ? "-rotate-90" : ""}`}
-					>
-						<path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-					</svg>
+					<ChevronDown size={ICON_SIZE_EXTRA_SMALL} className={`transition-transform ${collapsed ? "-rotate-90" : ""}`} />
 				</button>
 
 				{/* Section name */}
@@ -166,9 +143,7 @@ export function NodeSectionItem({
 					           hover:text-[var(--text-danger)] hover:bg-[var(--bg-danger-subtle)] transition-colors"
 					title="Delete section"
 				>
-					<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-						<path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-					</svg>
+					<XIcon size={ICON_SIZE_EXTRA_SMALL} />
 				</button>
 			</div>
 

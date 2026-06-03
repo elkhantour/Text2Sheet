@@ -17,6 +17,7 @@ import {
 	handleUnmarkNodeList,
 	handleMoveNodeListToSection,
 	handleSyncSelectionToUI,
+	handleResizeWindow,
 } from "./handlers";
 
 figma.showUI(__html__, { width: PLUGIN_WIDTH, height: PLUGIN_HEIGHT, title: "Text2Sheet" });
@@ -36,6 +37,8 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "REORDER_ITEMS": await handleReorderItems(msg.itemIds); break;
 		case "MOVE_NODES_TO_SECTION": await handleMoveNodeListToSection(msg.nodeIds, msg.sectionId, msg.index); break;
 		case "REORDER_NODES_IN_SECTION": await handleReorderNodesInSection(msg.sectionId, msg.nodeIds); break;
+
+		case "RESIZE_WINDOW": handleResizeWindow(msg.width, msg.height); break;
 		case "SAVE_EXPORT_OPTIONS": await handleSaveExportOptions(msg.options); break;
 		case "CLEAR_ALL":
 			await saveIds([]);

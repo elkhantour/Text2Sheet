@@ -25,6 +25,8 @@ export interface PluginHookReturn {
 	saveExportOptions: (options: ExportOptions) => void;
 	getNodeFromId: (id: string) => MarkedNode | undefined;
 	getSectionFromId: (id: string) => NodeSection | undefined;
+	latestAddedNodes: string[];
+	resizeWindow: (width: number, height: number) => void;
 }
 
 export function usePlugin(): PluginHookReturn {
@@ -35,7 +37,7 @@ export function usePlugin(): PluginHookReturn {
 	const [exportOptions, setExportOptions] = useState<ExportOptions>(DEFAULT_EXPORT_OPTIONS);
 	const [isLoading, setIsLoading] = useState(true);
 	const [toast, setToast] = useState<PluginHookReturn["toast"]>(null);
-
+	const [latestAddedNodes, setLatestAddedNodes] = useState<string[]>([]);
 
 	useEffect(() => {
 		if (!toast) return;
@@ -58,6 +60,9 @@ export function usePlugin(): PluginHookReturn {
 					setItemOrder(msg.itemOrder);
 					setExportOptions(msg.exportOptions);
 					setIsLoading(false);
+					break;
+				case "LATEST_ADDED_NODES":
+					setLatestAddedNodes(msg.nodeIds);
 					break;
 				case "ERROR": setToast({ message: msg.message, kind: "error" }); break;
 				case "NOTIFY": setToast({ message: msg.message, kind: "success" }); break;
@@ -84,7 +89,7 @@ export function usePlugin(): PluginHookReturn {
 
 
 	return {
-		markedNodes, sections, itemOrder, exportOptions, isLoading, toast,
+		markedNodes, sections, itemOrder, exportOptions, isLoading, toast, latestAddedNodes,
 		markSelection: useCallback(() => postMessage({ type: "MARK_SELECTION" }), []),
 		highlightMarked: useCallback(() => postMessage({ type: "HIGHLIGHT_MARKED" }), []),
 		clearAll: useCallback(() => postMessage({ type: "CLEAR_ALL" }), []),
@@ -100,6 +105,9 @@ export function usePlugin(): PluginHookReturn {
 		saveExportOptions,
 		getNodeFromId: useCallback((id) => nodeMap.get(id), [nodeMap]),
 		getSectionFromId: useCallback((id) => sectionMap.get(id), [sectionMap]),
+		resizeWindow: useCallback((width: number, height: number) => {
+			postMessage({ type: "RESIZE_WINDOW", width, height })
+		}, [])
 	};
 }
 

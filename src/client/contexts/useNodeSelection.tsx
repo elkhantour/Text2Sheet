@@ -7,6 +7,7 @@ export interface NodeSelectionState {
 	selectedIds: Set<string>;
 	select: (id: string) => void;
 	toggle: (id: string) => void;
+	deselect: (id: string) => void;
 	rangeSelect: (id: string, orderedIds: string[]) => void;
 	clearSelection: () => void;
 	isSelected: (id: string) => boolean;
@@ -73,6 +74,14 @@ export function NodeSelectionProvider({
 		setLastSelectedId(id);
 	}, []);
 
+	const deselect = useCallback((id: string) => {
+		setSelectedIds((prev) => {
+			const next = new Set(prev);
+			next.delete(id);
+			return next;
+		});
+	}, []);
+
 	const rangeSelect = useCallback((id: string, orderedIds: string[]) => {
 
 		if (!lastSelectedId) { select(id); return; }
@@ -121,6 +130,7 @@ export function NodeSelectionProvider({
 	return (<NodeSelectionContext.Provider value={{
 		selectedIds,
 		select,
+		deselect,
 		toggle,
 		rangeSelect,
 		clearSelection,

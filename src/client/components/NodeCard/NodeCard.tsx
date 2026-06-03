@@ -4,7 +4,7 @@ import { useDnd } from "@components/Dnd/Context";
 import { useNodeSelection } from "@contexts/useNodeSelection";
 import { NodeContextMenu } from "./NodeContextMenu";
 import { usePlugin } from "@hooks/usePlugin";
-import { FrameIcon, XIcon } from "lucide-react";
+import { GripVertical, ScanIcon, XIcon } from "lucide-react";
 import { ICON_SIZE_EXTRA_SMALL } from "@utils/constants";
 
 interface NodeCardProps {
@@ -50,6 +50,7 @@ export function NodeCard({
 
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
+
 		if (e.shiftKey) {
 			selection.rangeSelect(nodeId, itemOrder);
 		} else if (e.metaKey || e.ctrlKey) {
@@ -98,7 +99,9 @@ export function NodeCard({
 
 	const handleUnmark = (id: string) => {
 		// If the card is part of a selection, remove all selected
-		unmarkNodes(getDraggableNodes(id));
+		const ids = getDraggableNodes(id);
+		unmarkNodes(ids);
+		ids.forEach(selection.deselect);
 	};
 
 	// ── Helper ───────────────────────────────────────────────────────────────
@@ -133,7 +136,7 @@ export function NodeCard({
 				">
 				{/* Top row */}
 				<div className="flex items-center gap-2">
-					<span className="w-4 shrink-0 text-center font-mono text-[var(--text-muted)]">⠿</span>
+					<GripVertical size={ICON_SIZE_EXTRA_SMALL} className="text-[var(--text-muted)]" />
 
 					<span className={`flex-1 truncate text-xs font-medium transition-colors ${selected ? "text-[var(--accent)]" : "text-[var(--text-primary)]"
 						}`}>
@@ -142,7 +145,7 @@ export function NodeCard({
 
 					<div className="flex shrink-0 gap-1">
 						<ActionButton title="Focus layer in canvas" onClick={() => selectNode(nodeId)}>
-							<FrameIcon size={ICON_SIZE_EXTRA_SMALL} />
+							<ScanIcon size={ICON_SIZE_EXTRA_SMALL} />
 						</ActionButton>
 						<ActionButton title="Remove from export" onClick={() => handleUnmark(nodeId)} danger>
 							<XIcon size={ICON_SIZE_EXTRA_SMALL} />

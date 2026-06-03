@@ -49,7 +49,7 @@ export function SectionBody({
 		>
 			{
 				sectionNodes.length === 0 && (
-					<div className="flex items-center justify-center h-8 rounded border border-dashed text-[10px] text-[var(--text-muted)] transition-colors">
+					<div className="flex items-center justify-center h-8 rounded border border-dashed text-[10px] text-[var(--text-muted)] cursor-default select-none transition-colors">
 						Drop cards here
 					</div>
 				)

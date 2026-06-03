@@ -175,9 +175,6 @@ function AddToSectionDialog({
 									hover:text-[var(--text-primary)]
 								"
 							>
-								<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-									<rect x="0.5" y="0.5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1" />
-								</svg>
 								{section.name}
 								<span className="ml-auto text-[10px] text-[var(--text-muted)]">
 									{section.nodeIds.length}
