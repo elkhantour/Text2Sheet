@@ -45,7 +45,7 @@ function buildSectionedCSV(
 	const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 	const sectionMap = new Map(sections.map((s) => [s.id, s]));
 
-	const rows: string[][] = [headerRow(options)];
+	const rows: string[][] = []; //headerRow(options)
 	let isFirstLooseNode = true;
 
 	for (const id of itemOrder) {
