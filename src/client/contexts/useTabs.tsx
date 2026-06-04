@@ -24,6 +24,7 @@ export function TabsProvider({
 	itemOrder: string[];
 	children: React.ReactNode;
 }) {
+
 	const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
 	const sectionMap = useMemo(() => new Map(sections.map((s) => [s.id, s])), [sections]);
 

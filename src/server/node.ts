@@ -44,6 +44,7 @@ export async function loadAndSendState(): Promise<void> {
 		if (!cleanedOrder.includes(id) && !idsInSections.has(id)) cleanedOrder.push(id);
 	}
 
+	// DELETEME
 	// if (
 	//   cleanedSections.some((s, i) => s.nodeIds.length !== sections[i]?.nodeIds.length) ||
 	//   cleanedOrder.length !== itemOrder.length

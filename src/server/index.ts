@@ -24,6 +24,7 @@ figma.showUI(__html__, { width: PLUGIN_WIDTH, height: PLUGIN_HEIGHT, title: "Tex
 loadAndSendState();
 
 figma.ui.onmessage = async (msg: UIToPluginMessage) => {
+
 	switch (msg.type) {
 		case "MARK_SELECTION": await handleMarkSelection(); break;
 		case "HIGHLIGHT_MARKED": await handleHighlightMarked(); break;

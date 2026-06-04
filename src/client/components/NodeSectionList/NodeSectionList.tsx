@@ -25,7 +25,7 @@ export function NodeSectionList(): React.ReactElement {
 		reorderNodesInSection,
 		getNodeFromId,
 		getSectionFromId,
-		sections,
+		itemOrder,
 	} = usePlugin();
 
 	const { activeTab, activeNodes, activeSections, activeItemOrder } = useTabs();
@@ -73,7 +73,7 @@ export function NodeSectionList(): React.ReactElement {
 
 		if (dragging.kind === "section") {
 			if (activeDropZone.kind === "top-level") {
-				const next = reorderTopLevel(activeItemOrder, dragging.sectionId, activeDropZone.beforeId);
+				const next = reorderTopLevel(itemOrder, dragging.sectionId, activeDropZone.beforeId);
 				reorderItems(next);
 			}
 		} else if (dragging.kind === "nodes") {
@@ -86,7 +86,7 @@ export function NodeSectionList(): React.ReactElement {
 
 				let newIndex = 0;
 				for (const nodeId of nodeIds) {
-					removeNodeFromSource(nodeId, sourceSectionId, activeItemOrder, moveNodesToSection, reorderNodesInSection, reorderItems);
+					removeNodeFromSource(nodeId, sourceSectionId, itemOrder, moveNodesToSection, reorderNodesInSection, reorderItems);
 					newIndex = target.nodeIds.filter((id) => !nodeIds.includes(id)).length;
 				}
 
@@ -105,7 +105,7 @@ export function NodeSectionList(): React.ReactElement {
 				for (let i = 0; i < nodeIds.length; i++) {
 					const nodeId = nodeIds[i];
 					if (sourceSectionId !== activeDropZone.sectionId) {
-						removeNodeFromSource(nodeId, sourceSectionId, activeItemOrder, moveNodesToSection, reorderNodesInSection, reorderItems);
+						removeNodeFromSource(nodeId, sourceSectionId, itemOrder, moveNodesToSection, reorderNodesInSection, reorderItems);
 					}
 				}
 
@@ -115,7 +115,7 @@ export function NodeSectionList(): React.ReactElement {
 
 				moveNodesToSection(nodeIds, null, 0);
 				// Insert all dragged nodes before the target, preserving their relative order
-				let order = activeItemOrder;
+				let order = itemOrder;
 				for (const nodeId of nodeIds) {
 					if (!order.includes(nodeId)) order = [...order, nodeId];
 				}
@@ -139,7 +139,7 @@ export function NodeSectionList(): React.ReactElement {
 			setDragging(null);
 			setActiveDropZone(null);
 		}
-	}, [dragging, activeDropZone, activeItemOrder, activeSections, reorderItems, moveNodesToSection, reorderNodesInSection]);
+	}, [dragging, activeDropZone, itemOrder, activeSections, reorderItems, moveNodesToSection, reorderNodesInSection]);
 
 	// ── Add section ───────────────────────────────────────────────────────────
 
@@ -152,7 +152,7 @@ export function NodeSectionList(): React.ReactElement {
 
 	useEffect(() => {
 		// scroll to the bottom if the number of section gets updated
-		if (activeTab && lastTabId.current === activeTab.id && lastSectionCount.current != activeSections.length)
+		if (activeTab && lastTabId.current === activeTab.id && lastSectionCount.current < activeSections.length)
 			if (bodyRef.current)
 				bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
 
@@ -170,7 +170,6 @@ export function NodeSectionList(): React.ReactElement {
 	const handleListMouseDown = (e: React.MouseEvent) => {
 		if (e.target === e.currentTarget) selection.clearSelection();
 	};
-
 
 
 	// ── Render ────────────────────────────────────────────────────────────────
