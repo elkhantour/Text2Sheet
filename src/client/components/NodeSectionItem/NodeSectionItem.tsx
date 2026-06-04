@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import type { MarkedNode, NodeSection } from "@ctypes/messages";
 import { useDnd } from "@components/Dnd/Context";
 import { SectionBody } from "./SectionBody";
-import { usePlugin } from "@hooks/usePlugin";
+import { usePlugin } from "@contexts/usePlugin";
 import { ChevronDown, GripVertical, XIcon } from "lucide-react";
 import { ICON_SIZE_EXTRA_SMALL } from "@utils/constants";
 

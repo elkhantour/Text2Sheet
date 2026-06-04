@@ -1,7 +1,7 @@
 import React from "react";
 import { useState, useCallback, useEffect, useContext, createContext } from "react";
 import { useTabs } from "./useTabs";
-import { usePlugin } from "@hooks/usePlugin";
+import { usePlugin } from "@contexts/usePlugin";
 
 export interface NodeSelectionState {
 	selectedIds: Set<string>;

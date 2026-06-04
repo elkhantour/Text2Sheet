@@ -4,9 +4,7 @@ import {
 	getStoredIds,
 	saveIds,
 	getSections,
-	saveSections,
 	getItemOrder,
-	saveItemOrder,
 	getExportOptions
 } from "./storage";
 import { ORPHAN_TAB_ID, ORPHAN_TAB_NAME } from "../lib/constants";
@@ -14,9 +12,11 @@ import { ORPHAN_TAB_ID, ORPHAN_TAB_NAME } from "../lib/constants";
 // ─── Main state loader ────────────────────────────────────────────────────────
 
 export async function loadAndSendState(): Promise<void> {
-	const [storedIds, sections, itemOrder, exportOptions] = await Promise.all([
-		getStoredIds(), getSections(), getItemOrder(), getExportOptions(),
-	]);
+
+	const storedIds = getStoredIds();
+	const sections = getSections();
+	const itemOrder = getItemOrder();
+	const exportOptions = getExportOptions();
 
 	const validIds: string[] = [];
 	const markedNodes: MarkedNode[] = [];
@@ -28,7 +28,7 @@ export async function loadAndSendState(): Promise<void> {
 		resolveNode(node).forEach((child) => markedNodes.push(child));
 	}
 
-	if (validIds.length !== storedIds.length) await saveIds(validIds);
+	if (validIds.length !== storedIds.length) saveIds(validIds);
 
 	const validIdSet = new Set(validIds);
 	const cleanedSections = sections.map((s) => ({

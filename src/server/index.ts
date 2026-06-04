@@ -31,7 +31,7 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "UNMARK_NODES": await handleUnmarkNodeList(msg.nodeIds); break;
 		case "SELECT_NODE": await handleSelectNode(msg.nodeId); break;
 		case "LOAD_MARKED": await loadAndSendState(); break;
-		case "REORDER_NODES": await saveIds(msg.nodeIds); break;
+		case "REORDER_NODES": saveIds(msg.nodeIds); break;
 		case "CREATE_SECTION": await handleCreateSection(msg.name, msg.topFrameId, msg.topFrameName); break;
 		case "DELETE_SECTION": await handleDeleteSection(msg.sectionId); break;
 		case "RENAME_SECTION": await handleRenameSection(msg.sectionId, msg.name); break;
@@ -42,9 +42,9 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "RESIZE_WINDOW": handleResizeWindow(msg.width, msg.height); break;
 		case "SAVE_EXPORT_OPTIONS": await handleSaveExportOptions(msg.options); break;
 		case "CLEAR_ALL":
-			await saveIds([]);
-			await saveSections([]);
-			await saveItemOrder([]);
+			saveIds([]);
+			saveSections([]);
+			saveItemOrder([]);
 			await loadAndSendState();
 			sendNotify("Cleared all marked layers.");
 			break;

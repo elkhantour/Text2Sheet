@@ -6,7 +6,7 @@ import { FileDownIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 import { Spinner } from "./Spinner";
 import { export2File } from "@utils/exports/manager";
-import { usePlugin } from "@hooks/usePlugin";
+import { usePlugin } from "@contexts/usePlugin";
 import { useTabs } from "@contexts/useTabs";
 
 function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {

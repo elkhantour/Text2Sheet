@@ -1,13 +1,13 @@
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { sendError, sendNotify, sendToUI } from "./message";
 import { loadAndSendState } from "./node";
-import { getStoredIds, saveIds, getSections, saveSections, getItemOrder, saveItemOrder, saveExportOptions } from "./storage";
+import { getStoredIds, saveIds, getSections, saveSections, saveItemOrder, saveExportOptions, getItemOrder } from "./storage";
 import { ExportOptions } from "@ctypes/messages";
 
 // ─── Existing handlers ────────────────────────────────────────────────────────
 
 export async function handleHighlightMarked(): Promise<void> {
-	const storedIds = await getStoredIds();
+	const storedIds = getStoredIds();
 	const nodes = await Promise.all(storedIds.map((id) => figma.getNodeByIdAsync(id)));
 	const validNodes = nodes.filter((n): n is SceneNode => n !== null && "parent" in n && n.parent !== null);
 	if (validNodes.length === 0) { sendError("No marked layers found in this file."); return; }
@@ -25,7 +25,7 @@ export async function handleMarkSelection(): Promise<void> {
 	const selectionTextNodeIds: string[] = [];
 
 	const getChildTextNodes = (node: SceneNode) => {
-		if (node.type === "TEXT") return selectionTextNodeIds.push(node.id);
+		if (node.type === "TEXT" && node.visible) return selectionTextNodeIds.push(node.id);
 		if ("children" in node) node.children.forEach(getChildTextNodes);
 	};
 	selection.forEach((sel) => getChildTextNodes(sel));
@@ -40,8 +40,8 @@ export async function handleMarkSelection(): Promise<void> {
 
 	sendToUI({ type: "LATEST_ADDED_NODES", nodeIds: selectionTextNodeIds });
 
-	await saveIds(storedIds);
-	await saveItemOrder(itemOrder);
+	saveIds(storedIds);
+	saveItemOrder(itemOrder);
 	await loadAndSendState();
 	sendNotify(`Marked ${selectionTextNodeIds.length} layer${selectionTextNodeIds.length > 1 ? "s" : ""} for export.`);
 
@@ -69,7 +69,8 @@ export async function handleUnmarkNodeList(nodeIds: string[]): Promise<void> {
 		saveItemOrder(itemOrder.filter(id => !idSet.has(id))),
 	]);
 
-	await loadAndSendState();
+	// Already handled visually client side
+	// await loadAndSendState();
 }
 
 export async function handleSelectNode(nodeId: string): Promise<void> {
@@ -80,18 +81,21 @@ export async function handleSelectNode(nodeId: string): Promise<void> {
 	figma.viewport.scrollAndZoomIntoView([node as SceneNode]);
 }
 
-export async function handleReorder(nodeIds: string[]): Promise<void> {
-	await saveIds(nodeIds);
+export function handleReorder(nodeIds: string[]): void {
+	saveIds(nodeIds);
 }
 
 // ─── Section handlers ─────────────────────────────────────────────────────────
 
 export async function handleCreateSection(name: string, topFrameId: string, topFrameName: string): Promise<void> {
-	const [sections, itemOrder] = await Promise.all([getSections(), getItemOrder()]);
+	const itemOrder = getItemOrder();
+	const sections = getSections();
 	const newSection = { id: `section_${Date.now()}`, name, nodeIds: [] as string[], topFrameId, topFrameName };
-	await saveSections([...sections, newSection]);
-	await saveItemOrder([...itemOrder, newSection.id]);
-	await loadAndSendState();
+	saveSections([...sections, newSection]);
+	saveItemOrder([...itemOrder, newSection.id]);
+
+	// Already handled visually client side
+	// await loadAndSendState();
 }
 
 export async function handleDeleteSection(sectionId: string): Promise<void> {
@@ -101,20 +105,26 @@ export async function handleDeleteSection(sectionId: string): Promise<void> {
 	const sectionIdx = itemOrder.indexOf(sectionId);
 	const newOrder = [...itemOrder];
 	newOrder.splice(sectionIdx, 1, ...target.nodeIds);
-	await saveSections(sections.filter((s) => s.id !== sectionId));
-	await saveItemOrder(newOrder);
-	await loadAndSendState();
+	saveSections(sections.filter((s) => s.id !== sectionId));
+	saveItemOrder(newOrder);
+
+	// Already handled visually client side
+	// await loadAndSendState();
 }
 
 export async function handleRenameSection(sectionId: string, name: string): Promise<void> {
-	const sections = await getSections();
-	await saveSections(sections.map((s) => (s.id === sectionId ? { ...s, name } : s)));
-	await loadAndSendState();
+	const sections = getSections();
+	saveSections(sections.map((s) => (s.id === sectionId ? { ...s, name } : s)));
+
+	// Already handled visually client side
+	// await loadAndSendState();
 }
 
 export async function handleReorderItems(itemIds: string[]): Promise<void> {
-	await saveItemOrder(itemIds);
-	await loadAndSendState();
+	saveItemOrder(itemIds);
+
+	// Already handled visually client side
+	// await loadAndSendState();
 }
 
 export async function handleMoveNodeListToSection(
@@ -122,10 +132,9 @@ export async function handleMoveNodeListToSection(
 	sectionId: string | null,
 	index: number
 ): Promise<void> {
-	const [sections, itemOrder] = await Promise.all([
-		getSections(),
-		getItemOrder(),
-	]);
+
+	const sections = getSections();
+	const itemOrder = getItemOrder();
 
 	const idSet = new Set(nodeIds);
 
@@ -158,23 +167,26 @@ export async function handleMoveNodeListToSection(
 		]);
 	}
 
-	await loadAndSendState();
+	// TODO: Already handled visually client side
+	// await loadAndSendState();
 }
 
 export async function handleReorderNodesInSection(sectionId: string, nodeIds: string[]): Promise<void> {
-	const sections = await getSections();
-	await saveSections(sections.map((s) => (s.id === sectionId ? { ...s, nodeIds } : s)));
+	const sections = getSections();
+	saveSections(sections.map((s) => (s.id === sectionId ? { ...s, nodeIds } : s)));
+
+	//TODO:  Already handled visually client side
 	await loadAndSendState();
 }
 
 export async function handleSaveExportOptions(options: ExportOptions): Promise<void> {
-	await saveExportOptions(options);
+	saveExportOptions(options);
 	await loadAndSendState();
 }
 
 
 export async function handleSyncSelectionToUI() {
-	const storedIds = new Set(await getStoredIds());
+	const storedIds = new Set(getStoredIds());
 
 	const selectedStoredIds: string[] = [];
 

@@ -10,7 +10,7 @@ import { Button, Text } from "@radix-ui/themes";
 import { PlusIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 import { useNodeSelection } from "@contexts/useNodeSelection";
-import { usePlugin } from "@hooks/usePlugin";
+import { usePlugin } from "@contexts/usePlugin";
 import { useTabs } from "@contexts/useTabs";
 
 
@@ -30,7 +30,6 @@ export function NodeSectionList(): React.ReactElement {
 
 	const { activeTab, activeNodes, activeSections, activeItemOrder } = useTabs();
 
-
 	const bodyRef = useRef<HTMLDivElement | null>(null);
 	const lastSectionCount = useRef<number>(0);
 	const lastTabId = useRef<string | null>(activeTab ? activeTab.id : null);
@@ -40,23 +39,6 @@ export function NodeSectionList(): React.ReactElement {
 
 	// ── Selection ─────────────────────────────────────────────────────────────
 	const selection = useNodeSelection();
-
-	// DELETEME Flat ordered list of all visible node IDs for range-select
-	const orderedNodeIds = useMemo(() => {
-		const ids: string[] = [];
-		for (const id of activeItemOrder) {
-
-			const node = getNodeFromId(id);
-			if (node) {
-				ids.push(id);
-			} else {
-				const section = getSectionFromId(id);
-				if (section) ids.push(...section.nodeIds.filter((nid) => !!(getNodeFromId(nid))));
-			}
-		}
-		return ids;
-	}, [activeItemOrder, activeNodes, activeSections]);
-
 
 	// TODO: Move this whole chunk within a DragAndDrop decicated component
 	// ── Dnd ───────────────────────────────────────────────────────────────────

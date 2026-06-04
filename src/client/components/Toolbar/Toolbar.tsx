@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import React from "react";
 import type { ExportOptions } from "@ctypes/messages";
 import { Button, Dialog, SegmentedControl, Text, Separator } from "@radix-ui/themes";
 import { CheckboxStateToBool } from "@components/Checkbox/Utils";
 import Checkbox from "@components/Checkbox/Checkbox";
 import { PlusIcon, SettingsIcon, SquareDashedMousePointerIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
-import { usePlugin } from "@hooks/usePlugin";
+import { usePlugin } from "@contexts/usePlugin";
 import { useTabs } from "@contexts/useTabs";
 import { Toggle } from "@radix-ui/react-toggle";
 import { useNodeSelection } from "@contexts/useNodeSelection";

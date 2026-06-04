@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useNodeSelection } from "@contexts/useNodeSelection";
 import { ContextMenu } from "@radix-ui/themes";
-import { usePlugin } from "@hooks/usePlugin";
+import { usePlugin } from "@contexts/usePlugin";
 import { MinusSquareIcon, PlusSquareIcon, TrashIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 import { useTabs } from "@contexts/useTabs";

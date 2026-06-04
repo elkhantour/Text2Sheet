@@ -3,49 +3,41 @@ import { EXPORT_OPTIONS_KEY, ITEM_ORDER_KEY, SECTIONS_KEY, STORAGE_KEY } from ".
 import type { NodeSection, ExportOptions } from "@ctypes/messages";
 
 // ─── Node IDs ─────────────────────────────────────────────────────────────────
-
-export async function getStoredIds(): Promise<string[]> {
-	const raw = await figma.clientStorage.getAsync(STORAGE_KEY);
+export function getStoredIds(): string[] {
+	const raw = JSON.parse(figma.root.getPluginData(STORAGE_KEY) || "[]");
 	if (Array.isArray(raw)) return raw as string[];
 	return [];
 }
-
-export async function saveIds(ids: string[]): Promise<void> {
-	await figma.clientStorage.setAsync(STORAGE_KEY, ids);
+export function saveIds(ids: string[]): void {
+	figma.root.setPluginData(STORAGE_KEY, JSON.stringify(ids));
 }
 
 // ─── Sections ─────────────────────────────────────────────────────────────────
-
-export async function getSections(): Promise<NodeSection[]> {
-	const raw = await figma.clientStorage.getAsync(SECTIONS_KEY);
+export function getSections(): NodeSection[] {
+	const raw = JSON.parse(figma.root.getPluginData(SECTIONS_KEY) || "[]");
 	if (Array.isArray(raw)) return raw as NodeSection[];
 	return [];
 }
-
-export async function saveSections(sections: NodeSection[]): Promise<void> {
-	await figma.clientStorage.setAsync(SECTIONS_KEY, sections);
+export function saveSections(sections: NodeSection[]): void {
+	figma.root.setPluginData(SECTIONS_KEY, JSON.stringify(sections));
 }
 
 // ─── Item order ───────────────────────────────────────────────────────────────
-
-export async function getItemOrder(): Promise<string[]> {
-	const raw = await figma.clientStorage.getAsync(ITEM_ORDER_KEY);
+export function getItemOrder(): string[] {
+	const raw = JSON.parse(figma.root.getPluginData(ITEM_ORDER_KEY) || "[]");
 	if (Array.isArray(raw)) return raw as string[];
 	return [];
 }
-
-export async function saveItemOrder(order: string[]): Promise<void> {
-	await figma.clientStorage.setAsync(ITEM_ORDER_KEY, order);
+export function saveItemOrder(order: string[]): void {
+	figma.root.setPluginData(ITEM_ORDER_KEY, JSON.stringify(order));
 }
 
 // ─── Export options ───────────────────────────────────────────────────────────
-
-export async function getExportOptions(): Promise<ExportOptions> {
-	const raw = await figma.clientStorage.getAsync(EXPORT_OPTIONS_KEY);
+export function getExportOptions(): ExportOptions {
+	const raw = JSON.parse(figma.root.getPluginData(EXPORT_OPTIONS_KEY) || "{}");
 	if (raw && typeof raw === "object") return { ...DEFAULT_EXPORT_OPTIONS, ...(raw as Partial<ExportOptions>) };
 	return { ...DEFAULT_EXPORT_OPTIONS };
 }
-
-export async function saveExportOptions(options: ExportOptions): Promise<void> {
-	await figma.clientStorage.setAsync(EXPORT_OPTIONS_KEY, options);
+export function saveExportOptions(options: ExportOptions): void {
+	figma.root.setPluginData(EXPORT_OPTIONS_KEY, JSON.stringify(options));
 }

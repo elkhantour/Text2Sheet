@@ -1,4 +1,4 @@
-import { usePlugin } from "@hooks/usePlugin";
+import { usePlugin } from "@contexts/usePlugin";
 import React from "react";
 
 export default () => {

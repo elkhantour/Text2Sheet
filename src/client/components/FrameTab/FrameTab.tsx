@@ -1,6 +1,6 @@
 import React from "react";
 import { Text } from "@radix-ui/themes";
-import { usePlugin } from "@hooks/usePlugin";
+import { usePlugin } from "@contexts/usePlugin";
 import { useTabs } from "@contexts/useTabs";
 import { useNodeSelection } from "@contexts/useNodeSelection";
 

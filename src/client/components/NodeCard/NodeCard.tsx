@@ -3,7 +3,7 @@ import type { MarkedNode } from "@ctypes/messages";
 import { useDnd } from "@components/Dnd/Context";
 import { useNodeSelection } from "@contexts/useNodeSelection";
 import { NodeContextMenu } from "./NodeContextMenu";
-import { usePlugin } from "@hooks/usePlugin";
+import { usePlugin } from "@contexts/usePlugin";
 import { GripVertical, ScanIcon, XIcon } from "lucide-react";
 import { ICON_SIZE_EXTRA_SMALL } from "@utils/constants";
 
