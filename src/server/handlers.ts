@@ -87,10 +87,10 @@ export function handleReorder(nodeIds: string[]): void {
 
 // ─── Section handlers ─────────────────────────────────────────────────────────
 
-export async function handleCreateSection(name: string, topFrameId: string, topFrameName: string): Promise<void> {
+export async function handleCreateSection(name: string, sectionId: string, topFrameId: string, topFrameName: string): Promise<void> {
 	const itemOrder = getItemOrder();
 	const sections = getSections();
-	const newSection = { id: `section_${Date.now()}`, name, nodeIds: [] as string[], topFrameId, topFrameName };
+	const newSection = { id: sectionId, name, nodeIds: [] as string[], topFrameId, topFrameName };
 	saveSections([...sections, newSection]);
 	saveItemOrder([...itemOrder, newSection.id]);
 

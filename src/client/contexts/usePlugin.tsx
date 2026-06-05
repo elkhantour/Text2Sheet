@@ -121,7 +121,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 
 		createSection: useCallback((name, tab) => {
 			const newSection: NodeSection = {
-				id: `optimistic-${Date.now()}`,
+				id: `section-${Date.now()}`,
 				nodeIds: [],
 				name,
 				topFrameId: tab.id,
@@ -129,12 +129,24 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 			};
 			setSections(prev => [...prev, newSection]);
 			setItemOrder(prev => [...prev, newSection.id]);
-			postMessage({ type: "CREATE_SECTION", name, topFrameId: tab.id, topFrameName: tab.name });
+			postMessage({ type: "CREATE_SECTION", name, sectionId: newSection.id, topFrameId: tab.id, topFrameName: tab.name });
 		}, []),
 
 		deleteSection: useCallback((sectionId) => {
-			setSections(prev => prev.filter(s => s.id !== sectionId));
-			setItemOrder(prev => prev.filter(id => id !== sectionId));
+			setSections(prev => {
+				const target = prev.find(s => s.id === sectionId);
+				if (!target) return prev;
+
+				setItemOrder(order => {
+					const sectionIdx = order.indexOf(sectionId);
+					const newOrder = [...order];
+					newOrder.splice(sectionIdx, 1, ...target.nodeIds);
+					return newOrder;
+				});
+
+				return prev.filter(s => s.id !== sectionId);
+			});
+
 			postMessage({ type: "DELETE_SECTION", sectionId });
 		}, []),
 

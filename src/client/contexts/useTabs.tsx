@@ -38,6 +38,7 @@ export function TabsProvider({ children }: { children: React.ReactNode }) {
 			});
 	}, [markedNodes, sections]);
 
+
 	const [activeTab, setActiveTabState] = useState<FrameTab | null>(null);
 
 	// Always resolve to a valid tab; fall back to first tab; null if no tabs exist

@@ -14,6 +14,7 @@ export function Toolbar(): React.ReactElement {
 
 	const {
 		markedNodes,
+		sections,
 		clearAll,
 		markSelection,
 		saveExportOptions,
@@ -110,7 +111,11 @@ export function Toolbar(): React.ReactElement {
 
 							<div className="p-4 bg-red-950 border border-red-800 flex flex-col gap-4 justify-center rounded-md">
 								<Text color="red" size="1" ><b>Danger Zone</b></Text>
-								<Button color="red" onClick={hasNodes ? clearAll : undefined} disabled={!hasNodes}>Clear All</Button>
+								<Button color="red"
+									onClick={(hasNodes || sections.length) ? clearAll : undefined}
+									disabled={!hasNodes && !sections.length}>
+									Clear All
+								</Button>
 
 							</div>
 						</div>

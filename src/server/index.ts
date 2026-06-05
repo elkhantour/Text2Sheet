@@ -32,13 +32,12 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "SELECT_NODE": await handleSelectNode(msg.nodeId); break;
 		case "LOAD_MARKED": await loadAndSendState(); break;
 		case "REORDER_NODES": saveIds(msg.nodeIds); break;
-		case "CREATE_SECTION": await handleCreateSection(msg.name, msg.topFrameId, msg.topFrameName); break;
+		case "CREATE_SECTION": await handleCreateSection(msg.name, msg.sectionId, msg.topFrameId, msg.topFrameName); break;
 		case "DELETE_SECTION": await handleDeleteSection(msg.sectionId); break;
 		case "RENAME_SECTION": await handleRenameSection(msg.sectionId, msg.name); break;
 		case "REORDER_ITEMS": await handleReorderItems(msg.itemIds); break;
 		case "MOVE_NODES_TO_SECTION": await handleMoveNodeListToSection(msg.nodeIds, msg.sectionId, msg.index); break;
 		case "REORDER_NODES_IN_SECTION": await handleReorderNodesInSection(msg.sectionId, msg.nodeIds); break;
-
 		case "RESIZE_WINDOW": handleResizeWindow(msg.width, msg.height); break;
 		case "SAVE_EXPORT_OPTIONS": await handleSaveExportOptions(msg.options); break;
 		case "CLEAR_ALL":

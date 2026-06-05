@@ -8,7 +8,7 @@ export type UIToPluginMessage =
 	| { type: "SELECT_NODE"; nodeId: string }
 	| { type: "LOAD_MARKED" }
 	| { type: "REORDER_ITEMS"; itemIds: string[] }
-	| { type: "CREATE_SECTION"; name: string, topFrameId: string, topFrameName: string }
+	| { type: "CREATE_SECTION"; name: string, sectionId: string, topFrameId: string, topFrameName: string }
 	| { type: "DELETE_SECTION"; sectionId: string }
 	| { type: "RENAME_SECTION"; sectionId: string; name: string }
 	| { type: "MOVE_NODES_TO_SECTION"; nodeIds: string[]; sectionId: string | null; index: number }
