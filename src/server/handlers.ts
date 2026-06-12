@@ -32,16 +32,17 @@ export async function handleMarkSelection(): Promise<void> {
 
 	// Collects all visible TEXT node ids nested anywhere under `node`.
 	const collectTextNodes = (node: SceneNode, out: string[]) => {
-		layerCount++; // DEBUG
 		if (node.type === "TEXT") {
-			if (node.visible) {
-				out.push(node.id);
-				characterCount += node.characters.length; // DEBUG
-			}
+			if (node.visible) out.push(node.id);
 			return;
 		}
 		if (!node.visible) return;
-		if ("children" in node) node.children.forEach((child) => collectTextNodes(child, out));
+		if (!("findAllWithCriteria" in node)) return;
+
+		const textNodes = node.findAllWithCriteria({ types: ["TEXT"] });
+		for (const t of textNodes) {
+			if (t.visible) out.push(t.id);
+		}
 	};
 
 	// A "first layer" container that should become its own section.
@@ -117,6 +118,9 @@ export async function handleMarkSelection(): Promise<void> {
 	saveIds(storedIds);
 	saveSections(sections);
 	saveItemOrder(cleanedItemOrder);
+
+	const loadAndSend = Date.now(); // DEBUG
+
 	await loadAndSendState();
 
 	const totalEnd = Date.now(); // DEBUG
@@ -129,7 +133,8 @@ export async function handleMarkSelection(): Promise<void> {
 		`storedIds: ${storedIds.length}, itemOrder: ${cleanedItemOrder.length}, sections: ${sections.length}\n ` +
 		`traversal: ${traversalEnd - traversalStart}ms\n ` +
 		`merge: ${mergeEnd - traversalEnd}ms\n ` +
-		`save+loadState: ${totalEnd - mergeEnd}ms\n ` +
+		`save: ${loadAndSend - mergeEnd}ms\n ` +
+		`loadState: ${totalEnd - loadAndSend}ms\n ` +
 		`total: ${totalEnd - debugStart}ms`
 	);
 
