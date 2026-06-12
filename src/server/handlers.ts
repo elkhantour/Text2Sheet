@@ -18,39 +18,123 @@ export async function handleHighlightMarked(): Promise<void> {
 
 export async function handleMarkSelection(): Promise<void> {
 
+	// DEBUG
+	let characterCount = 0, layerCount = 0;
+	const debugStart = Date.now();
+
 	const selection = figma.currentPage.selection;
 	if (selection.length === 0) { sendError("Select at least one layer in the canvas first."); return; }
-
 	const storedIds = getStoredIds();
 	const itemOrder = getItemOrder();
+	const sections = getSections();
 	const { autogroup } = getSelectionOptions();
-
 	const selectionTextNodeIds: string[] = [];
 
-	const getChildTextNodes = (node: SceneNode) => {
-		if (node.type === "TEXT" && node.visible) return selectionTextNodeIds.push(node.id);
-		if ("children" in node) node.children.forEach(getChildTextNodes);
+	// Collects all visible TEXT node ids nested anywhere under `node`.
+	const collectTextNodes = (node: SceneNode, out: string[]) => {
+		layerCount++; // DEBUG
+		if (node.type === "TEXT") {
+			if (node.visible) {
+				out.push(node.id);
+				characterCount += node.characters.length; // DEBUG
+			}
+			return;
+		}
+		if (!node.visible) return;
+		if ("children" in node) node.children.forEach((child) => collectTextNodes(child, out));
 	};
-	selection.forEach((sel) => getChildTextNodes(sel));
 
+	// A "first layer" container that should become its own section.
+	const isSectionable = (node: SceneNode): boolean =>
+		node.type === "GROUP" || node.type === "FRAME";
 
+	const traversalStart = Date.now(); // DEBUG
+
+	if (autogroup) {
+		for (const sel of selection) {
+			if (!("children" in sel)) {
+				collectTextNodes(sel, selectionTextNodeIds);
+				continue;
+			}
+			for (const child of sel.children) {
+				if (!child.visible) continue;
+				if (child.type === "TEXT") {
+					selectionTextNodeIds.push(child.id);
+					layerCount++; // DEBUG
+					characterCount += child.characters.length; // DEBUG
+					continue;
+				}
+				if (isSectionable(child)) {
+					const groupTextIds: string[] = [];
+					collectTextNodes(child, groupTextIds);
+					if (groupTextIds.length === 0) continue;
+					selectionTextNodeIds.push(...groupTextIds);
+					const existingSection = sections.find((s) => s.id === child.id);
+					if (existingSection) {
+						const existingIds = new Set(existingSection.nodeIds);
+						for (const id of groupTextIds) {
+							if (!existingIds.has(id)) {
+								existingSection.nodeIds.push(id);
+								existingIds.add(id);
+							}
+						}
+						existingSection.name = child.name;
+					} else {
+						sections.push({
+							id: child.id,
+							name: child.name,
+							nodeIds: groupTextIds,
+							topFrameId: sel.id,
+							topFrameName: sel.name,
+						});
+						if (!itemOrder.includes(child.id)) itemOrder.push(child.id);
+					}
+				} else {
+					collectTextNodes(child, selectionTextNodeIds);
+				}
+			}
+		}
+	} else {
+		selection.forEach((sel) => collectTextNodes(sel, selectionTextNodeIds));
+	}
+
+	const traversalEnd = Date.now(); // DEBUG
+
+	// Any text id that now belongs to a section shouldn't also live in the root item order.
+	const sectionedIds = new Set(sections.flatMap((s) => s.nodeIds));
+	const cleanedItemOrder = itemOrder.filter((id) => !sectionedIds.has(id));
 	for (const id of selectionTextNodeIds) {
-		if (!storedIds.includes(id)) {
-			storedIds.push(id);
-			if (!itemOrder.includes(id)) itemOrder.push(id);
+		if (!storedIds.includes(id)) storedIds.push(id);
+		if (!sectionedIds.has(id) && !cleanedItemOrder.includes(id)) {
+			cleanedItemOrder.push(id);
 		}
 	}
+
+	const mergeEnd = Date.now(); // DEBUG
 
 	sendToUI({ type: "LATEST_ADDED_NODES", nodeIds: selectionTextNodeIds });
 
 	saveIds(storedIds);
-	saveItemOrder(itemOrder);
+	saveSections(sections);
+	saveItemOrder(cleanedItemOrder);
 	await loadAndSendState();
+
+	const totalEnd = Date.now(); // DEBUG
+
+	// DEBUG
+	console.log(
+		`[markSelection debug] layers visited: ${layerCount}\n ` +
+		`text nodes marked: ${selectionTextNodeIds.length}\n ` +
+		`characters: ${characterCount}\n ` +
+		`storedIds: ${storedIds.length}, itemOrder: ${cleanedItemOrder.length}, sections: ${sections.length}\n ` +
+		`traversal: ${traversalEnd - traversalStart}ms\n ` +
+		`merge: ${mergeEnd - traversalEnd}ms\n ` +
+		`save+loadState: ${totalEnd - mergeEnd}ms\n ` +
+		`total: ${totalEnd - debugStart}ms`
+	);
+
 	sendNotify(`Marked ${selectionTextNodeIds.length} layer${selectionTextNodeIds.length > 1 ? "s" : ""} for export.`);
-
-
 }
-
 
 export async function handleUnmarkNodeList(nodeIds: string[]): Promise<void> {
 	const [storedIds, sections, itemOrder] = await Promise.all([
