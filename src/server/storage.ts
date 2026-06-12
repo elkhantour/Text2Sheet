@@ -1,6 +1,6 @@
-import { DEFAULT_EXPORT_OPTIONS } from "../lib/constants";
-import { EXPORT_OPTIONS_KEY, ITEM_ORDER_KEY, SECTIONS_KEY, STORAGE_KEY } from "./constants";
-import type { NodeSection, ExportOptions } from "@ctypes/messages";
+import { DEFAULT_EXPORT_OPTIONS, DEFAULT_SELECTION_OPTIONS } from "../lib/constants";
+import { EXPORT_OPTIONS_KEY, ITEM_ORDER_KEY, SECTIONS_KEY, SELECTION_OPTIONS_KEY, STORAGE_KEY } from "./constants";
+import type { NodeSection, ExportOptions, SelectionOptions } from "@ctypes/messages";
 
 // ─── Node IDs ─────────────────────────────────────────────────────────────────
 export function getStoredIds(): string[] {
@@ -32,12 +32,23 @@ export function saveItemOrder(order: string[]): void {
 	figma.root.setPluginData(ITEM_ORDER_KEY, JSON.stringify(order));
 }
 
-// ─── Export options ───────────────────────────────────────────────────────────
+// ─── Options ───────────────────────────────────────────────────────────
 export function getExportOptions(): ExportOptions {
 	const raw = JSON.parse(figma.root.getPluginData(EXPORT_OPTIONS_KEY) || "{}");
 	if (raw && typeof raw === "object") return { ...DEFAULT_EXPORT_OPTIONS, ...(raw as Partial<ExportOptions>) };
 	return { ...DEFAULT_EXPORT_OPTIONS };
 }
+
 export function saveExportOptions(options: ExportOptions): void {
 	figma.root.setPluginData(EXPORT_OPTIONS_KEY, JSON.stringify(options));
+}
+
+export function saveSelectionOptions(options: SelectionOptions): void {
+	figma.root.setPluginData(SELECTION_OPTIONS_KEY, JSON.stringify(options));
+}
+
+export function getSelectionOptions(): SelectionOptions {
+	const raw = JSON.parse(figma.root.getPluginData(SELECTION_OPTIONS_KEY) || "{}");
+	if (raw && typeof raw === "object") return { ...DEFAULT_SELECTION_OPTIONS, ...(raw as Partial<SelectionOptions>) };
+	return { ...DEFAULT_SELECTION_OPTIONS };
 }

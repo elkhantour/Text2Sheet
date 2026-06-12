@@ -1,8 +1,8 @@
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { sendError, sendNotify, sendToUI } from "./message";
 import { loadAndSendState } from "./node";
-import { getStoredIds, saveIds, getSections, saveSections, saveItemOrder, saveExportOptions, getItemOrder } from "./storage";
-import { ExportOptions } from "@ctypes/messages";
+import { getStoredIds, saveIds, getSections, saveSections, saveItemOrder, saveExportOptions, getItemOrder, saveSelectionOptions, getSelectionOptions } from "./storage";
+import { ExportOptions, SelectionOptions } from "@ctypes/messages";
 
 // ─── Existing handlers ────────────────────────────────────────────────────────
 
@@ -21,7 +21,10 @@ export async function handleMarkSelection(): Promise<void> {
 	const selection = figma.currentPage.selection;
 	if (selection.length === 0) { sendError("Select at least one layer in the canvas first."); return; }
 
-	const [storedIds, itemOrder] = await Promise.all([getStoredIds(), getItemOrder()]);
+	const storedIds = getStoredIds();
+	const itemOrder = getItemOrder();
+	const { autogroup } = getSelectionOptions();
+
 	const selectionTextNodeIds: string[] = [];
 
 	const getChildTextNodes = (node: SceneNode) => {
@@ -184,6 +187,10 @@ export async function handleSaveExportOptions(options: ExportOptions): Promise<v
 	await loadAndSendState();
 }
 
+export async function handleSaveSelectionOptions(options: SelectionOptions): Promise<void> {
+	saveSelectionOptions(options);
+	await loadAndSendState();
+}
 
 export async function handleSyncSelectionToUI() {
 	const storedIds = new Set(getStoredIds());

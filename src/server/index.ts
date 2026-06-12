@@ -18,6 +18,7 @@ import {
 	handleMoveNodeListToSection,
 	handleSyncSelectionToUI,
 	handleResizeWindow,
+	handleSaveSelectionOptions,
 } from "./handlers";
 
 figma.showUI(__html__, { width: PLUGIN_WIDTH, height: PLUGIN_HEIGHT, title: "Text2Sheet" });
@@ -40,6 +41,7 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "REORDER_NODES_IN_SECTION": await handleReorderNodesInSection(msg.sectionId, msg.nodeIds); break;
 		case "RESIZE_WINDOW": handleResizeWindow(msg.width, msg.height); break;
 		case "SAVE_EXPORT_OPTIONS": await handleSaveExportOptions(msg.options); break;
+		case "SAVE_SELECTION_OPTIONS": await handleSaveSelectionOptions(msg.options); break;
 		case "CLEAR_ALL":
 			saveIds([]);
 			saveSections([]);

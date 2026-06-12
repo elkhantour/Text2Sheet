@@ -1,7 +1,7 @@
 // PluginContext.tsx
 import React, { createContext, useContext, useEffect, useCallback, useState, useMemo } from "react";
-import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions, FrameTab } from "@ctypes/messages";
-import { DEFAULT_EXPORT_OPTIONS } from "../../lib/constants";
+import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions, FrameTab, SelectionOptions } from "@ctypes/messages";
+import { DEFAULT_EXPORT_OPTIONS, DEFAULT_SELECTION_OPTIONS } from "../../lib/constants";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,6 +12,7 @@ interface PluginContextValue {
 	sections: NodeSection[];
 	itemOrder: string[];
 	exportOptions: ExportOptions;
+	selectionOptions: SelectionOptions;
 	latestAddedNodes: string[];
 	markSelection: () => void;
 	highlightMarked: () => void;
@@ -26,6 +27,7 @@ interface PluginContextValue {
 	moveNodesToSection: (nodeIds: string[], sectionId: string | null, index: number) => void;
 	reorderNodesInSection: (sectionId: string, nodeIds: string[]) => void;
 	saveExportOptions: (options: ExportOptions) => void;
+	saveSelectionOptions: (options: SelectionOptions) => void;
 	getNodeFromId: (id: string) => MarkedNode | undefined;
 	getSectionFromId: (id: string) => NodeSection | undefined;
 	resizeWindow: (width: number, height: number) => void;
@@ -42,6 +44,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 	const [sections, setSections] = useState<NodeSection[]>([]);
 	const [itemOrder, setItemOrder] = useState<string[]>([]);
 	const [exportOptions, setExportOptions] = useState<ExportOptions>(DEFAULT_EXPORT_OPTIONS);
+	const [selectionOptions, setSelectionOptions] = useState<SelectionOptions>(DEFAULT_SELECTION_OPTIONS);
 	const [isLoading, setIsLoading] = useState(true);
 	const [toast, setToast] = useState<PluginContextValue["toast"]>(null);
 	const [latestAddedNodes, setLatestAddedNodes] = useState<string[]>([]);
@@ -94,7 +97,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 
 
 	const value: PluginContextValue = {
-		markedNodes, sections, itemOrder, exportOptions, isLoading, toast, latestAddedNodes,
+		markedNodes, sections, itemOrder, exportOptions, selectionOptions, isLoading, toast, latestAddedNodes,
 
 		// ── No optimistic update: result depends on Figma's current selection ──
 		markSelection: useCallback(() => postMessage({ type: "MARK_SELECTION" }), []),
@@ -208,6 +211,11 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 		saveExportOptions: useCallback((options) => {
 			setExportOptions(options);
 			postMessage({ type: "SAVE_EXPORT_OPTIONS", options });
+		}, []),
+
+		saveSelectionOptions: useCallback((options) => {
+			setSelectionOptions(options);
+			postMessage({ type: "SAVE_SELECTION_OPTIONS", options });
 		}, []),
 
 		dismissToast: useCallback(() => setToast(null), []),

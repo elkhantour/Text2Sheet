@@ -14,6 +14,7 @@ export type UIToPluginMessage =
 	| { type: "MOVE_NODES_TO_SECTION"; nodeIds: string[]; sectionId: string | null; index: number }
 	| { type: "REORDER_NODES_IN_SECTION"; sectionId: string; nodeIds: string[] }
 	| { type: "SAVE_EXPORT_OPTIONS"; options: ExportOptions }
+	| { type: "SAVE_SELECTION_OPTIONS"; options: SelectionOptions }
 	| { type: "RESIZE_WINDOW"; width: number; height: number; }
 	// Legacy
 	| { type: "REORDER_NODES"; nodeIds: string[] };
@@ -76,6 +77,12 @@ export interface ExportOptions {
 	splitBySections: boolean;
 	exportMode: ExportMode;
 }
+
+export interface SelectionOptions {
+	autogroup: boolean;
+	sync: boolean;
+}
+
 
 
 /** A derived tab — not stored, computed from nodes + sections */

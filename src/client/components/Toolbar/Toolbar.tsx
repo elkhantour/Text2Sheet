@@ -3,12 +3,12 @@ import type { ExportOptions } from "@ctypes/messages";
 import { Button, Dialog, SegmentedControl, Text, Separator } from "@radix-ui/themes";
 import { CheckboxStateToBool } from "@components/Checkbox/Utils";
 import Checkbox from "@components/Checkbox/Checkbox";
-import { PlusIcon, SettingsIcon, SquareDashedMousePointerIcon } from "lucide-react";
+import { GroupIcon, PlusIcon, SettingsIcon, SquareDashedMousePointerIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 import { usePlugin } from "@contexts/usePlugin";
 import { useTabs } from "@contexts/useTabs";
-import { Toggle } from "@radix-ui/react-toggle";
 import { useNodeSelection } from "@contexts/useNodeSelection";
+import { ToggleLabel } from "@components/ToggleLabel/ToggleLabel";
 
 export function Toolbar(): React.ReactElement {
 
@@ -19,14 +19,16 @@ export function Toolbar(): React.ReactElement {
 		markSelection,
 		saveExportOptions,
 		exportOptions,
+		selectionOptions,
+		saveSelectionOptions,
 	} = usePlugin();
 
 	const { tabs } = useTabs();
 
-	const { toggleLinkSelection, isLinkSelection } = useNodeSelection();
+	const { toggleLinkSelection } = useNodeSelection();
 
 	const hasNodes = markedNodes.length > 0;
-	const setOption = <K extends keyof ExportOptions>(key: K, value: ExportOptions[K]) =>
+	const setExportOption = <K extends keyof ExportOptions>(key: K, value: ExportOptions[K]) =>
 		saveExportOptions({ ...exportOptions, [key]: value });
 
 	const hasMultipleTabs = tabs.length > 1;
@@ -36,46 +38,52 @@ export function Toolbar(): React.ReactElement {
 
 			<Button onClick={markSelection} size="2"> <PlusIcon size={ICON_SIZE_SMALL} /> Add Selection</Button>
 
-			<div className="flex flex-row gap-3">
-				<Toggle aria-label="Toggle linked selection" onPressedChange={() => {
-					toggleLinkSelection();
-				}}>
-					<SquareDashedMousePointerIcon
-						size={ICON_SIZE_SMALL}
-						data-active={isLinkSelection}
-						className="
-                                           		text-[var(--text-muted)]
-                                                        data-[active=true]:text-[var(--accent)]
-                                                        hover:text-[var(--accent-7)]
-                                           	"
-					/>
-				</Toggle>
+			<div className="flex flex-row gap-4">
+
+				<ToggleLabel
+					icon={GroupIcon}
+					label="Auto Group"
+					pressed={selectionOptions.autogroup}
+					onPressedChange={() => {
+						saveSelectionOptions({ ...selectionOptions, autogroup: !selectionOptions.autogroup });
+					}}
+				/>
+				<ToggleLabel
+					icon={SquareDashedMousePointerIcon}
+					label="Sync Selection"
+					pressed={selectionOptions.sync}
+					onPressedChange={() => {
+						toggleLinkSelection();
+						saveSelectionOptions({ ...selectionOptions, sync: !selectionOptions.sync });
+					}}
+				/>
+
 				<Dialog.Root>
 					<Dialog.Trigger>
 						<Button size="1" variant="ghost"><SettingsIcon size={ICON_SIZE_SMALL} /></Button>
 					</Dialog.Trigger>
 					<Dialog.Content>
-						<Dialog.Title>Export settings</Dialog.Title>
+						<Dialog.Title size="3">Export settings</Dialog.Title>
 						<div className="flex flex-col gap-4 mt-2">
 
 							<Checkbox
 								label="Include layer names"
 								checked={exportOptions.includeLayerNames}
 								className="text-[var(--text-muted)]"
-								onChange={(e) => setOption("includeLayerNames", CheckboxStateToBool(e))}
+								onChange={(e) => setExportOption("includeLayerNames", CheckboxStateToBool(e))}
 							/>
 
 							<Checkbox
 								label="Split by sections"
 								checked={exportOptions.splitBySections}
 								className="text-[var(--text-muted)]"
-								onChange={(e) => setOption("splitBySections", CheckboxStateToBool(e))}
+								onChange={(e) => setExportOption("splitBySections", CheckboxStateToBool(e))}
 							/>
 
 							{/* Format Export (XLS / CSV)*/}
 							<SegmentedControl.Root
 								defaultValue={exportOptions.exportMode.format}
-								onValueChange={(v) => setOption("exportMode", {
+								onValueChange={(v) => setExportOption("exportMode", {
 									...exportOptions.exportMode,
 									format: v as ExportOptions["exportMode"]["format"],
 								})}
@@ -95,7 +103,7 @@ export function Toolbar(): React.ReactElement {
 									</span>
 									<SegmentedControl.Root
 										defaultValue={exportOptions.exportMode.structure}
-										onValueChange={(v) => setOption("exportMode", {
+										onValueChange={(v) => setExportOption("exportMode", {
 											...exportOptions.exportMode,
 											structure: v as ExportOptions["exportMode"]["structure"],
 										})}
