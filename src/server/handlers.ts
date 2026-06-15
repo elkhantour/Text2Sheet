@@ -22,6 +22,8 @@ export async function handleMarkSelection(): Promise<void> {
 	let characterCount = 0, layerCount = 0;
 	const debugStart = Date.now();
 
+	figma.skipInvisibleInstanceChildren = true;
+
 	const selection = figma.currentPage.selection;
 	if (selection.length === 0) { sendError("Select at least one layer in the canvas first."); return; }
 	const storedIds = getStoredIds();

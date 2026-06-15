@@ -12,17 +12,19 @@ import { ORPHAN_TAB_ID, ORPHAN_TAB_NAME } from "../lib/constants";
 // ─── Main state loader ────────────────────────────────────────────────────────
 
 export async function loadAndSendState(): Promise<void> {
-
 	const storedIds = getStoredIds();
 	const sections = getSections();
 	const itemOrder = getItemOrder();
 	const exportOptions = getExportOptions();
 
+	// Resolve all nodes in parallel instead of one-by-one.
+	const resolved = await Promise.all(
+		storedIds.map(async (id) => ({ id, node: await figma.getNodeByIdAsync(id) }))
+	);
+
 	const validIds: string[] = [];
 	const markedNodes: MarkedNode[] = [];
-
-	for (const id of storedIds) {
-		const node = await figma.getNodeByIdAsync(id);
+	for (const { id, node } of resolved) {
 		if (!node) continue;
 		validIds.push(id);
 		resolveNode(node).forEach((child) => markedNodes.push(child));
@@ -40,18 +42,13 @@ export async function loadAndSendState(): Promise<void> {
 	const cleanedOrder = itemOrder.filter((id) => validIdSet.has(id) || sectionIdSet.has(id));
 
 	const idsInSections = new Set(cleanedSections.flatMap((s) => s.nodeIds));
+	const cleanedOrderSet = new Set(cleanedOrder);
 	for (const id of validIds) {
-		if (!cleanedOrder.includes(id) && !idsInSections.has(id)) cleanedOrder.push(id);
+		if (!cleanedOrderSet.has(id) && !idsInSections.has(id)) {
+			cleanedOrder.push(id);
+			cleanedOrderSet.add(id);
+		}
 	}
-
-	// DELETEME
-	// if (
-	//   cleanedSections.some((s, i) => s.nodeIds.length !== sections[i]?.nodeIds.length) ||
-	//   cleanedOrder.length !== itemOrder.length
-	// ) {
-	//   await saveSections(cleanedSections);
-	//   await saveItemOrder(cleanedOrder);
-	// }
 
 	sendToUI({ type: "STATE_UPDATE", nodes: markedNodes, sections: cleanedSections, itemOrder: cleanedOrder, exportOptions });
 }
