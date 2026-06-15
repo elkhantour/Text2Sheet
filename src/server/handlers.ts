@@ -1,7 +1,7 @@
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { sendError, sendNotify, sendToUI } from "./message";
-import { loadAndSendState } from "./node";
-import { getStoredIds, saveIds, getSections, saveSections, saveItemOrder, saveExportOptions, getItemOrder, saveSelectionOptions, getSelectionOptions } from "./storage";
+import { loadAndSendState, resolveNode } from "./node";
+import { getStoredIds, saveIds, getSections, saveSections, saveItemOrder, saveExportOptions, getItemOrder, saveSelectionOptions, getSelectionOptions, removeCachedNode, addCachedNode, getCachedNodesArray } from "./storage";
 import { ExportOptions, SelectionOptions } from "@ctypes/messages";
 
 // ─── Existing handlers ────────────────────────────────────────────────────────
@@ -32,10 +32,18 @@ export async function handleMarkSelection(): Promise<void> {
 	const { autogroup } = getSelectionOptions();
 	const selectionTextNodeIds: string[] = [];
 
+	function addMarkedNode(node: SceneNode, out: string[]) {
+		if (!node.visible)
+			return;
+
+		out.push(node.id);
+		resolveNode(node).forEach((child) => addCachedNode(child));
+	}
+
 	// Collects all visible TEXT node ids nested anywhere under `node`.
 	const collectTextNodes = (node: SceneNode, out: string[]) => {
 		if (node.type === "TEXT") {
-			if (node.visible) out.push(node.id);
+			addMarkedNode(node, out);
 			return;
 		}
 		if (!node.visible) return;
@@ -43,7 +51,7 @@ export async function handleMarkSelection(): Promise<void> {
 
 		const textNodes = node.findAllWithCriteria({ types: ["TEXT"] });
 		for (const t of textNodes) {
-			if (t.visible) out.push(t.id);
+			addMarkedNode(t, out);
 		}
 	};
 
@@ -107,7 +115,7 @@ export async function handleMarkSelection(): Promise<void> {
 	const sectionedIds = new Set(sections.flatMap((s) => s.nodeIds));
 	const cleanedItemOrder = itemOrder.filter((id) => !sectionedIds.has(id));
 	for (const id of selectionTextNodeIds) {
-		if (!storedIds.includes(id)) storedIds.push(id);
+		if (!storedIds.includes(id)) storedIds.push(id); // <<======
 		if (!sectionedIds.has(id) && !cleanedItemOrder.includes(id)) {
 			cleanedItemOrder.push(id);
 		}
@@ -144,13 +152,18 @@ export async function handleMarkSelection(): Promise<void> {
 }
 
 export async function handleUnmarkNodeList(nodeIds: string[]): Promise<void> {
-	const [storedIds, sections, itemOrder] = await Promise.all([
-		getStoredIds(),
-		getSections(),
-		getItemOrder(),
-	]);
+
+	const storedIds = getStoredIds();
+	const sections = getSections();
+	const itemOrder = getItemOrder();
+
 
 	const idSet = new Set(nodeIds);
+	idSet.forEach(removeCachedNode);
+
+	console.log(nodeIds);
+	console.log(idSet);
+	console.log(getCachedNodesArray());
 
 	await Promise.all([
 		saveIds(storedIds.filter(id => !idSet.has(id))),
@@ -193,11 +206,15 @@ export async function handleCreateSection(name: string, sectionId: string, topFr
 }
 
 export async function handleDeleteSection(sectionId: string): Promise<void> {
-	const [sections, itemOrder] = await Promise.all([getSections(), getItemOrder()]);
+	const sections = getSections();
+	const itemOrder = getItemOrder();
+
 	const target = sections.find((s) => s.id === sectionId);
 	if (!target) return;
+
 	const sectionIdx = itemOrder.indexOf(sectionId);
 	const newOrder = [...itemOrder];
+
 	newOrder.splice(sectionIdx, 1, ...target.nodeIds);
 	saveSections(sections.filter((s) => s.id !== sectionId));
 	saveItemOrder(newOrder);

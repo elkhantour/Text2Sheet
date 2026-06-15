@@ -5,11 +5,13 @@ import {
 	saveIds,
 	getSections,
 	getItemOrder,
-	getExportOptions
+	getExportOptions,
+	getCachedNodesArray
 } from "./storage";
 import { ORPHAN_TAB_ID, ORPHAN_TAB_NAME } from "../lib/constants";
 
 // ─── Main state loader ────────────────────────────────────────────────────────
+
 
 export async function loadAndSendState(): Promise<void> {
 	const storedIds = getStoredIds();
@@ -17,18 +19,8 @@ export async function loadAndSendState(): Promise<void> {
 	const itemOrder = getItemOrder();
 	const exportOptions = getExportOptions();
 
-	// Resolve all nodes in parallel instead of one-by-one.
-	const resolved = await Promise.all(
-		storedIds.map(async (id) => ({ id, node: await figma.getNodeByIdAsync(id) }))
-	);
-
-	const validIds: string[] = [];
-	const markedNodes: MarkedNode[] = [];
-	for (const { id, node } of resolved) {
-		if (!node) continue;
-		validIds.push(id);
-		resolveNode(node).forEach((child) => markedNodes.push(child));
-	}
+	const cachedNodes = getCachedNodesArray();
+	const validIds: string[] = cachedNodes.map(n => n.id);
 
 	if (validIds.length !== storedIds.length) saveIds(validIds);
 
@@ -50,7 +42,15 @@ export async function loadAndSendState(): Promise<void> {
 		}
 	}
 
-	sendToUI({ type: "STATE_UPDATE", nodes: markedNodes, sections: cleanedSections, itemOrder: cleanedOrder, exportOptions });
+	console.log(cleanedOrder);
+
+	sendToUI({
+		type: "STATE_UPDATE",
+		nodes: cachedNodes,
+		sections: cleanedSections,
+		itemOrder: cleanedOrder,
+		exportOptions
+	});
 }
 
 export async function loadAndSendMarkedNodes(): Promise<void> {
@@ -63,13 +63,23 @@ export function resolveNode(node: BaseNode): MarkedNode[] {
 	const { id: topFrameId, name: topFrameName } = getTopFrame(node);
 
 	if (node.type === "TEXT") {
-		return [{ id: node.id, name: node.name, nodeType: node.type, previewText: node.characters, topFrameId, topFrameName }];
+		return [{
+			id: node.id,
+			name: node.name,
+			nodeType: node.type,
+			previewText: node.characters,
+			topFrameId,
+			topFrameName
+		}];
 	}
 
 	const childTextNodes = collectTextChildren(node);
 	return childTextNodes.map<MarkedNode>((child) => ({
-		id: child.id, name: child.name, nodeType: node.type,
-		previewText: child.content, topFrameId, topFrameName,
+		id: child.id,
+		name: child.name,
+		nodeType: node.type,
+		previewText: child.content,
+		topFrameId, topFrameName,
 	}));
 }
 
@@ -90,7 +100,11 @@ export function getTopFrame(node: BaseNode): { id: string; name: string } {
 export function collectTextChildren(node: BaseNode): ChildTextNode[] {
 	const results: ChildTextNode[] = [];
 	if (node.type === "TEXT") {
-		results.push({ id: node.id, name: node.name, content: node.characters });
+		results.push({
+			id: node.id,
+			name: node.name,
+			content: node.characters
+		});
 		return results;
 	}
 	if ("children" in node) {

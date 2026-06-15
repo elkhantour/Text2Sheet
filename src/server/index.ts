@@ -3,7 +3,7 @@ import type { UIToPluginMessage } from "@ctypes/messages";
 import { sendNotify } from "./message";
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { loadAndSendState } from "./node";
-import { saveIds, saveSections, saveItemOrder } from "./storage";
+import { saveIds, saveSections, saveItemOrder, clearCachedNodes, initCachedNodes } from "./storage";
 import {
 	handleHighlightMarked,
 	handleMarkSelection,
@@ -22,6 +22,8 @@ import {
 } from "./handlers";
 
 figma.showUI(__html__, { width: PLUGIN_WIDTH, height: PLUGIN_HEIGHT, title: "Text2Sheet" });
+
+initCachedNodes();
 loadAndSendState();
 
 figma.ui.onmessage = async (msg: UIToPluginMessage) => {
@@ -43,6 +45,7 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "SAVE_EXPORT_OPTIONS": await handleSaveExportOptions(msg.options); break;
 		case "SAVE_SELECTION_OPTIONS": await handleSaveSelectionOptions(msg.options); break;
 		case "CLEAR_ALL":
+			clearCachedNodes();
 			saveIds([]);
 			saveSections([]);
 			saveItemOrder([]);

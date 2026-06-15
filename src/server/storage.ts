@@ -1,6 +1,49 @@
 import { DEFAULT_EXPORT_OPTIONS, DEFAULT_SELECTION_OPTIONS } from "../lib/constants";
 import { EXPORT_OPTIONS_KEY, ITEM_ORDER_KEY, SECTIONS_KEY, SELECTION_OPTIONS_KEY, STORAGE_KEY } from "./constants";
-import type { NodeSection, ExportOptions, SelectionOptions } from "@ctypes/messages";
+import type { NodeSection, ExportOptions, SelectionOptions, MarkedNode } from "@ctypes/messages";
+import { resolveNode } from "./node";
+import { sendNotify } from "./message";
+
+var CACHED_NODES: Map<string, MarkedNode> = new Map();
+
+
+// ─── Cached Marked Nodes  ──────────────────────────────────────────────────────
+
+export function addCachedNode(node: MarkedNode) {
+	CACHED_NODES.set(node.id, node);
+}
+
+export function removeCachedNode(id: string) {
+	CACHED_NODES.delete(id);
+}
+
+/**
+	* Initialise Cached Nodes map from stored Ids 
+	* @description Used at the plugin launch,
+	* we store ids instead of full node to save up PluginData space
+	* 
+	*/
+export async function initCachedNodes() {
+	const storedIds = getStoredIds();
+
+	let nodeCount = 0;
+	return Promise.all(storedIds.map(async (id) => {
+		const node = await figma.getNodeByIdAsync(id);
+		if (node)
+			resolveNode(node).forEach((child) => addCachedNode(child));
+		sendNotify(`Loading node ${nodeCount}/${storedIds.length}`);
+		return;
+	}));
+
+}
+
+export function clearCachedNodes() {
+	CACHED_NODES.clear();
+}
+
+export function getCachedNodesArray() {
+	return [...CACHED_NODES.values()];
+}
 
 // ─── Node IDs ─────────────────────────────────────────────────────────────────
 export function getStoredIds(): string[] {
