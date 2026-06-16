@@ -43,8 +43,7 @@ export function NodeSelectionProvider({
 						}
 					}
 
-					// FIXME: msg.nodesId
-					setSelectedIds(new Set(msg.nodeIds));
+			  setSelectedIds(new Set(msg.nodeIds));
 					break;
 			}
 		};

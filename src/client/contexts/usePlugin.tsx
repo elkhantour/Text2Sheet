@@ -175,6 +175,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 				id: `section-${Date.now()}`,
 				name,
 				nodes: [],
+				topFrameId: tab.id,
 			};
 			setTabs(prev => prev.map(t =>
 				t.id === tab.id
