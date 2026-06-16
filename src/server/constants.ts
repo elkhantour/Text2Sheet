@@ -6,5 +6,5 @@ export const SELECTION_OPTIONS_KEY = "selectionOptions";
 export const TABS_KEY = "tabs";
 
 
-export const PLUGIN_WIDTH = 400;
+export const PLUGIN_WIDTH = 640;
 export const PLUGIN_HEIGHT = 520;

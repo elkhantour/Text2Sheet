@@ -9,7 +9,7 @@ import {
 	saveSelectionOptions,
 	getSelectionOptions,
 } from "./storage";
-import type { ExportOptions, FrameTab, NodeSection, SelectionOptions } from "@ctypes/messages";
+import type { ExportOptions, FrameTab, NodeSection, SelectionOptions, TreeNode } from "@ctypes/messages";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

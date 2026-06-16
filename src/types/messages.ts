@@ -22,7 +22,7 @@ export type UIToPluginMessage =
 
 export type PluginToUIMessage =
 	/** Initial load + any mutation: always the full up-to-date tab list */
-	| { type: "STATE_UPDATE"; tabs: FrameTab[]; exportOptions: ExportOptions }
+	| { type: "STATE_UPDATE"; tabs: FrameTab[]; tree: TreeNode[]; exportOptions: ExportOptions; }
 	/** Server push after any mutation — the fully updated tab */
 	| { type: "TAB_UPDATED"; tab: FrameTab }
 	| { type: "ERROR"; message: string }
@@ -87,4 +87,11 @@ export interface ExportOptions {
 export interface SelectionOptions {
 	autogroup: boolean;
 	sync: boolean;
+}
+
+export interface TreeNode {
+	id: string;
+	name: string;
+	children?: TreeNode[];
+	tab?: FrameTab;
 }

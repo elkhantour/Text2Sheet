@@ -1,6 +1,6 @@
 // PluginContext.tsx
 import React, { createContext, useContext, useEffect, useCallback, useState, useMemo } from "react";
-import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions, FrameTab, SelectionOptions } from "@ctypes/messages";
+import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions, FrameTab, SelectionOptions, TreeNode } from "@ctypes/messages";
 import { DEFAULT_EXPORT_OPTIONS, DEFAULT_SELECTION_OPTIONS } from "../../lib/constants";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -12,6 +12,7 @@ interface PluginContextValue {
 	isLoading: boolean;
 	toast: { message: string; kind: "error" | "success" | "info" } | null;
 	latestAddedNodes: string[];
+	tree: TreeNode[];
 
 	// ── Tab state ─────────────────────────────────────────────────────────────
 	tabs: FrameTab[];
@@ -66,6 +67,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [toast, setToast] = useState<PluginContextValue["toast"]>(null);
 	const [latestAddedNodes, setLatestAddedNodes] = useState<string[]>([]);
+	const [tree, setTree] = useState<TreeNode[]>([]);
 
 	// Auto-dismiss toast after 3s
 	useEffect(() => {
@@ -83,6 +85,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 			switch (msg.type) {
 				case "STATE_UPDATE":
 					setTabs(msg.tabs);
+					setTree(msg.tree);
 					setExportOptions(msg.exportOptions);
 					setIsLoading(false);
 					break;
@@ -144,7 +147,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 		exportOptions, selectionOptions,
 		isLoading, toast, latestAddedNodes,
 		tabs, activeTab, setActiveTab,
-		activeNodes, activeSections,
+		activeNodes, activeSections, tree,
 
 		markSelection: useCallback(() => postMessage({ type: "MARK_SELECTION" }), []),
 		highlightMarked: useCallback(() => postMessage({ type: "HIGHLIGHT_MARKED" }), []),

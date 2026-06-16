@@ -1,0 +1,104 @@
+import { usePlugin } from "@contexts/usePlugin";
+import { TreeNode } from "@ctypes/messages";
+import { ChevronDown } from "lucide-react";
+import { Collapsible } from "radix-ui";
+import React, { ComponentPropsWithRef, useState } from "react";
+
+interface TreeNodeProps {
+	node: TreeNode;
+	depth: number;
+	activeTabId?: string;
+	setActiveTab: (tabId: string) => void;
+}
+
+const LABEL_STYLE = `
+group
+w-full flex items-center justify-between
+px-2 py-1 rounded
+text-sm transition-colors text-gray-500
+hover:text-green-100
+data-[active=true]:text-green-100
+data-[active=true]:bg-green-600/20
+`;
+
+function TreeNodeComponent({
+	node,
+	depth,
+	activeTabId,
+	setActiveTab,
+}: TreeNodeProps) {
+	const hasChildren = node.children && node.children.length > 0;
+	const isActive = node.tab?.id === activeTabId;
+	const [isOpen, setIsOpen] = useState(false);
+
+	return (
+		<div className="pl-4 mb-2" style={{ paddingLeft: depth * 16 }}>
+			{hasChildren ? (
+				<Collapsible.Root key={node.id} className="w-full" onOpenChange={setIsOpen}>
+					<div className="flex items-center">
+						<button
+							data-active={isActive}
+							className={LABEL_STYLE}
+							onClick={() => node.tab && setActiveTab(node.tab.id)}
+						>
+							<span>{node.name}</span>
+						</button>
+						{hasChildren && (
+							<Collapsible.Trigger asChild>
+								<span className="flex items-center justify-end flex-1 text-gray-800 hover:text-gray-200">
+									<ChevronDown data-open={isOpen} className="h-4 w-4 transition-transform data-[open=true]:rotate-[-180deg]" />
+								</span>
+							</Collapsible.Trigger>
+						)}
+					</div>
+
+					<Collapsible.Content>
+						<div className="ml-6 border-l border-gray-800">
+							{node.children!.map(child => (
+								<TreeNodeComponent
+									key={child.id}
+									node={child}
+									depth={depth + 1}
+									activeTabId={activeTabId}
+									setActiveTab={setActiveTab}
+								/>
+							))}
+						</div>
+					</Collapsible.Content>
+				</Collapsible.Root>
+			) : (
+				<button
+					onClick={() => node.tab && setActiveTab(node.tab.id)}
+					data-active={isActive}
+					className={LABEL_STYLE}
+				>
+					<span>{node.name}</span>
+				</button>
+			)}
+		</div>
+	);
+}
+
+
+
+export default function TreeView({ className }: ComponentPropsWithRef<"div">) {
+
+	const { tree, activeTab, setActiveTab } = usePlugin();
+
+	return (
+		<div
+			className={`text-sm font-sans overflow-y-auto ${className}`}
+			style={{ scrollbarWidth: 'thin' }}
+		>
+			{tree.map(node => (
+				<TreeNodeComponent
+					key={node.id}
+					node={node}
+					depth={0}
+					activeTabId={activeTab?.id}
+					setActiveTab={setActiveTab}
+				/>
+			))}
+		</div>
+	);
+}

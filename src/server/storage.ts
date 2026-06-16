@@ -11,6 +11,7 @@ import type {
 } from "@ctypes/messages";
 import { resolveNode } from "./node";
 
+
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 
 /** Returns the full persisted tab list (shells only — no MarkedNode data) */

@@ -1,4 +1,4 @@
-import type { ChildTextNode, FrameTab, MarkedNode, NodeSection } from "@ctypes/messages";
+import type { ChildTextNode, FrameTab, MarkedNode, NodeSection, TreeNode } from "@ctypes/messages";
 import { sendToUI } from "./message";
 import {
 	getStoredTabs,
@@ -14,8 +14,9 @@ export async function loadAndSendState(): Promise<void> {
 	const storedTabs = getStoredTabs();
 	const exportOptions = getExportOptions();
 	const tabs = await resolveTabs(storedTabs);
+	const tree = getTreeFromTabs(tabs);
 
-	sendToUI({ type: "STATE_UPDATE", tabs, exportOptions });
+	sendToUI({ type: "STATE_UPDATE", tabs, tree, exportOptions });
 }
 
 export async function loadAndSendMarkedNodes(): Promise<void> {
@@ -26,10 +27,10 @@ export async function loadAndSendMarkedNodes(): Promise<void> {
 // ─── Tab resolution ───────────────────────────────────────────────────────────
 
 /**
- * Takes stored FrameTab shells, resolves all node IDs through the Figma API,
- * and returns fully populated FrameTabs with embedded MarkedNode objects.
- * Prunes any node IDs that no longer exist in the Figma document.
- */
+	* Takes stored FrameTab shells, resolves all node IDs through the Figma API,
+	* and returns fully populated FrameTabs with embedded MarkedNode objects.
+	* Prunes any node IDs that no longer exist in the Figma document.
+	*/
 export async function resolveTabs(storedTabs: FrameTab[]): Promise<FrameTab[]> {
 	const resolved = await Promise.all(storedTabs.map(resolveTab));
 
@@ -67,9 +68,9 @@ export async function resolveTab(tab: FrameTab): Promise<FrameTab> {
 }
 
 /**
- * Resolves a list of node IDs into MarkedNode objects.
- * Silently drops IDs that no longer exist in the Figma document.
- */
+	* Resolves a list of node IDs into MarkedNode objects.
+	* Silently drops IDs that no longer exist in the Figma document.
+	*/
 async function resolveNodeList(nodeIds: string[]): Promise<MarkedNode[]> {
 	const results = await Promise.all(
 		nodeIds.map(async (id) => {
@@ -132,4 +133,42 @@ export function collectTextChildren(node: BaseNode): ChildTextNode[] {
 		for (const child of node.children) results.push(...collectTextChildren(child));
 	}
 	return results;
+}
+
+
+export function getTreeFromTabs(tabs: FrameTab[]): TreeNode[] {
+	const root: TreeNode[] = [];
+
+	for (const tab of tabs) {
+		const pathSegments = tab.name.split('/').filter(Boolean);
+		let currentLevel = root;
+		let targetNode: TreeNode | null = null;
+
+		for (let i = 0; i < pathSegments.length; i++) {
+			const segment = pathSegments[i];
+			const isLastSegment = i === pathSegments.length - 1;
+			const existingNode = currentLevel.find(node => node.name === segment);
+
+			if (existingNode) {
+				currentLevel = existingNode.children || (existingNode.children = []);
+				targetNode = existingNode;
+			} else {
+				const newNode: TreeNode = {
+					id: isLastSegment ? tab.id : `${tab.id}-${i}`,
+					name: segment,
+					children: [],
+				};
+				currentLevel.push(newNode);
+				currentLevel = newNode.children!;
+				targetNode = newNode;
+			}
+		}
+
+		// Attach tab to the last node in the path
+		if (targetNode) {
+			targetNode.tab = tab;
+		}
+	}
+
+	return root;
 }

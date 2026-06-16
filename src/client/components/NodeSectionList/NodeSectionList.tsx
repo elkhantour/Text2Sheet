@@ -159,7 +159,7 @@ export function NodeSectionList(): React.ReactElement {
 
 	const isEmpty = activeTab?.nodes.length === 0 && activeTab.sections.length === 0;
 
-	if (isEmpty) {
+	if (isEmpty || !activeTab) {
 		return (
 			<div className="flex flex-1 flex-col">
 				<EmptyState />
@@ -167,22 +167,24 @@ export function NodeSectionList(): React.ReactElement {
 		);
 	}
 
-	if (!activeTab)
-		return (<div className="flex flex-1 flex-col overflow-hidden"></div>);
-
 	return (
 		<DndContext.Provider value={{ dragging, activeDropZone, startDrag, setDropZone, endDrag }}>
-			<div className="flex flex-1 flex-col overflow-hidden">
+			<div className="flex flex-1 flex-col overflow-y-auto">
 				{/* Toolbar */}
 				<div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)]">
-					<Text size="1" className="text-[var(--text-muted)]">
-						{activeTab?.nodes.length} text layers
-						{selection.selectedIds.size > 0 && (
-							<span className="ml-1.5 text-[var(--accent)]">
-								· {selection.selectedIds.size} selected
-							</span>
-						)}
-					</Text>
+					<div className="flex items-center gap-4">
+						<Text size="2" className="max-w-[200px] overflow-hidden text-ellipsis">
+							{activeTab?.name}
+						</Text>
+						<Text size="1" className="text-[var(--text-muted)]">
+							{activeTab?.nodes.length} text layers
+							{selection.selectedIds.size > 0 && (
+								<span className="ml-1.5 text-[var(--accent)]">
+									· {selection.selectedIds.size} selected
+								</span>
+							)}
+						</Text>
+					</div>
 					<Button size="1" variant="ghost" onClick={handleAddSection}>
 						<PlusIcon size={ICON_SIZE_SMALL} />
 						Add Section
