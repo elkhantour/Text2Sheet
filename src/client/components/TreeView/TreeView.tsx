@@ -44,10 +44,7 @@ function TreeNodeComponent({
 							>
 								<span>{node.name}</span>
 							</button>
-
-							<span className="flex items-center justify-end flex-1 text-gray-600 hover:text-gray-200">
-								<ChevronDown data-open={isOpen} className="h-4 w-4 transition-transform data-[open=true]:rotate-[-180deg]" />
-							</span>
+							<ChevronDown data-open={isOpen} className="h-4 w-4 transition-transform data-[open=true]:rotate-[-180deg]" />
 						</div>
 					</Collapsible.Trigger>
 					<Collapsible.Content>
