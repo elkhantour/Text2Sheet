@@ -7,28 +7,29 @@ export type UIToPluginMessage =
 	| { type: "UNMARK_NODES"; nodeIds: string[] }
 	| { type: "SELECT_NODE"; nodeId: string }
 	| { type: "LOAD_MARKED" }
-	| { type: "REORDER_ITEMS"; itemIds: string[] }
-	| { type: "CREATE_SECTION"; name: string, sectionId: string, topFrameId: string, topFrameName: string }
-	| { type: "DELETE_SECTION"; sectionId: string }
+	| { type: "REORDER_ITEMS"; tabId: string; itemIds: string[] }
+	| { type: "CREATE_SECTION"; name: string; sectionId: string; tabId: string }
+	| { type: "DELETE_SECTION"; sectionId: string; tabId: string }
 	| { type: "RENAME_SECTION"; sectionId: string; name: string }
 	| { type: "MOVE_NODES_TO_SECTION"; nodeIds: string[]; sectionId: string | null; index: number }
 	| { type: "REORDER_NODES_IN_SECTION"; sectionId: string; nodeIds: string[] }
 	| { type: "SAVE_EXPORT_OPTIONS"; options: ExportOptions }
 	| { type: "SAVE_SELECTION_OPTIONS"; options: SelectionOptions }
-	| { type: "RESIZE_WINDOW"; width: number; height: number; }
-	// Legacy
-	| { type: "REORDER_NODES"; nodeIds: string[] };
+	| { type: "RESIZE_WINDOW"; width: number; height: number };
 
 
 // ─── Message types (Plugin → UI) ────────────────────────────────────────────
 
 export type PluginToUIMessage =
-	| { type: "MARKED_NODES_UPDATE"; nodes: MarkedNode[] }
-	| { type: "STATE_UPDATE"; nodes: MarkedNode[]; sections: NodeSection[]; itemOrder: string[]; exportOptions: ExportOptions }
+	/** Initial load + any mutation: always the full up-to-date tab list */
+	| { type: "STATE_UPDATE"; tabs: FrameTab[]; exportOptions: ExportOptions }
+	/** Server push after any mutation — the fully updated tab */
+	| { type: "TAB_UPDATED"; tab: FrameTab }
 	| { type: "ERROR"; message: string }
 	| { type: "NOTIFY"; message: string }
 	| { type: "SELECT_NODES"; nodeIds: string[] }
 	| { type: "LATEST_ADDED_NODES"; nodeIds: string[] }
+
 
 // ─── Data shapes ─────────────────────────────────────────────────────────────
 
@@ -38,20 +39,26 @@ export interface MarkedNode {
 	nodeType: string;
 	previewText: string;
 	childTextNodes?: ChildTextNode[];
-	/** ID of the top-level frame this node lives under */
 	topFrameId: string;
-	/** Display name of that top-level frame */
 	topFrameName: string;
+	sectionId?: string;
 }
 
 export interface NodeSection {
 	id: string;
 	name: string;
-	nodeIds: string[];
+	nodes: MarkedNode[];
 	collapsed?: boolean;
-	/** The top-level frame this section belongs to (set at creation) */
-	topFrameId: string;
-	topFrameName: string;
+}
+
+export interface FrameTab {
+	id: string;
+	name: string;
+	/** Orphan nodes not belonging to any section */
+	nodes: MarkedNode[];
+	sections: NodeSection[];
+	/** Interleaved node IDs + section IDs in display order */
+	itemOrder: string[];
 }
 
 export interface ChildTextNode {
@@ -63,7 +70,6 @@ export interface ChildTextNode {
 export type TopLevelItem =
 	| { kind: "node"; id: string }
 	| { kind: "section"; id: string };
-
 
 export type ExportFormat = "xls" | "csv";
 
@@ -81,12 +87,4 @@ export interface ExportOptions {
 export interface SelectionOptions {
 	autogroup: boolean;
 	sync: boolean;
-}
-
-
-
-/** A derived tab — not stored, computed from nodes + sections */
-export interface FrameTab {
-	id: string;
-	name: string;
 }

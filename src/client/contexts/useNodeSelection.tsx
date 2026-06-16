@@ -1,6 +1,5 @@
 import React from "react";
 import { useState, useCallback, useEffect, useContext, createContext } from "react";
-import { useTabs } from "./useTabs";
 import { usePlugin } from "@contexts/usePlugin";
 
 export interface NodeSelectionState {
@@ -26,8 +25,7 @@ export function NodeSelectionProvider({
 	const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
 	const [isLinkSelection, setIsLinkSelection] = useState<boolean>(false);
 
-	const { getNodeFromId, getSectionFromId } = usePlugin();
-	const { setActiveTab } = useTabs();
+	const { getNodeFromId, getSectionFromId, setActiveTab, activeTab } = usePlugin();
 
 	useEffect(() => {
 		const handler = (event: MessageEvent) => {
@@ -36,7 +34,7 @@ export function NodeSelectionProvider({
 			switch (msg.type) {
 				case "SELECT_NODES":
 
-					if (msg.nodeIds.length > 0) {
+					if (msg.nodes.length > 0) {
 						const node = getNodeFromId(msg.nodeIds[0]);
 
 						if (node) {
@@ -44,7 +42,8 @@ export function NodeSelectionProvider({
 						}
 					}
 
-					setSelectedIds(new Set(msg.nodeIds));
+					// FIXME: msg.nodesId
+					setSelectedIds(new Set(msg.nodes));
 					break;
 			}
 		};
@@ -84,15 +83,16 @@ export function NodeSelectionProvider({
 
 	const rangeSelect = useCallback((id: string, orderedIds: string[]) => {
 
+		if (!activeTab) { return; }
 		if (!lastSelectedId) { select(id); return; }
 
 		// flatten the ordered ids
 		const flattenOrdered: string[] = [];
 
 		orderedIds.forEach(id => {
-			const section = getSectionFromId(id);
+			const section = getSectionFromId(activeTab.id, id);
 			if (section) {
-				flattenOrdered.push(...section.nodeIds);
+				flattenOrdered.push(...section.nodes.map(n => n.id));
 			} else {
 				flattenOrdered.push(id);
 			}

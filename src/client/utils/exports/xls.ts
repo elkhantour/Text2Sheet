@@ -20,14 +20,11 @@ const FONT_NAME = "Calibri";
 // ─── Public entry point ───────────────────────────────────────────────────────
 
 /**
- * Builds and downloads a .xlsx workbook.
- * Each FrameTab becomes one sheet.
- * Structure is always "combined" (multi-sheet workbook) for XLS exports.
- */
+	* Builds and downloads a .xlsx workbook.
+	* Each FrameTab becomes one sheet.
+	* Structure is always "combined" (multi-sheet workbook) for XLS exports.
+	*/
 export async function downloadXLS(
-	nodes: MarkedNode[],
-	sections: NodeSection[],
-	itemOrder: string[],
 	options: ExportOptions,
 	tabs: FrameTab[],
 	filename = `text2sheet_${today()}.xlsx`,
@@ -37,16 +34,10 @@ export async function downloadXLS(
 	workbook.created = new Date();
 
 	for (const tab of tabs) {
-		const tabNodes = nodes.filter((n) => n.topFrameId === tab.id);
-		const tabSections = sections.filter((s) => s.topFrameId === tab.id);
-		const tabNodeIds = new Set(tabNodes.map((n) => n.id));
-		const tabSectionIds = new Set(tabSections.map((s) => s.id));
-		const tabOrder = itemOrder.filter((id) => tabNodeIds.has(id) || tabSectionIds.has(id));
-
 		const sheetName = sanitizeFilename(tab.name).slice(0, 31); // Excel sheet name limit
 		const sheet = workbook.addWorksheet(sheetName);
 
-		buildSheet(sheet, tabNodes, tabSections, tabOrder, options);
+		buildSheet(sheet, tab.nodes, tab.sections, tab.itemOrder, options);
 	}
 
 	const buffer = await workbook.xlsx.writeBuffer();
@@ -162,9 +153,7 @@ function buildSectionedSheet(
 			const looseFirst = itemOrder.indexOf(looseNodes[0]?.id ?? "") < itemOrder.indexOf(id);
 			if (looseFirst) renderLoose();
 
-			const sectionNodes = section.nodeIds
-				.map((nid) => nodeMap.get(nid))
-				.filter((n): n is MarkedNode => !!n);
+			const sectionNodes = section.nodes.filter((n): n is MarkedNode => !!n);
 
 			rowIndex = addSectionBlock(sheet, section.name, sectionNodes, options, colCount, rowIndex, false);
 		}
@@ -240,9 +229,9 @@ function addSectionBlock(
 // ─── Row resolution ───────────────────────────────────────────────────────────
 
 /**
- * Returns raw cell value arrays for a node (without the section column).
- * The section column is prepended by the caller.
- */
+	* Returns raw cell value arrays for a node (without the section column).
+	* The section column is prepended by the caller.
+	*/
 function resolveNodeRows(node: MarkedNode, options: ExportOptions): string[][] {
 	if (node.nodeType === "TEXT") {
 		return [options.includeLayerNames

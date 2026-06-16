@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import type { DragItem, DropZone } from "@components/Dnd/Context";
 import { DndContext } from "@components/Dnd/Context";
 import { NodeSectionItem } from "@components/NodeSectionItem/NodeSectionItem";
@@ -11,7 +11,6 @@ import { PlusIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 import { useNodeSelection } from "@contexts/useNodeSelection";
 import { usePlugin } from "@contexts/usePlugin";
-import { useTabs } from "@contexts/useTabs";
 
 
 export function NodeSectionList(): React.ReactElement {
@@ -25,10 +24,12 @@ export function NodeSectionList(): React.ReactElement {
 		reorderNodesInSection,
 		getNodeFromId,
 		getSectionFromId,
-		itemOrder,
+		activeTab,
 	} = usePlugin();
 
-	const { activeTab, activeNodes, activeSections, activeItemOrder } = useTabs();
+
+	if (!activeTab)
+		return <span />;
 
 	const bodyRef = useRef<HTMLDivElement | null>(null);
 	const lastSectionCount = useRef<number>(0);
@@ -47,7 +48,7 @@ export function NodeSectionList(): React.ReactElement {
 	const setDropZone = useCallback((zone: DropZone | null) => setActiveDropZone(zone), []);
 
 	const endDrag = useCallback(() => {
-		if (!dragging || !activeDropZone) {
+		if (!dragging || !activeDropZone || !activeTab) {
 			setDragging(null);
 			setActiveDropZone(null);
 			return;
@@ -55,30 +56,33 @@ export function NodeSectionList(): React.ReactElement {
 
 		if (dragging.kind === "section") {
 			if (activeDropZone.kind === "top-level") {
-				const next = reorderTopLevel(itemOrder, dragging.sectionId, activeDropZone.beforeId);
-				reorderItems(next);
+				const next = reorderTopLevel(activeTab.itemOrder, dragging.sectionId, activeDropZone.beforeId);
+				reorderItems(activeTab.id, next);
 			}
 		} else if (dragging.kind === "nodes") {
 			const { nodeIds, sourceSectionId } = dragging;
 
 			if (activeDropZone.kind === "section-header") {
-				const target = getSectionFromId(activeDropZone.sectionId);
+				const target = getSectionFromId(activeTab.id, activeDropZone.sectionId);
 				if (!target) return cleanup();
 				if (sourceSectionId === activeDropZone.sectionId) return cleanup();
 
 				let newIndex = 0;
 				for (const nodeId of nodeIds) {
-					removeNodeFromSource(nodeId, sourceSectionId, itemOrder, moveNodesToSection, reorderNodesInSection, reorderItems);
-					newIndex = target.nodeIds.filter((id) => !nodeIds.includes(id)).length;
+					removeNodeFromSource(activeTab.id, nodeId, sourceSectionId, activeTab.itemOrder, moveNodesToSection, reorderNodesInSection, reorderItems);
+					newIndex = target.nodes.filter((node) => !nodeIds.includes(node.id)).length;
 				}
 
 				moveNodesToSection(nodeIds, activeDropZone.sectionId, newIndex);
 
 			} else if (activeDropZone.kind === "section-body") {
-				const target = getSectionFromId(activeDropZone.sectionId);
+				const target = getSectionFromId(activeTab.id, activeDropZone.sectionId);
 				if (!target) return cleanup();
 
-				const filteredTargetIds = target.nodeIds.filter((id) => !nodeIds.includes(id));
+				const filteredTargetIds = target.nodes
+					.filter((node) => !nodeIds.includes(node.id))
+					.map(n => n.id);
+
 				const insertIdx = activeDropZone.beforeNodeId
 					? filteredTargetIds.indexOf(activeDropZone.beforeNodeId)
 					: filteredTargetIds.length;
@@ -87,7 +91,7 @@ export function NodeSectionList(): React.ReactElement {
 				for (let i = 0; i < nodeIds.length; i++) {
 					const nodeId = nodeIds[i];
 					if (sourceSectionId !== activeDropZone.sectionId) {
-						removeNodeFromSource(nodeId, sourceSectionId, itemOrder, moveNodesToSection, reorderNodesInSection, reorderItems);
+						removeNodeFromSource(activeTab.id, nodeId, sourceSectionId, activeTab.itemOrder, moveNodesToSection, reorderNodesInSection, reorderItems);
 					}
 				}
 
@@ -97,7 +101,7 @@ export function NodeSectionList(): React.ReactElement {
 
 				moveNodesToSection(nodeIds, null, 0);
 				// Insert all dragged nodes before the target, preserving their relative order
-				let order = itemOrder;
+				let order = activeTab.itemOrder;
 				for (const nodeId of nodeIds) {
 					if (!order.includes(nodeId)) order = [...order, nodeId];
 				}
@@ -112,7 +116,7 @@ export function NodeSectionList(): React.ReactElement {
 					...nodeIds,
 					...withoutDragged.slice(finalIdx),
 				];
-				reorderItems(nextOrder);
+				reorderItems(activeTab.id, nextOrder);
 			}
 		}
 
@@ -121,12 +125,12 @@ export function NodeSectionList(): React.ReactElement {
 			setDragging(null);
 			setActiveDropZone(null);
 		}
-	}, [dragging, activeDropZone, itemOrder, activeSections, reorderItems, moveNodesToSection, reorderNodesInSection]);
+	}, [dragging, activeDropZone, activeTab.itemOrder, activeTab.sections, reorderItems, moveNodesToSection, reorderNodesInSection]);
 
 	// ── Add section ───────────────────────────────────────────────────────────
 
 	const handleAddSection = () => {
-		const name = `Section ${activeSections.length + 1}`;
+		const name = `Section ${activeTab.sections.length + 1}`;
 		if (activeTab) {
 			createSection(name, activeTab);
 		}
@@ -134,12 +138,12 @@ export function NodeSectionList(): React.ReactElement {
 
 	useEffect(() => {
 		// scroll to the bottom if the number of section gets updated
-		if (activeTab && lastTabId.current === activeTab.id && lastSectionCount.current < activeSections.length)
+		if (activeTab && lastTabId.current === activeTab.id && lastSectionCount.current < activeTab.sections.length)
 			if (bodyRef.current)
 				bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
 
-		lastSectionCount.current = activeSections.length;
-	}, [activeSections]);
+		lastSectionCount.current = activeTab.sections.length;
+	}, [activeTab.sections]);
 
 
 	useEffect(() => {
@@ -156,7 +160,7 @@ export function NodeSectionList(): React.ReactElement {
 
 	// ── Render ────────────────────────────────────────────────────────────────
 
-	const isEmpty = activeNodes.length === 0 && activeSections.length === 0;
+	const isEmpty = activeTab.nodes.length === 0 && activeTab.sections.length === 0;
 
 	if (isEmpty) {
 		return (
@@ -172,7 +176,7 @@ export function NodeSectionList(): React.ReactElement {
 				{/* Toolbar */}
 				<div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)]">
 					<Text size="1" className="text-[var(--text-muted)]">
-						{activeNodes.length} text layers
+						{activeTab?.nodes.length} text layers
 						{selection.selectedIds.size > 0 && (
 							<span className="ml-1.5 text-[var(--accent)]">
 								· {selection.selectedIds.size} selected
@@ -191,8 +195,8 @@ export function NodeSectionList(): React.ReactElement {
 					onMouseDown={handleListMouseDown}
 					ref={bodyRef}
 				>
-					{activeItemOrder.map((id) => {
-						const section = getSectionFromId(id);
+					{activeTab.itemOrder.map((id) => {
+						const section = getSectionFromId(activeTab.id, id);
 						const node = getNodeFromId(id);
 
 						const isDropTargetBefore =
@@ -205,12 +209,12 @@ export function NodeSectionList(): React.ReactElement {
 								{section ? (
 									<NodeSectionItem
 										section={section}
-										onDelete={() => deleteSection(section.id)}
+										onDelete={() => deleteSection(activeTab.id, section.id)}
 										onRename={(name) => renameSection(section.id, name)}
 									/>
 								) : node ? (
 									<NodeCard
-										nodeId={id}
+										node={node}
 										sourceSectionId={null}
 									/>
 								) : null}

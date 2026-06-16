@@ -5,22 +5,13 @@ import { today, sanitizeFilename, triggerDownload } from "@utils/exports/commons
 // ─── Per-tab CSV builder ──────────────────────────────────────────────────────
 
 export function buildTabCSVs(
-	nodes: MarkedNode[],
-	sections: NodeSection[],
-	itemOrder: string[],
 	options: ExportOptions,
 	tabs: FrameTab[],
 ): Array<{ tab: FrameTab; csv: string }> {
 	return tabs.map((tab) => {
-		const tabNodes = nodes.filter((n) => n.topFrameId === tab.id);
-		const tabSections = sections.filter((s) => s.topFrameId === tab.id);
-		const tabNodeIds = new Set(tabNodes.map((n) => n.id));
-		const tabSectionIds = new Set(tabSections.map((s) => s.id));
-		const tabOrder = itemOrder.filter((id) => tabNodeIds.has(id) || tabSectionIds.has(id));
-
 		const csv = options.splitBySections
-			? buildSectionedCSV(tabNodes, tabSections, tabOrder, options)
-			: buildFlatCSV(tabNodes, options);
+			? buildSectionedCSV(tab.nodes, tab.sections, tab.itemOrder, options)
+			: buildFlatCSV(tab.nodes, options);
 
 		return { tab, csv };
 	});
@@ -52,8 +43,7 @@ function buildSectionedCSV(
 		const section = sectionMap.get(id);
 		if (section) {
 			let isFirstNodeInSection = true;
-			for (const nodeId of section.nodeIds) {
-				const node = nodeMap.get(nodeId);
+			for (const node of section.nodes) {
 				if (!node) continue;
 				rows.push(...nodeRows(node, options, isFirstNodeInSection ? section.name : ""));
 				isFirstNodeInSection = false;

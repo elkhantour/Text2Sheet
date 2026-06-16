@@ -1,183 +1,181 @@
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { sendError, sendNotify, sendToUI } from "./message";
-import { loadAndSendState, resolveNode } from "./node";
-import { getStoredIds, saveIds, getSections, saveSections, saveItemOrder, saveExportOptions, getItemOrder, saveSelectionOptions, getSelectionOptions, removeCachedNode, addCachedNode, getCachedNodesArray } from "./storage";
-import { ExportOptions, SelectionOptions } from "@ctypes/messages";
+import { resolveNode, getTopFrame } from "./node";
+import {
+	getStoredTabs,
+	saveTab,
+	saveTabs,
+	saveExportOptions,
+	saveSelectionOptions,
+	getSelectionOptions,
+} from "./storage";
+import type { ExportOptions, FrameTab, NodeSection, SelectionOptions } from "@ctypes/messages";
 
-// ─── Existing handlers ────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-export async function handleHighlightMarked(): Promise<void> {
-	const storedIds = getStoredIds();
-	const nodes = await Promise.all(storedIds.map((id) => figma.getNodeByIdAsync(id)));
-	const validNodes = nodes.filter((n): n is SceneNode => n !== null && "parent" in n && n.parent !== null);
-	if (validNodes.length === 0) { sendError("No marked layers found in this file."); return; }
-	figma.currentPage.selection = validNodes;
-	figma.viewport.scrollAndZoomIntoView(validNodes);
-	sendNotify(`Highlighted ${validNodes.length} marked layer${validNodes.length !== 1 ? "s" : ""}.`);
+function findOrCreateTab(tabs: FrameTab[], tabId: string, tabName: string): FrameTab {
+	return tabs.find(t => t.id === tabId) ?? {
+		id: tabId,
+		name: tabName,
+		nodes: [],
+		sections: [],
+		itemOrder: [],
+	};
 }
 
+function upsertTab(tabs: FrameTab[], tab: FrameTab): FrameTab[] {
+	const exists = tabs.some(t => t.id === tab.id);
+	return exists ? tabs.map(t => t.id === tab.id ? tab : t) : [...tabs, tab];
+}
+
+
+// ─── Mark selection ───────────────────────────────────────────────────────────
+
 export async function handleMarkSelection(): Promise<void> {
-
-	// DEBUG
-	let characterCount = 0, layerCount = 0;
 	const debugStart = Date.now();
-
 	figma.skipInvisibleInstanceChildren = true;
 
 	const selection = figma.currentPage.selection;
 	if (selection.length === 0) { sendError("Select at least one layer in the canvas first."); return; }
-	const storedIds = getStoredIds();
-	const itemOrder = getItemOrder();
-	const sections = getSections();
+
 	const { autogroup } = getSelectionOptions();
-	const selectionTextNodeIds: string[] = [];
+	let tabs = getStoredTabs();
+	const addedNodeIds: string[] = [];
 
-	function addMarkedNode(node: SceneNode, out: string[]) {
-		if (!node.visible)
-			return;
-
-		out.push(node.id);
-		resolveNode(node).forEach((child) => addCachedNode(child));
+	// Collect all text nodes under a node
+	function collectTextNodes(node: SceneNode): SceneNode[] {
+		if (!node.visible) return [];
+		if (node.type === "TEXT") return [node];
+		if (!("findAllWithCriteria" in node)) return [];
+		return node.findAllWithCriteria({ types: ["TEXT"] }).filter(n => n.visible);
 	}
 
-	// Collects all visible TEXT node ids nested anywhere under `node`.
-	const collectTextNodes = (node: SceneNode, out: string[]) => {
-		if (node.type === "TEXT") {
-			addMarkedNode(node, out);
-			return;
-		}
-		if (!node.visible) return;
-		if (!("findAllWithCriteria" in node)) return;
-
-		const textNodes = node.findAllWithCriteria({ types: ["TEXT"] });
-		for (const t of textNodes) {
-			addMarkedNode(t, out);
-		}
-	};
-
-	// A "first layer" container that should become its own section.
-	const isSectionable = (node: SceneNode): boolean =>
+	const isSectionable = (node: SceneNode) =>
 		node.type === "GROUP" || node.type === "FRAME";
 
-	const traversalStart = Date.now(); // DEBUG
+	for (const sel of selection) {
+		const { id: tabId, name: tabName } = getTopFrame(sel);
+		let tab = findOrCreateTab(tabs, tabId, tabName);
 
-	if (autogroup) {
-		for (const sel of selection) {
-			if (!("children" in sel)) {
-				collectTextNodes(sel, selectionTextNodeIds);
-				continue;
-			}
+		if (autogroup && "children" in sel) {
 			for (const child of sel.children) {
 				if (!child.visible) continue;
+
 				if (child.type === "TEXT") {
-					selectionTextNodeIds.push(child.id);
-					layerCount++; // DEBUG
-					characterCount += child.characters.length; // DEBUG
+					const node = resolveNode(child);
+					if (!tab.nodes.some(n => n.id === node.id)) {
+						tab.nodes.push(node);
+						if (!tab.itemOrder.includes(node.id)) tab.itemOrder.push(node.id);
+						addedNodeIds.push(node.id);
+					}
 					continue;
 				}
+
 				if (isSectionable(child)) {
-					const groupTextIds: string[] = [];
-					collectTextNodes(child, groupTextIds);
-					if (groupTextIds.length === 0) continue;
-					selectionTextNodeIds.push(...groupTextIds);
-					const existingSection = sections.find((s) => s.id === child.id);
+					const textNodes = collectTextNodes(child);
+					if (textNodes.length === 0) continue;
+
+					const existingSection = tab.sections.find(s => s.id === child.id);
 					if (existingSection) {
-						const existingIds = new Set(existingSection.nodeIds);
-						for (const id of groupTextIds) {
-							if (!existingIds.has(id)) {
-								existingSection.nodeIds.push(id);
-								existingIds.add(id);
+						const existingIds = new Set(existingSection.nodes.map(n => n.id));
+						for (const t of textNodes) {
+							if (!existingIds.has(t.id)) {
+								const node = resolveNode(t);
+								existingSection.nodes.push(node);
+								addedNodeIds.push(node.id);
 							}
 						}
 						existingSection.name = child.name;
 					} else {
-						sections.push({
+						const nodes = textNodes.map(t => resolveNode(t));
+						const newSection: NodeSection = {
 							id: child.id,
 							name: child.name,
-							nodeIds: groupTextIds,
-							topFrameId: sel.id,
-							topFrameName: sel.name,
-						});
-						if (!itemOrder.includes(child.id)) itemOrder.push(child.id);
+							nodes,
+						};
+						tab.sections.push(newSection);
+						if (!tab.itemOrder.includes(child.id)) tab.itemOrder.push(child.id);
+						addedNodeIds.push(...nodes.map(n => n.id));
 					}
 				} else {
-					collectTextNodes(child, selectionTextNodeIds);
+					for (const t of collectTextNodes(child)) {
+						const node = resolveNode(t);
+						if (!tab.nodes.some(n => n.id === node.id)) {
+							tab.nodes.push(node);
+							if (!tab.itemOrder.includes(node.id)) tab.itemOrder.push(node.id);
+							addedNodeIds.push(node.id);
+						}
+					}
+				}
+			}
+		} else {
+			for (const t of collectTextNodes(sel)) {
+				const node = resolveNode(t);
+				if (!tab.nodes.some(n => n.id === node.id)) {
+					tab.nodes.push(node);
+					if (!tab.itemOrder.includes(node.id)) tab.itemOrder.push(node.id);
+					addedNodeIds.push(node.id);
 				}
 			}
 		}
-	} else {
-		selection.forEach((sel) => collectTextNodes(sel, selectionTextNodeIds));
+
+		tabs = upsertTab(tabs, tab);
+		saveTab(tab);
+		sendToUI({ type: "TAB_UPDATED", tab });
 	}
 
-	const traversalEnd = Date.now(); // DEBUG
+	sendToUI({ type: "LATEST_ADDED_NODES", nodeIds: addedNodeIds });
+	sendNotify(`Marked ${addedNodeIds.length} layer${addedNodeIds.length !== 1 ? "s" : ""} for export.`);
 
-	// Any text id that now belongs to a section shouldn't also live in the root item order.
-	const sectionedIds = new Set(sections.flatMap((s) => s.nodeIds));
-	const cleanedItemOrder = itemOrder.filter((id) => !sectionedIds.has(id));
-	for (const id of selectionTextNodeIds) {
-		if (!storedIds.includes(id)) storedIds.push(id); // <<======
-		if (!sectionedIds.has(id) && !cleanedItemOrder.includes(id)) {
-			cleanedItemOrder.push(id);
-		}
-	}
-
-	const mergeEnd = Date.now(); // DEBUG
-
-	sendToUI({ type: "LATEST_ADDED_NODES", nodeIds: selectionTextNodeIds });
-
-	saveIds(storedIds);
-	saveSections(sections);
-	saveItemOrder(cleanedItemOrder);
-
-	const loadAndSend = Date.now(); // DEBUG
-
-	await loadAndSendState();
-
-	const totalEnd = Date.now(); // DEBUG
-
-	// DEBUG
-	console.log(
-		`[markSelection debug] layers visited: ${layerCount}\n ` +
-		`text nodes marked: ${selectionTextNodeIds.length}\n ` +
-		`characters: ${characterCount}\n ` +
-		`storedIds: ${storedIds.length}, itemOrder: ${cleanedItemOrder.length}, sections: ${sections.length}\n ` +
-		`traversal: ${traversalEnd - traversalStart}ms\n ` +
-		`merge: ${mergeEnd - traversalEnd}ms\n ` +
-		`save: ${loadAndSend - mergeEnd}ms\n ` +
-		`loadState: ${totalEnd - loadAndSend}ms\n ` +
-		`total: ${totalEnd - debugStart}ms`
-	);
-
-	sendNotify(`Marked ${selectionTextNodeIds.length} layer${selectionTextNodeIds.length > 1 ? "s" : ""} for export.`);
+	console.log(`[markSelection] ${addedNodeIds.length} nodes added in ${Date.now() - debugStart}ms`);
 }
 
+
+// ─── Unmark ───────────────────────────────────────────────────────────────────
+
 export async function handleUnmarkNodeList(nodeIds: string[]): Promise<void> {
-
-	const storedIds = getStoredIds();
-	const sections = getSections();
-	const itemOrder = getItemOrder();
-
-
 	const idSet = new Set(nodeIds);
-	idSet.forEach(removeCachedNode);
+	const tabs = getStoredTabs();
 
-	console.log(nodeIds);
-	console.log(idSet);
-	console.log(getCachedNodesArray());
-
-	await Promise.all([
-		saveIds(storedIds.filter(id => !idSet.has(id))),
-		saveSections(
-			sections.map(s => ({
+	const updatedTabs = tabs
+		.map(tab => ({
+			...tab,
+			nodes: tab.nodes.filter(n => !idSet.has(n.id)),
+			sections: tab.sections.map(s => ({
 				...s,
-				nodeIds: s.nodeIds.filter(id => !idSet.has(id)),
-			}))
-		),
-		saveItemOrder(itemOrder.filter(id => !idSet.has(id))),
+				nodes: s.nodes.filter(n => !idSet.has(n.id)),
+			})),
+			itemOrder: tab.itemOrder.filter(id => !idSet.has(id)),
+		}))
+		.filter(tab => tab.nodes.length > 0 || tab.sections.some(s => s.nodes.length > 0));
+
+	saveTabs(updatedTabs);
+
+	// Send TAB_UPDATED for each affected tab (or remove it if now empty)
+	for (const original of tabs) {
+		const updated = updatedTabs.find(t => t.id === original.id);
+		if (updated) sendToUI({ type: "TAB_UPDATED", tab: updated });
+		// Removed tabs: UI handles that via unmarkNodes optimistic update
+	}
+}
+
+
+// ─── Select / highlight ───────────────────────────────────────────────────────
+
+export async function handleHighlightMarked(): Promise<void> {
+	const tabs = getStoredTabs();
+	const allNodeIds = tabs.flatMap(t => [
+		...t.nodes.map(n => n.id),
+		...t.sections.flatMap(s => s.nodes.map(n => n.id)),
 	]);
 
-	// Already handled visually client side
-	// await loadAndSendState();
+	const nodes = await Promise.all(allNodeIds.map(id => figma.getNodeByIdAsync(id)));
+	const validNodes = nodes.filter((n): n is SceneNode => n !== null && "parent" in n && n.parent !== null);
+
+	if (validNodes.length === 0) { sendError("No marked layers found in this file."); return; }
+	figma.currentPage.selection = validNodes;
+	figma.viewport.scrollAndZoomIntoView(validNodes);
+	sendNotify(`Highlighted ${validNodes.length} marked layer${validNodes.length !== 1 ? "s" : ""}.`);
 }
 
 export async function handleSelectNode(nodeId: string): Promise<void> {
@@ -188,54 +186,87 @@ export async function handleSelectNode(nodeId: string): Promise<void> {
 	figma.viewport.scrollAndZoomIntoView([node as SceneNode]);
 }
 
-export function handleReorder(nodeIds: string[]): void {
-	saveIds(nodeIds);
+export async function handleSyncSelectionToUI(): Promise<void> {
+	const tabs = getStoredTabs();
+	const allNodeIds = new Set(tabs.flatMap(t => [
+		...t.nodes.map(n => n.id),
+		...t.sections.flatMap(s => s.nodes.map(n => n.id)),
+	]));
+
+	const selectedStoredIds: string[] = [];
+	function visit(node: SceneNode) {
+		if (allNodeIds.has(node.id)) selectedStoredIds.push(node.id);
+		if ("children" in node) node.children.forEach(visit);
+	}
+	figma.currentPage.selection.forEach(visit);
+	sendToUI({ type: "SELECT_NODES", nodeIds: selectedStoredIds });
 }
+
+
+// ─── Clear all ────────────────────────────────────────────────────────────────
+
+export async function handleClearAll(): Promise<void> {
+	saveTabs([]);
+}
+
 
 // ─── Section handlers ─────────────────────────────────────────────────────────
 
-export async function handleCreateSection(name: string, sectionId: string, topFrameId: string, topFrameName: string): Promise<void> {
-	const itemOrder = getItemOrder();
-	const sections = getSections();
-	const newSection = { id: sectionId, name, nodeIds: [] as string[], topFrameId, topFrameName };
-	saveSections([...sections, newSection]);
-	saveItemOrder([...itemOrder, newSection.id]);
+export async function handleCreateSection(name: string, sectionId: string, tabId: string): Promise<void> {
+	const tabs = getStoredTabs();
+	const tab = tabs.find(t => t.id === tabId);
+	if (!tab) return;
 
-	// Already handled visually client side
-	// await loadAndSendState();
+	const newSection: NodeSection = { id: sectionId, name, nodes: [] };
+	const updated: FrameTab = {
+		...tab,
+		sections: [...tab.sections, newSection],
+		itemOrder: [...tab.itemOrder, sectionId],
+	};
+	saveTab(updated);
+	// Already handled optimistically client-side
 }
 
-export async function handleDeleteSection(sectionId: string): Promise<void> {
-	const sections = getSections();
-	const itemOrder = getItemOrder();
+export async function handleDeleteSection(sectionId: string, tabId: string): Promise<void> {
+	const tabs = getStoredTabs();
+	const tab = tabs.find(t => t.id === tabId);
+	if (!tab) return;
 
-	const target = sections.find((s) => s.id === sectionId);
+	const target = tab.sections.find(s => s.id === sectionId);
 	if (!target) return;
 
-	const sectionIdx = itemOrder.indexOf(sectionId);
-	const newOrder = [...itemOrder];
-
-	newOrder.splice(sectionIdx, 1, ...target.nodeIds);
-	saveSections(sections.filter((s) => s.id !== sectionId));
-	saveItemOrder(newOrder);
-
-	// Already handled visually client side
-	// await loadAndSendState();
+	const updated: FrameTab = {
+		...tab,
+		nodes: [...tab.nodes, ...target.nodes],
+		sections: tab.sections.filter(s => s.id !== sectionId),
+		itemOrder: tab.itemOrder.flatMap(id =>
+			id === sectionId ? target.nodes.map(n => n.id) : [id]
+		),
+	};
+	saveTab(updated);
+	// Already handled optimistically client-side
 }
 
 export async function handleRenameSection(sectionId: string, name: string): Promise<void> {
-	const sections = getSections();
-	saveSections(sections.map((s) => (s.id === sectionId ? { ...s, name } : s)));
+	const tabs = getStoredTabs();
+	const tab = tabs.find(t => t.sections.some(s => s.id === sectionId));
+	if (!tab) return;
 
-	// Already handled visually client side
-	// await loadAndSendState();
+	const updated: FrameTab = {
+		...tab,
+		sections: tab.sections.map(s => s.id === sectionId ? { ...s, name } : s),
+	};
+	saveTab(updated);
+	// Already handled optimistically client-side
 }
 
-export async function handleReorderItems(itemIds: string[]): Promise<void> {
-	saveItemOrder(itemIds);
+export async function handleReorderItems(tabId: string, itemIds: string[]): Promise<void> {
+	const tabs = getStoredTabs();
+	const tab = tabs.find(t => t.id === tabId);
+	if (!tab) return;
 
-	// Already handled visually client side
-	// await loadAndSendState();
+	saveTab({ ...tab, itemOrder: itemIds });
+	// Already handled optimistically client-side
 }
 
 export async function handleMoveNodeListToSection(
@@ -243,89 +274,86 @@ export async function handleMoveNodeListToSection(
 	sectionId: string | null,
 	index: number
 ): Promise<void> {
-
-	const sections = getSections();
-	const itemOrder = getItemOrder();
-
 	const idSet = new Set(nodeIds);
+	const tabs = getStoredTabs();
 
-	// remove all nodes from current locations
-	const cleanedSections = sections.map((s) => ({
+	// Find which tab owns these nodes
+	const tab = tabs.find(t =>
+		t.nodes.some(n => idSet.has(n.id)) ||
+		t.sections.some(s => s.nodes.some(n => idSet.has(n.id)))
+	);
+	if (!tab) return;
+
+	// Collect the actual node objects being moved
+	const movingNodes = [
+		...tab.nodes.filter(n => idSet.has(n.id)),
+		...tab.sections.flatMap(s => s.nodes.filter(n => idSet.has(n.id))),
+	];
+
+	const cleanedNodes = tab.nodes.filter(n => !idSet.has(n.id));
+	const cleanedSections = tab.sections.map(s => ({
 		...s,
-		nodeIds: s.nodeIds.filter((id) => !idSet.has(id)),
+		nodes: s.nodes.filter(n => !idSet.has(n.id)),
 	}));
 
-	const cleanedOrder = itemOrder.filter((id) => !idSet.has(id));
-
+	let updated: FrameTab;
 	if (sectionId === null) {
-		// insert into root order
-		cleanedOrder.splice(index, 0, ...nodeIds);
-
-		await Promise.all([
-			saveSections(cleanedSections),
-			saveItemOrder(cleanedOrder),
-		]);
+		const newItemOrder = tab.itemOrder.filter(id => !idSet.has(id));
+		newItemOrder.splice(index, 0, ...nodeIds);
+		updated = {
+			...tab,
+			nodes: [...cleanedNodes, ...movingNodes],
+			sections: cleanedSections,
+			itemOrder: newItemOrder,
+		};
 	} else {
-		const target = cleanedSections.find((s) => s.id === sectionId);
-		if (!target) return;
-
-		// insert into section
-		target.nodeIds.splice(index, 0, ...nodeIds);
-
-		await Promise.all([
-			saveSections(cleanedSections),
-			saveItemOrder(cleanedOrder),
-		]);
+		const targetSection = cleanedSections.find(s => s.id === sectionId);
+		if (!targetSection) return;
+		targetSection.nodes.splice(index, 0, ...movingNodes);
+		updated = {
+			...tab,
+			nodes: cleanedNodes,
+			sections: cleanedSections,
+			itemOrder: tab.itemOrder.filter(id => !idSet.has(id)),
+		};
 	}
 
-	// TODO: Already handled visually client side
-	// await loadAndSendState();
+	saveTab(updated);
+	// Already handled optimistically client-side
 }
 
 export async function handleReorderNodesInSection(sectionId: string, nodeIds: string[]): Promise<void> {
-	const sections = getSections();
-	saveSections(sections.map((s) => (s.id === sectionId ? { ...s, nodeIds } : s)));
+	const tabs = getStoredTabs();
+	const tab = tabs.find(t => t.sections.some(s => s.id === sectionId));
+	if (!tab) return;
 
-	//TODO:  Already handled visually client side
-	await loadAndSendState();
+	const updated: FrameTab = {
+		...tab,
+		sections: tab.sections.map(s => {
+			if (s.id !== sectionId) return s;
+			const nodeMap = new Map(s.nodes.map(n => [n.id, n]));
+			return { ...s, nodes: nodeIds.map(id => nodeMap.get(id)!).filter(Boolean) };
+		}),
+	};
+	saveTab(updated);
+	// Already handled optimistically client-side
 }
+
+
+// ─── Options ──────────────────────────────────────────────────────────────────
 
 export async function handleSaveExportOptions(options: ExportOptions): Promise<void> {
 	saveExportOptions(options);
-	await loadAndSendState();
 }
 
 export async function handleSaveSelectionOptions(options: SelectionOptions): Promise<void> {
 	saveSelectionOptions(options);
-	await loadAndSendState();
-}
-
-export async function handleSyncSelectionToUI() {
-	const storedIds = new Set(getStoredIds());
-
-	const selectedStoredIds: string[] = [];
-
-	function visit(node: SceneNode) {
-		if (storedIds.has(node.id)) {
-			selectedStoredIds.push(node.id);
-		}
-
-		if ("children" in node) {
-			for (const child of node.children) {
-				visit(child);
-			}
-		}
-	}
-
-	for (const node of figma.currentPage.selection) {
-		visit(node);
-	}
-
-	sendToUI({ type: "SELECT_NODES", nodeIds: selectedStoredIds });
 }
 
 
-export function handleResizeWindow(width: number, height: number) {
+// ─── Window ───────────────────────────────────────────────────────────────────
+
+export function handleResizeWindow(width: number, height: number): void {
 	width = Math.max(Math.round(width), PLUGIN_WIDTH);
 	height = Math.max(Math.round(height), PLUGIN_HEIGHT);
 	figma.ui.resize(width, height);

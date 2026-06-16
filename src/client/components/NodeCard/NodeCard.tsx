@@ -8,7 +8,7 @@ import { GripVertical, ScanIcon, XIcon } from "lucide-react";
 import { ICON_SIZE_EXTRA_SMALL } from "@utils/constants";
 
 interface NodeCardProps {
-	nodeId: string;
+	node: MarkedNode;
 	// DELETE ME index: number;
 	/** null = loose top-level card, string = inside a section */
 	sourceSectionId: string | null;
@@ -17,7 +17,7 @@ interface NodeCardProps {
 }
 
 export function NodeCard({
-	nodeId,
+	node,
 	sourceSectionId,
 	onDragOverGap,
 }: NodeCardProps): React.ReactElement {
@@ -25,19 +25,16 @@ export function NodeCard({
 	const {
 		unmarkNodes,
 		selectNode,
-		itemOrder,
-		getNodeFromId,
+		activeTab,
 	} = usePlugin();
 
 	const selection = useNodeSelection();
 
-	const selected = selection.isSelected(nodeId);
+	const selected = selection.isSelected(node.id);
 
 	const { dragging, startDrag, setDropZone, endDrag } = useDnd();
 
-	const node: MarkedNode | undefined = getNodeFromId(nodeId);
-
-	const isDragging = dragging?.kind === "nodes" && dragging.nodeIds[0] === nodeId;
+	const isDragging = dragging?.kind === "nodes" && dragging.nodeIds[0] === node.id;
 
 	const previewLines: string[] =
 		node && node.nodeType !== "TEXT" && node.childTextNodes?.length
@@ -51,25 +48,25 @@ export function NodeCard({
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 
-		if (e.shiftKey) {
-			selection.rangeSelect(nodeId, itemOrder);
+		if (e.shiftKey && activeTab) {
+			selection.rangeSelect(node.id, activeTab.itemOrder);
 		} else if (e.metaKey || e.ctrlKey) {
-			selection.toggle(nodeId);
+			selection.toggle(node.id);
 		} else {
 
-			if (selection.isSelected(nodeId)) {
-				selection.toggle(nodeId);
+			if (selection.isSelected(node.id)) {
+				selection.toggle(node.id);
 			} else {
 				//selection.clearSelection();
-				selection.select(nodeId);
+				selection.select(node.id);
 			}
 		}
 	};
 
 	const handleContextMenu = (e: React.MouseEvent) => {
 		e.stopPropagation();
-		if (!selection.isSelected(nodeId)) {
-			selection.toggle(nodeId);
+		if (!selection.isSelected(node.id)) {
+			selection.toggle(node.id);
 		}
 	};
 
@@ -80,7 +77,7 @@ export function NodeCard({
 	const handleDragStart = (e: React.DragEvent) => {
 		e.dataTransfer.effectAllowed = "move";
 		e.stopPropagation();
-		startDrag({ kind: "nodes", nodeIds: getDraggableNodes(nodeId), sourceSectionId });
+		startDrag({ kind: "nodes", nodeIds: getDraggableNodes(node.id), sourceSectionId });
 	};
 
 	const handleDragOver = (e: React.DragEvent) => {
@@ -88,9 +85,9 @@ export function NodeCard({
 		e.preventDefault();
 		e.stopPropagation();
 		if (onDragOverGap) {
-			onDragOverGap(nodeId);
+			onDragOverGap(node.id);
 		} else {
-			setDropZone({ kind: "top-level", beforeId: nodeId });
+			setDropZone({ kind: "top-level", beforeId: node.id });
 		}
 	};
 
@@ -144,10 +141,10 @@ export function NodeCard({
 					</span>
 
 					<div className="flex shrink-0 gap-1">
-						<ActionButton title="Focus layer in canvas" onClick={() => selectNode(nodeId)}>
+						<ActionButton title="Focus layer in canvas" onClick={() => selectNode(node.id)}>
 							<ScanIcon size={ICON_SIZE_EXTRA_SMALL} />
 						</ActionButton>
-						<ActionButton title="Remove from export" onClick={() => handleUnmark(nodeId)} danger>
+						<ActionButton title="Remove from export" onClick={() => handleUnmark(node.id)} danger>
 							<XIcon size={ICON_SIZE_EXTRA_SMALL} />
 						</ActionButton>
 					</div>

@@ -6,28 +6,25 @@ import Checkbox from "@components/Checkbox/Checkbox";
 import { GroupIcon, PlusIcon, SettingsIcon, SquareDashedMousePointerIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
 import { usePlugin } from "@contexts/usePlugin";
-import { useTabs } from "@contexts/useTabs";
 import { useNodeSelection } from "@contexts/useNodeSelection";
 import { ToggleLabel } from "@components/ToggleLabel/ToggleLabel";
 
 export function Toolbar(): React.ReactElement {
 
 	const {
-		markedNodes,
-		sections,
 		clearAll,
 		markSelection,
 		saveExportOptions,
 		exportOptions,
 		selectionOptions,
 		saveSelectionOptions,
+		tabs,
+		activeTab,
 	} = usePlugin();
-
-	const { tabs } = useTabs();
 
 	const { toggleLinkSelection } = useNodeSelection();
 
-	const hasNodes = markedNodes.length > 0;
+	const hasNodes = activeTab ? activeTab.nodes.length > 0 : false;
 	const setExportOption = <K extends keyof ExportOptions>(key: K, value: ExportOptions[K]) =>
 		saveExportOptions({ ...exportOptions, [key]: value });
 
@@ -120,8 +117,8 @@ export function Toolbar(): React.ReactElement {
 							<div className="p-4 bg-red-950 border border-red-800 flex flex-col gap-4 justify-center rounded-md">
 								<Text color="red" size="1" ><b>Danger Zone</b></Text>
 								<Button color="red"
-									onClick={(hasNodes || sections.length) ? clearAll : undefined}
-									disabled={!hasNodes && !sections.length}>
+									onClick={(hasNodes || activeTab?.sections.length) ? clearAll : undefined}
+									disabled={!hasNodes && !activeTab?.sections.length}>
 									Clear All
 								</Button>
 

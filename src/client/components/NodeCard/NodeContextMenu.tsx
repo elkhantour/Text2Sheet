@@ -5,7 +5,6 @@ import { ContextMenu } from "@radix-ui/themes";
 import { usePlugin } from "@contexts/usePlugin";
 import { MinusSquareIcon, PlusSquareIcon, TrashIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
-import { useTabs } from "@contexts/useTabs";
 
 interface NodeContextMenuProps {
 	children: React.ReactNode;
@@ -21,18 +20,21 @@ export function NodeContextMenu({
 		unmarkNodes,
 		moveNodesToSection,
 		getSectionFromId,
+		activeTab,
 	} = usePlugin();
 
-	const { activeSections } = useTabs();
 	const selection = useNodeSelection();
+
+	if (!activeTab)
+		return <></>
 
 	// TODO unify string[] and Set<string> for node Ids
 	const handleMoveToSection = useCallback((nodeIds: Set<string>, sectionId: string) => {
-		const target = getSectionFromId(sectionId);
+		const target = getSectionFromId(activeTab.id, sectionId);
 		if (!target) return;
-		moveNodesToSection(Array.from(nodeIds), sectionId, target.nodeIds.length);
+		moveNodesToSection(Array.from(nodeIds), sectionId, target.nodes.length);
 		selection.clearSelection();
-	}, [activeSections, moveNodesToSection, selection]);
+	}, [activeTab.sections, moveNodesToSection, selection]);
 
 	const handleRemoveFromSection = useCallback((nodeIds: Set<string>) => {
 		moveNodesToSection(Array.from(nodeIds), null, 0);
@@ -61,7 +63,7 @@ export function NodeContextMenu({
 					{/* Add to section */}
 					<ContextMenu.Item
 						onSelect={() => setAddToSectionOpen(true)}
-						disabled={activeSections.length === 0}
+						disabled={activeTab.sections.length === 0}
 						className="
 								flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
 								text-xs text-[var(--text-secondary)] outline-none
@@ -77,7 +79,7 @@ export function NodeContextMenu({
 					{/* Remove from section */}
 					{<ContextMenu.Item
 						onSelect={() => handleRemoveFromSection(selection.selectedIds)}
-						disabled={activeSections.length === 0}
+						disabled={activeTab.sections.length === 0}
 						className="
 									flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5
 									text-xs text-[var(--text-secondary)] outline-none
@@ -141,7 +143,10 @@ function AddToSectionDialog({
 	onConfirm,
 }: AddToSectionDialogProps): React.ReactElement {
 
-	const { activeSections } = useTabs();
+	const { activeTab } = usePlugin();
+
+	if (!activeTab)
+		return <></>;
 
 	return (
 		<Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -164,7 +169,7 @@ function AddToSectionDialog({
 					</Dialog.Description>
 
 					<div className="flex flex-col gap-1">
-						{activeSections.map((section) => (
+						{activeTab.sections.map((section) => (
 							<button
 								key={section.id}
 								onClick={() => onConfirm(section.id)}
@@ -178,7 +183,7 @@ function AddToSectionDialog({
 							>
 								{section.name}
 								<span className="ml-auto text-[10px] text-[var(--text-muted)]">
-									{section.nodeIds.length}
+									{section.nodes.length}
 								</span>
 							</button>
 						))}

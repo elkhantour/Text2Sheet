@@ -12,8 +12,6 @@ export function SectionBody({
 	section
 }: SectionBodyProps) {
 
-	const sectionNodes = section.nodeIds;
-
 	const { dragging, activeDropZone, setDropZone, endDrag } = useDnd();
 
 	const isNodeDrag = dragging?.kind === "nodes";
@@ -30,7 +28,7 @@ export function SectionBody({
 
 	return (
 		<div
-			data-empty={sectionNodes.length === 0}
+			data-empty={section.nodes.length === 0}
 			className="
                               flex
                               flex-col
@@ -48,7 +46,7 @@ export function SectionBody({
 			onDrop={(e) => { e.preventDefault(); endDrag(); }}
 		>
 			{
-				sectionNodes.length === 0 && (
+				section.nodes.length === 0 && (
 					<div className="flex items-center justify-center h-8 rounded border border-dashed text-[10px] text-[var(--text-muted)] cursor-default select-none transition-colors">
 						Drop cards here
 					</div>
@@ -56,11 +54,11 @@ export function SectionBody({
 			}
 
 			{
-				sectionNodes.map((node) => (
-					<React.Fragment key={node}>
-						{isDropBeforeNode(node) && <DropIndicator />}
+				section.nodes.map((node) => (
+					<React.Fragment key={node.id}>
+						{isDropBeforeNode(node.id) && <DropIndicator />}
 						<NodeCard
-							nodeId={node}
+							node={node}
 							sourceSectionId={section.id}
 							onDragOverGap={(beforeNodeId) =>
 								setDropZone({ kind: "section-body", sectionId: section.id, beforeNodeId })
@@ -70,7 +68,7 @@ export function SectionBody({
 				))
 			}
 
-			{isDropAtEnd && sectionNodes.length > 0 && <DropIndicator />}
+			{isDropAtEnd && section.nodes.length > 0 && <DropIndicator />}
 		</div >
 	);
 }

@@ -11,16 +11,17 @@ export function reorderTopLevel(order: string[], dragId: string, beforeId: strin
 
 // TODO: clean
 export function removeNodeFromSource(
+	tabId: string,
 	nodeId: string,
 	sourceSectionId: string | null,
 	itemOrder: string[],
 	onMoveNodeToSection: (nodeIds: string[], sectionId: string | null, index: number) => void,
 	onReorderNodesInSection: (sectionId: string, nodeIds: string[]) => void,
-	onReorderItems: (itemIds: string[]) => void,
+	onReorderItems: (tabId: string, itemIds: string[]) => void,
 ) {
 	if (sourceSectionId === null) {
 		// Was a loose top-level node — remove from itemOrder
-		onReorderItems(itemOrder.filter((id) => id !== nodeId));
+		onReorderItems(tabId, itemOrder.filter((id) => id !== nodeId));
 	}
 	// If it was inside a section the plugin handles removal when it receives MOVE_NODE_TO_SECTION
 }

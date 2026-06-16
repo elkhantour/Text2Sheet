@@ -24,16 +24,12 @@ export function NodeSectionItem({
 	const [draftName, setDraftName] = useState(section.name);
 	const inputRef = useRef<HTMLInputElement>(null);
 
-	const { getNodeFromId } = usePlugin();
-
 	const isDraggingThis = dragging?.kind === "section" && dragging.sectionId === section.id;
 	const isHeaderDropTarget =
 		(activeDropZone?.kind === "section-header" || activeDropZone?.kind === "section-body") &&
 		activeDropZone.sectionId === section.id;
 
-	const sectionNodes = section.nodeIds
-		.map((id) => getNodeFromId(id))
-		.filter(Boolean) as MarkedNode[];
+	const sectionNodes = section.nodes.filter(Boolean) as MarkedNode[];
 
 	// ── Section drag ─────────────────────────────────────────────────────────
 
