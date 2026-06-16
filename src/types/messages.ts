@@ -40,7 +40,6 @@ export interface MarkedNode {
 	previewText: string;
 	childTextNodes?: ChildTextNode[];
 	topFrameId: string;
-	topFrameName: string;
 	sectionId?: string;
 }
 
@@ -48,6 +47,7 @@ export interface NodeSection {
 	id: string;
 	name: string;
 	nodes: MarkedNode[];
+	topFrameId: string;
 	collapsed?: boolean;
 }
 

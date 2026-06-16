@@ -91,6 +91,7 @@ export async function handleMarkSelection(): Promise<void> {
 						const newSection: NodeSection = {
 							id: child.id,
 							name: child.name,
+							topFrameId: tabId,
 							nodes,
 						};
 						tab.sections.push(newSection);
@@ -187,6 +188,7 @@ export async function handleSelectNode(nodeId: string): Promise<void> {
 }
 
 export async function handleSyncSelectionToUI(): Promise<void> {
+
 	const tabs = getStoredTabs();
 	const allNodeIds = new Set(tabs.flatMap(t => [
 		...t.nodes.map(n => n.id),
@@ -199,6 +201,7 @@ export async function handleSyncSelectionToUI(): Promise<void> {
 		if ("children" in node) node.children.forEach(visit);
 	}
 	figma.currentPage.selection.forEach(visit);
+
 	sendToUI({ type: "SELECT_NODES", nodeIds: selectedStoredIds });
 }
 
@@ -217,7 +220,7 @@ export async function handleCreateSection(name: string, sectionId: string, tabId
 	const tab = tabs.find(t => t.id === tabId);
 	if (!tab) return;
 
-	const newSection: NodeSection = { id: sectionId, name, nodes: [] };
+	const newSection: NodeSection = { id: sectionId, name, nodes: [], topFrameId: tabId };
 	const updated: FrameTab = {
 		...tab,
 		sections: [...tab.sections, newSection],

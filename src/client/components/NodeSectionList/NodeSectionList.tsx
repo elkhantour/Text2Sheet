@@ -28,9 +28,6 @@ export function NodeSectionList(): React.ReactElement {
 	} = usePlugin();
 
 
-	if (!activeTab)
-		return <span />;
-
 	const bodyRef = useRef<HTMLDivElement | null>(null);
 	const lastSectionCount = useRef<number>(0);
 	const lastTabId = useRef<string | null>(activeTab ? activeTab.id : null);
@@ -125,12 +122,12 @@ export function NodeSectionList(): React.ReactElement {
 			setDragging(null);
 			setActiveDropZone(null);
 		}
-	}, [dragging, activeDropZone, activeTab.itemOrder, activeTab.sections, reorderItems, moveNodesToSection, reorderNodesInSection]);
+	}, [dragging, activeDropZone, activeTab?.itemOrder, activeTab?.sections, reorderItems, moveNodesToSection, reorderNodesInSection]);
 
 	// ── Add section ───────────────────────────────────────────────────────────
 
 	const handleAddSection = () => {
-		const name = `Section ${activeTab.sections.length + 1}`;
+		const name = `Section ${activeTab?.sections.length || 0 + 1}`;
 		if (activeTab) {
 			createSection(name, activeTab);
 		}
@@ -142,8 +139,8 @@ export function NodeSectionList(): React.ReactElement {
 			if (bodyRef.current)
 				bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
 
-		lastSectionCount.current = activeTab.sections.length;
-	}, [activeTab.sections]);
+		lastSectionCount.current = activeTab?.sections.length || 0;
+	}, [activeTab?.sections]);
 
 
 	useEffect(() => {
@@ -160,7 +157,7 @@ export function NodeSectionList(): React.ReactElement {
 
 	// ── Render ────────────────────────────────────────────────────────────────
 
-	const isEmpty = activeTab.nodes.length === 0 && activeTab.sections.length === 0;
+	const isEmpty = activeTab?.nodes.length === 0 && activeTab.sections.length === 0;
 
 	if (isEmpty) {
 		return (
@@ -169,6 +166,9 @@ export function NodeSectionList(): React.ReactElement {
 			</div>
 		);
 	}
+
+	if (!activeTab)
+		return (<div className="flex flex-1 flex-col overflow-hidden"></div>);
 
 	return (
 		<DndContext.Provider value={{ dragging, activeDropZone, startDrag, setDropZone, endDrag }}>

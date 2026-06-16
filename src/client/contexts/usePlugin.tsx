@@ -95,9 +95,11 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 				case "LATEST_ADDED_NODES":
 					setLatestAddedNodes(msg.nodeIds);
 					break;
+
 				case "ERROR":
 					setToast({ message: msg.message, kind: "error" });
 					break;
+
 				case "NOTIFY":
 					setToast({ message: msg.message, kind: "success" });
 					break;

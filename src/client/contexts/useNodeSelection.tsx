@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useCallback, useEffect, useContext, createContext } from "react";
 import { usePlugin } from "@contexts/usePlugin";
+import { PluginToUIMessage } from "@ctypes/messages";
 
 export interface NodeSelectionState {
 	selectedIds: Set<string>;
@@ -29,12 +30,12 @@ export function NodeSelectionProvider({
 
 	useEffect(() => {
 		const handler = (event: MessageEvent) => {
-			const msg = event.data.pluginMessage;
+			const msg = event.data.pluginMessage as PluginToUIMessage;
 
 			switch (msg.type) {
 				case "SELECT_NODES":
 
-					if (msg.nodes.length > 0) {
+					if (msg.nodeIds.length > 0) {
 						const node = getNodeFromId(msg.nodeIds[0]);
 
 						if (node) {
@@ -43,7 +44,7 @@ export function NodeSelectionProvider({
 					}
 
 					// FIXME: msg.nodesId
-					setSelectedIds(new Set(msg.nodes));
+					setSelectedIds(new Set(msg.nodeIds));
 					break;
 			}
 		};

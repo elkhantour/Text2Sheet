@@ -86,7 +86,7 @@ async function resolveNodeList(nodeIds: string[]): Promise<MarkedNode[]> {
 // ─── Node resolution ──────────────────────────────────────────────────────────
 
 export function resolveNode(node: BaseNode): MarkedNode {
-	const { id: topFrameId, name: topFrameName } = getTopFrame(node);
+	const { id: topFrameId } = getTopFrame(node);
 
 	if (node.type === "TEXT") {
 		return {
@@ -95,7 +95,6 @@ export function resolveNode(node: BaseNode): MarkedNode {
 			nodeType: node.type,
 			previewText: node.characters,
 			topFrameId,
-			topFrameName,
 		};
 	}
 
@@ -108,7 +107,6 @@ export function resolveNode(node: BaseNode): MarkedNode {
 		previewText: firstChild?.content ?? "",
 		childTextNodes: collectTextChildren(node),
 		topFrameId,
-		topFrameName,
 	};
 }
 
