@@ -1,6 +1,6 @@
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { sendError, sendNotify, sendToUI } from "./message";
-import { resolveNode, getTopFrame } from "./node";
+import { resolveNode, getTopFrame, loadAndSendState } from "./node";
 import {
 	getStoredTabs,
 	saveTab,
@@ -122,9 +122,10 @@ export async function handleMarkSelection(): Promise<void> {
 
 		tabs = upsertTab(tabs, tab);
 		saveTab(tab);
-		sendToUI({ type: "TAB_UPDATED", tab });
+		//sendToUI({ type: "TAB_UPDATED", tab });
 	}
 
+	loadAndSendState();
 	sendToUI({ type: "LATEST_ADDED_NODES", nodeIds: addedNodeIds });
 	sendNotify(`Marked ${addedNodeIds.length} layer${addedNodeIds.length !== 1 ? "s" : ""} for export.`);
 

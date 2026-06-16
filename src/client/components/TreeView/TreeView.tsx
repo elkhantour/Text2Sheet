@@ -3,6 +3,7 @@ import { TreeNode } from "@ctypes/messages";
 import { ChevronDown } from "lucide-react";
 import { Collapsible } from "radix-ui";
 import React, { ComponentPropsWithRef, useState } from "react";
+import { clsx } from "clsx";
 
 interface TreeNodeProps {
 	node: TreeNode;
@@ -32,28 +33,25 @@ function TreeNodeComponent({
 	const [isOpen, setIsOpen] = useState(false);
 
 	return (
-		<div className="pl-4 mb-2" style={{ paddingLeft: depth * 16 }}>
+		<div className="pl-2 mb-2">
 			{hasChildren ? (
 				<Collapsible.Root key={node.id} className="w-full" onOpenChange={setIsOpen}>
-					<div className="flex items-center">
-						<button
-							data-active={isActive}
-							className={LABEL_STYLE}
-							onClick={() => node.tab && setActiveTab(node.tab.id)}
-						>
-							<span>{node.name}</span>
-						</button>
-						{hasChildren && (
-							<Collapsible.Trigger asChild>
-								<span className="flex items-center justify-end flex-1 text-gray-800 hover:text-gray-200">
-									<ChevronDown data-open={isOpen} className="h-4 w-4 transition-transform data-[open=true]:rotate-[-180deg]" />
-								</span>
-							</Collapsible.Trigger>
-						)}
-					</div>
+					<Collapsible.Trigger asChild>
+						<div className={clsx(LABEL_STYLE, "flex items-center")}>
+							<button
+								data-active={isActive}
+								onClick={() => node.tab && setActiveTab(node.tab.id)}
+							>
+								<span>{node.name}</span>
+							</button>
 
+							<span className="flex items-center justify-end flex-1 text-gray-600 hover:text-gray-200">
+								<ChevronDown data-open={isOpen} className="h-4 w-4 transition-transform data-[open=true]:rotate-[-180deg]" />
+							</span>
+						</div>
+					</Collapsible.Trigger>
 					<Collapsible.Content>
-						<div className="ml-6 border-l border-gray-800">
+						<div className="ml-2 border-l border-gray-800">
 							{node.children!.map(child => (
 								<TreeNodeComponent
 									key={child.id}
