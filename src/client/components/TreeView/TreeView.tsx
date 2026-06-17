@@ -46,7 +46,7 @@ function TreeNodeComponent({
 								className="flex flex-row gap-2 items-center"
 							>
 								<span>{node.name}</span>
-								{activeTabId && hasActiveChildren(node, activeTabId) && <span className="w-2 h-2 block rounded-xs bg-green-400/30" />}
+								{activeTabId && !isOpen && hasActiveChildren(node, activeTabId) && <span className="w-2 h-2 block rounded-xs bg-green-400/30" />}
 							</button>
 							<ChevronDown data-open={isOpen} className="h-4 w-4 transition-transform data-[open=true]:rotate-[-180deg]" />
 						</div>

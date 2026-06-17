@@ -1,6 +1,6 @@
 // PluginContext.tsx
 import React, { createContext, useContext, useEffect, useCallback, useState, useMemo } from "react";
-import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions, FrameTab, SelectionOptions, TreeNode } from "@ctypes/messages";
+import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions, FrameTab, SelectionOptions, TreeNode, GlobalStats } from "@ctypes/messages";
 import { DEFAULT_EXPORT_OPTIONS, DEFAULT_SELECTION_OPTIONS } from "../../lib/constants";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -13,6 +13,7 @@ interface PluginContextValue {
 	toast: { message: string; kind: "error" | "success" | "info" } | null;
 	latestAddedNodes: string[];
 	tree: TreeNode[];
+	globalStats: GlobalStats;
 
 	// ── Tab state ─────────────────────────────────────────────────────────────
 	tabs: FrameTab[];
@@ -68,6 +69,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 	const [toast, setToast] = useState<PluginContextValue["toast"]>(null);
 	const [latestAddedNodes, setLatestAddedNodes] = useState<string[]>([]);
 	const [tree, setTree] = useState<TreeNode[]>([]);
+	const [globalStats, setGlobalStats] = useState<GlobalStats>({ rowsCount: 0, pagesCount: 0 });
 
 	// Auto-dismiss toast after 3s
 	useEffect(() => {
@@ -87,11 +89,13 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 					setTabs(msg.tabs);
 					setTree(msg.tree);
 					setExportOptions(msg.exportOptions);
+					setGlobalStats(msg.globalStats);
 					setIsLoading(false);
 					break;
 
 				case "TAB_UPDATED":
 					setTabs(prev => mergeTabs(prev, msg.tab));
+					setGlobalStats(msg.globalStats);
 					setLatestAddedNodes(msg.tab.nodes.map(n => n.id));
 					break;
 
@@ -147,7 +151,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 		exportOptions, selectionOptions,
 		isLoading, toast, latestAddedNodes,
 		tabs, activeTab, setActiveTab,
-		activeNodes, activeSections, tree,
+		activeNodes, activeSections, tree, globalStats,
 
 		markSelection: useCallback(() => postMessage({ type: "MARK_SELECTION" }), []),
 		highlightMarked: useCallback(() => postMessage({ type: "HIGHLIGHT_MARKED" }), []),

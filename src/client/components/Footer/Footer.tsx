@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { countExportableRows } from "../../utils/exports/commons";
 import { Button, Text } from "@radix-ui/themes";
 import { FileDownIcon } from "lucide-react";
 import { ICON_SIZE_SMALL } from "@utils/constants";
@@ -25,14 +24,14 @@ export function Footer(): React.ReactElement {
 		tabs,
 		exportOptions,
 		activeTab,
+		globalStats,
 	} = usePlugin();
 
 
 
 	const [downloading, setDownloading] = useState(false);
 
-	const rowCount = countExportableRows(activeTab?.nodes || []);
-	const canDownload = rowCount > 0;
+	const canDownload = globalStats.rowsCount > 0;
 
 	const handleDownload = async () => {
 		if (!canDownload || downloading || !activeTab) return;
@@ -48,9 +47,9 @@ export function Footer(): React.ReactElement {
 		<div className="footer flex shrink-0 flex-row gap-3 items-center justify-between border-t border-[var(--border)] px-3 pt-6 pb-6">
 
 			<div className="flex justify-between gap-3 pt-0.5">
-				<Stat label="Rows" value={rowCount} {...(canDownload ? { accent: true } : {})} />
+				<Stat label="Rows" value={globalStats.rowsCount} {...(canDownload ? { accent: true } : {})} />
 
-				<Stat label="Pages" value={tabs.length} {...(canDownload ? { accent: true } : {})} />
+				<Stat label="Pages" value={globalStats.pagesCount} {...(canDownload ? { accent: true } : {})} />
 
 			</div>
 

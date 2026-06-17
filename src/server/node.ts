@@ -1,4 +1,4 @@
-import type { ChildTextNode, FrameTab, MarkedNode, NodeSection, TreeNode } from "@ctypes/messages";
+import type { ChildTextNode, FrameTab, GlobalStats, MarkedNode, NodeSection, TreeNode } from "@ctypes/messages";
 import { sendToUI } from "./message";
 import {
 	getStoredTabs,
@@ -15,12 +15,24 @@ export async function loadAndSendState(): Promise<void> {
 	const exportOptions = getExportOptions();
 	const tabs = await resolveTabs(storedTabs);
 	const tree = getTreeFromTabs(tabs);
+	const globalStats = computeGlobalStats(tabs);
 
-	sendToUI({ type: "STATE_UPDATE", tabs, tree, exportOptions });
+	sendToUI({ type: "STATE_UPDATE", tabs, tree, exportOptions, globalStats });
 }
 
 export async function loadAndSendMarkedNodes(): Promise<void> {
 	return loadAndSendState();
+}
+
+export function computeGlobalStats(tabs: FrameTab[]): GlobalStats {
+	return {
+		pagesCount: tabs.length,
+		rowsCount: tabs.reduce((acc, tab) =>
+			acc
+			+ tab.nodes.length
+			+ tab.sections.reduce((bcc, sec) => bcc + sec.nodes.length, 0),
+			0),
+	};
 }
 
 

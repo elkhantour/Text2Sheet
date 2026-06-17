@@ -1,6 +1,6 @@
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { sendError, sendNotify, sendToUI } from "./message";
-import { resolveNode, getTopFrame, loadAndSendState } from "./node";
+import { resolveNode, getTopFrame, loadAndSendState, computeGlobalStats } from "./node";
 import {
 	getStoredTabs,
 	saveTab,
@@ -152,11 +152,12 @@ export async function handleUnmarkNodeList(nodeIds: string[]): Promise<void> {
 		.filter(tab => tab.nodes.length > 0 || tab.sections.some(s => s.nodes.length > 0));
 
 	saveTabs(updatedTabs);
+	const globalStats = computeGlobalStats(updatedTabs);
 
 	// Send TAB_UPDATED for each affected tab (or remove it if now empty)
 	for (const original of tabs) {
 		const updated = updatedTabs.find(t => t.id === original.id);
-		if (updated) sendToUI({ type: "TAB_UPDATED", tab: updated });
+		if (updated) sendToUI({ type: "TAB_UPDATED", tab: updated, globalStats });
 		// Removed tabs: UI handles that via unmarkNodes optimistic update
 	}
 }

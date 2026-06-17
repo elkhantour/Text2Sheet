@@ -22,9 +22,9 @@ export type UIToPluginMessage =
 
 export type PluginToUIMessage =
 	/** Initial load + any mutation: always the full up-to-date tab list */
-	| { type: "STATE_UPDATE"; tabs: FrameTab[]; tree: TreeNode[]; exportOptions: ExportOptions; }
+	| { type: "STATE_UPDATE"; tabs: FrameTab[]; tree: TreeNode[]; exportOptions: ExportOptions; globalStats: GlobalStats; }
 	/** Server push after any mutation — the fully updated tab */
-	| { type: "TAB_UPDATED"; tab: FrameTab }
+	| { type: "TAB_UPDATED"; tab: FrameTab; globalStats: GlobalStats; }
 	| { type: "ERROR"; message: string }
 	| { type: "NOTIFY"; message: string }
 	| { type: "SELECT_NODES"; nodeIds: string[] }
@@ -32,6 +32,11 @@ export type PluginToUIMessage =
 
 
 // ─── Data shapes ─────────────────────────────────────────────────────────────
+
+export interface GlobalStats {
+	rowsCount: number;
+	pagesCount: number;
+};
 
 export interface MarkedNode {
 	id: string;
