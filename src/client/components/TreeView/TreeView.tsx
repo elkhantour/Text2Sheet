@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { Collapsible } from "radix-ui";
 import React, { ComponentPropsWithRef, useState } from "react";
 import { clsx } from "clsx";
+import { hasActiveChildren } from "./Helper";
 
 interface TreeNodeProps {
 	node: TreeNode;
@@ -32,17 +33,20 @@ function TreeNodeComponent({
 	const isActive = node.tab?.id === activeTabId;
 	const [isOpen, setIsOpen] = useState(false);
 
+
 	return (
 		<div className="pl-2 mb-2">
 			{hasChildren ? (
 				<Collapsible.Root key={node.id} className="w-full" onOpenChange={setIsOpen}>
 					<Collapsible.Trigger asChild>
-						<div className={clsx(LABEL_STYLE, "flex items-center")}>
+						<div className={LABEL_STYLE}>
 							<button
 								data-active={isActive}
 								onClick={() => node.tab && setActiveTab(node.tab.id)}
+								className="flex flex-row gap-2 items-center"
 							>
 								<span>{node.name}</span>
+								{activeTabId && hasActiveChildren(node, activeTabId) && <span className="w-2 h-2 block rounded-xs bg-green-400/30" />}
 							</button>
 							<ChevronDown data-open={isOpen} className="h-4 w-4 transition-transform data-[open=true]:rotate-[-180deg]" />
 						</div>
