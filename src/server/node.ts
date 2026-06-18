@@ -1,24 +1,24 @@
-import type { ChildTextNode, FrameTab, GlobalStats, MarkedNode, NodeSection, TreeNode } from "@ctypes/messages";
+import type { ChildTextNode, FrameTab, GlobalStats, MarkedNode, NodeSection, StoredTab, TreeNode } from "@ctypes/messages";
 import { sendToUI } from "./message";
 import {
-	getStoredTabs,
-	saveTabs,
+	storeTabs,
 	getExportOptions,
 	getSelectionOptions,
+	getStoredTabs,
 } from "./storage";
 import { ORPHAN_TAB_ID, ORPHAN_TAB_NAME } from "../lib/constants";
+import { cacheResolvedTab } from "./cache";
 
+export function loadAndSendState() {
 
-// ─── Main state loader ────────────────────────────────────────────────────────
-
-export async function loadAndSendState(): Promise<void> {
-
-	const startTime = Date.now();
+	// On init, generate tree from store stab names
+	// Then we dynamically load  and resolve their content
+	// based on the clicked leaf
 
 	const storedTabs = getStoredTabs();
+	const tree = getTreeFromTabs(storedTabs);
 	const exportOptions = getExportOptions();
 	const selectionOptions = getSelectionOptions();
-	const tree = getTreeFromTabs(storedTabs);
 	const globalStats = computeGlobalStats(storedTabs);
 
 	sendToUI({
@@ -29,15 +29,12 @@ export async function loadAndSendState(): Promise<void> {
 		globalStats
 	});
 
-	const finalTime = Date.now() - startTime;
-	console.log(`Loaded in ${finalTime}ms`);
 }
 
-export async function loadAndSendMarkedNodes(): Promise<void> {
-	return loadAndSendState();
-}
 
-export function computeGlobalStats(tabs: FrameTab[]): GlobalStats {
+// NOTE: For tabs we use a structure that is compatible with StoredTabs and FrameTab
+// So we can compute the stats either from the cached or stored tabs.
+export function computeGlobalStats(tabs: { nodes: any[], sections: Array<{ nodes: any[] }> }[]): GlobalStats {
 	return {
 		pagesCount: tabs.length,
 		rowsCount: tabs.reduce((acc, tab) =>
@@ -56,7 +53,7 @@ export function computeGlobalStats(tabs: FrameTab[]): GlobalStats {
 	* and returns fully populated FrameTabs with embedded MarkedNode objects.
 	* Prunes any node IDs that no longer exist in the Figma document.
 	*/
-export async function resolveTabs(storedTabs: FrameTab[]): Promise<FrameTab[]> {
+export async function resolveTabs(storedTabs: StoredTab[]): Promise<FrameTab[]> {
 	const resolved = await Promise.all(storedTabs.map(resolveTab));
 
 	// Drop any tabs that ended up completely empty after pruning
@@ -65,20 +62,24 @@ export async function resolveTabs(storedTabs: FrameTab[]): Promise<FrameTab[]> {
 	);
 
 	// Persist back if anything was pruned
-	if (nonEmpty.length !== storedTabs.length) saveTabs(nonEmpty);
+	if (nonEmpty.length !== storedTabs.length) storeTabs(nonEmpty);
 
 	return nonEmpty;
 }
 
-export async function resolveTab(tab: FrameTab): Promise<FrameTab> {
+export async function resolveTab(tab: StoredTab): Promise<FrameTab> {
+
+	const frame = await figma.getNodeByIdAsync(tab.id);
+	const name = frame ? frame.name : "Undefined";
+
 	// Resolve orphan nodes
-	const resolvedNodes = await resolveNodeList(tab.nodes.map(n => n.id));
+	const resolvedNodes = await resolveNodeList(tab.nodes);
 
 	// Resolve each section's nodes
 	const resolvedSections: NodeSection[] = await Promise.all(
 		tab.sections.map(async (section) => {
-			const nodes = await resolveNodeList(section.nodes.map(n => n.id));
-			return { ...section, nodes };
+			const nodes = await resolveNodeList(section.nodes);
+			return { ...section, nodes, topFrameId: tab.id };
 		})
 	);
 
@@ -89,7 +90,17 @@ export async function resolveTab(tab: FrameTab): Promise<FrameTab> {
 	]);
 	const itemOrder = tab.itemOrder.filter(id => validIds.has(id));
 
-	return { ...tab, nodes: resolvedNodes, sections: resolvedSections, itemOrder };
+	const resolvedTab = {
+		id: tab.id,
+		name,
+		nodes: resolvedNodes,
+		sections: resolvedSections,
+		itemOrder
+	};
+
+	cacheResolvedTab(tab.id, resolvedTab);
+
+	return resolvedTab;
 }
 
 /**
@@ -161,7 +172,7 @@ export function collectTextChildren(node: BaseNode): ChildTextNode[] {
 }
 
 
-export function getTreeFromTabs(tabs: FrameTab[]): TreeNode[] {
+export function getTreeFromTabs(tabs: { name: string, id: string }[]): TreeNode[] {
 	const root: TreeNode[] = [];
 
 	for (const tab of tabs) {
@@ -191,7 +202,7 @@ export function getTreeFromTabs(tabs: FrameTab[]): TreeNode[] {
 
 		// Attach tab to the last node in the path
 		if (targetNode) {
-			targetNode.tab = tab;
+			targetNode.tabId = tab.id;
 		}
 	}
 

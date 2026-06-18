@@ -6,7 +6,7 @@ export type UIToPluginMessage =
 	| { type: "CLEAR_ALL" }
 	| { type: "UNMARK_NODES"; nodeIds: string[] }
 	| { type: "SELECT_NODE"; nodeId: string }
-	| { type: "LOAD_MARKED" }
+	| { type: "INIT_LOAD" }
 	| { type: "RESOLVE_TAB", tabId: string; }
 	| { type: "INIT_LOAD" }
 	| { type: "REORDER_ITEMS"; tabId: string; itemIds: string[] }
@@ -50,6 +50,7 @@ export interface MarkedNode {
 	topFrameId: string;
 	sectionId?: string;
 }
+
 
 export interface NodeSection {
 	id: string;
@@ -108,5 +109,20 @@ export interface TreeNode {
 	id: string;
 	name: string;
 	children?: TreeNode[];
-	tab?: FrameTab;
+	tabId?: string;
+}
+
+export interface StoredTab {
+	id: string;
+	name: string; // need name for initial tree building
+	nodes: string[];
+	sections: StoredNodeSection[];
+	itemOrder: string[];
+}
+
+
+export interface StoredNodeSection {
+	id: string;
+	name: string;
+	nodes: string[];
 }

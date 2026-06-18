@@ -1,6 +1,5 @@
 /// <reference types="@figma/plugin-typings" />
 import type { UIToPluginMessage } from "@ctypes/messages";
-import { sendNotify } from "./message";
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { loadAndSendState } from "./node";
 import {
@@ -24,6 +23,7 @@ import {
 
 figma.showUI(__html__, { width: PLUGIN_WIDTH, height: PLUGIN_HEIGHT, title: "Text2Sheet" });
 
+
 figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 
 	switch (msg.type) {
@@ -31,7 +31,7 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "HIGHLIGHT_MARKED": await handleHighlightMarked(); break;
 		case "UNMARK_NODES": await handleUnmarkNodeList(msg.nodeIds); break;
 		case "SELECT_NODE": await handleSelectNode(msg.nodeId); break;
-		case "LOAD_MARKED": await loadAndSendState(); break;
+		case "INIT_LOAD": loadAndSendState(); break;
 		case "RESOLVE_TAB": await handleResolveTab(msg.tabId); break;
 		case "CREATE_SECTION": await handleCreateSection(msg.name, msg.sectionId, msg.tabId); break;
 		case "DELETE_SECTION": await handleDeleteSection(msg.tabId, msg.sectionId); break;
@@ -42,7 +42,7 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "RESIZE_WINDOW": handleResizeWindow(msg.width, msg.height); break;
 		case "SAVE_EXPORT_OPTIONS": await handleSaveExportOptions(msg.options); break;
 		case "SAVE_SELECTION_OPTIONS": await handleSaveSelectionOptions(msg.options); break;
-		case "CLEAR_ALL": await handleClearAll(); break;
+		case "CLEAR_ALL": handleClearAll(); break;
 	}
 };
 

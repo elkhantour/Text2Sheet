@@ -29,7 +29,7 @@ function TreeNodeComponent({
 	setActiveTab,
 }: TreeNodeProps) {
 	const hasChildren = node.children && node.children.length > 0;
-	const isActive = node.tab?.id === activeTabId;
+	const isActive = node.tabId === activeTabId;
 	const [isOpen, setIsOpen] = useState(false);
 
 
@@ -41,7 +41,7 @@ function TreeNodeComponent({
 						<div className={LABEL_STYLE}>
 							<button
 								data-active={isActive}
-								onClick={() => node.tab && setActiveTab(node.tab.id)}
+								onClick={() => node.tabId && setActiveTab(node.tabId)}
 								className="flex flex-row gap-2 items-center"
 							>
 								<span>{node.name}</span>
@@ -66,7 +66,7 @@ function TreeNodeComponent({
 				</Collapsible.Root>
 			) : (
 				<button
-					onClick={() => node.tab && setActiveTab(node.tab.id)}
+					onClick={() => node.tabId && setActiveTab(node.tabId)}
 					data-active={isActive}
 					className={LABEL_STYLE}
 				>

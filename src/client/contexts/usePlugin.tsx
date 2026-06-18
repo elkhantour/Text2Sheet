@@ -121,7 +121,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 	}, []);
 
 	// Initial load
-	useEffect(() => { postMessage({ type: "LOAD_MARKED" }); }, []);
+	useEffect(() => { postMessage({ type: "INIT_LOAD" }); }, []);
 
 	// ── Active tab ────────────────────────────────────────────────────────────
 

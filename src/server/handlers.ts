@@ -1,13 +1,14 @@
+import { cacheResolvedTab, clearCacheResolvedTab, getCacheResolvedTabsArray } from "./cache";
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { sendError, sendNotify, sendToUI } from "./message";
 import { resolveNode, getTopFrame, loadAndSendState, computeGlobalStats, resolveTab } from "./node";
 import {
 	getStoredTabs,
-	saveTab,
-	saveTabs,
 	saveExportOptions,
 	saveSelectionOptions,
 	getSelectionOptions,
+	storeTab,
+	storeTabs,
 } from "./storage";
 import type { ExportOptions, FrameTab, NodeSection, SelectionOptions } from "@ctypes/messages";
 
@@ -54,6 +55,11 @@ function matchFilter(value: string, filters: SelectionOptions["filters"]) {
 
 }
 
+function updateTabCacheStorage(tab: FrameTab) {
+	storeTab(tab);
+	cacheResolvedTab(tab.id, tab);
+}
+
 
 // ─── Mark selection ───────────────────────────────────────────────────────────
 
@@ -65,7 +71,7 @@ export async function handleMarkSelection(): Promise<void> {
 	if (selection.length === 0) { sendError("Select at least one layer in the canvas first."); return; }
 
 	const { autogroup, filters } = getSelectionOptions();
-	let tabs = getStoredTabs();
+	let tabs = getCacheResolvedTabsArray();
 	const addedNodeIds: string[] = [];
 
 	// Collect all text nodes under a node
@@ -147,14 +153,14 @@ export async function handleMarkSelection(): Promise<void> {
 		}
 
 		tabs = upsertTab(tabs, tab);
-		saveTab(tab);
-		//sendToUI({ type: "TAB_UPDATED", tab });
+		updateTabCacheStorage(tab);
 	}
 
 	loadAndSendState();
 	sendToUI({ type: "LATEST_ADDED_NODES", nodeIds: addedNodeIds });
 	sendNotify(`Marked ${addedNodeIds.length} layer${addedNodeIds.length !== 1 ? "s" : ""} for export.`);
 
+	// DELETEME
 	console.log(`[markSelection] ${addedNodeIds.length} nodes added in ${Date.now() - debugStart}ms`);
 }
 
@@ -163,7 +169,7 @@ export async function handleMarkSelection(): Promise<void> {
 
 export async function handleUnmarkNodeList(nodeIds: string[]): Promise<void> {
 	const idSet = new Set(nodeIds);
-	const tabs = getStoredTabs();
+	const tabs = getCacheResolvedTabsArray();
 
 	const updatedTabs = tabs
 		.map(tab => ({
@@ -177,7 +183,7 @@ export async function handleUnmarkNodeList(nodeIds: string[]): Promise<void> {
 		}))
 		.filter(tab => tab.nodes.length > 0 || tab.sections.some(s => s.nodes.length > 0));
 
-	saveTabs(updatedTabs);
+	updatedTabs.forEach(updateTabCacheStorage);
 	const globalStats = computeGlobalStats(updatedTabs);
 
 	// Send TAB_UPDATED for each affected tab (or remove it if now empty)
@@ -192,7 +198,7 @@ export async function handleUnmarkNodeList(nodeIds: string[]): Promise<void> {
 // ─── Select / highlight ───────────────────────────────────────────────────────
 
 export async function handleHighlightMarked(): Promise<void> {
-	const tabs = getStoredTabs();
+	const tabs = getCacheResolvedTabsArray();
 	const allNodeIds = tabs.flatMap(t => [
 		...t.nodes.map(n => n.id),
 		...t.sections.flatMap(s => s.nodes.map(n => n.id)),
@@ -217,7 +223,7 @@ export async function handleSelectNode(nodeId: string): Promise<void> {
 
 export async function handleSyncSelectionToUI(): Promise<void> {
 
-	const tabs = getStoredTabs();
+	const tabs = getCacheResolvedTabsArray();
 	const allNodeIds = new Set(tabs.flatMap(t => [
 		...t.nodes.map(n => n.id),
 		...t.sections.flatMap(s => s.nodes.map(n => n.id)),
@@ -236,9 +242,10 @@ export async function handleSyncSelectionToUI(): Promise<void> {
 
 // ─── Clear all ────────────────────────────────────────────────────────────────
 
-export async function handleClearAll(): Promise<void> {
-	saveTabs([]);
-	await loadAndSendState();
+export function handleClearAll(): void {
+	storeTabs([]);
+	clearCacheResolvedTab();
+	loadAndSendState();
 	sendNotify("Cleared all marked layers.");
 }
 
@@ -246,7 +253,7 @@ export async function handleClearAll(): Promise<void> {
 // ─── Section handlers ─────────────────────────────────────────────────────────
 
 export async function handleCreateSection(name: string, sectionId: string, tabId: string): Promise<void> {
-	const tabs = getStoredTabs();
+	const tabs = getCacheResolvedTabsArray();
 	const tab = tabs.find(t => t.id === tabId);
 	if (!tab) return;
 
@@ -256,12 +263,13 @@ export async function handleCreateSection(name: string, sectionId: string, tabId
 		sections: [...tab.sections, newSection],
 		itemOrder: [...tab.itemOrder, sectionId],
 	};
-	saveTab(updated);
+
+	updateTabCacheStorage(updated);
 	// Already handled optimistically client-side
 }
 
 export async function handleDeleteSection(sectionId: string, tabId: string): Promise<void> {
-	const tabs = getStoredTabs();
+	const tabs = getCacheResolvedTabsArray();
 	const tab = tabs.find(t => t.id === tabId);
 	if (!tab) return;
 
@@ -276,12 +284,13 @@ export async function handleDeleteSection(sectionId: string, tabId: string): Pro
 			id === sectionId ? target.nodes.map(n => n.id) : [id]
 		),
 	};
-	saveTab(updated);
+
+	updateTabCacheStorage(updated);
 	// Already handled optimistically client-side
 }
 
 export async function handleRenameSection(sectionId: string, name: string): Promise<void> {
-	const tabs = getStoredTabs();
+	const tabs = getCacheResolvedTabsArray();
 	const tab = tabs.find(t => t.sections.some(s => s.id === sectionId));
 	if (!tab) return;
 
@@ -289,16 +298,17 @@ export async function handleRenameSection(sectionId: string, name: string): Prom
 		...tab,
 		sections: tab.sections.map(s => s.id === sectionId ? { ...s, name } : s),
 	};
-	saveTab(updated);
+
+	updateTabCacheStorage(updated);
 	// Already handled optimistically client-side
 }
 
 export async function handleReorderItems(tabId: string, itemIds: string[]): Promise<void> {
-	const tabs = getStoredTabs();
+	const tabs = getCacheResolvedTabsArray();
 	const tab = tabs.find(t => t.id === tabId);
 	if (!tab) return;
 
-	saveTab({ ...tab, itemOrder: itemIds });
+	updateTabCacheStorage({ ...tab, itemOrder: itemIds });
 	// Already handled optimistically client-side
 }
 
@@ -316,7 +326,7 @@ export async function handleMoveNodeListToSection(
 	index: number
 ): Promise<void> {
 	const idSet = new Set(nodeIds);
-	const tabs = getStoredTabs();
+	const tabs = getCacheResolvedTabsArray();
 
 	// Find which tab owns these nodes
 	const tab = tabs.find(t =>
@@ -359,12 +369,12 @@ export async function handleMoveNodeListToSection(
 		};
 	}
 
-	saveTab(updated);
+	updateTabCacheStorage(updated);
 	// Already handled optimistically client-side
 }
 
 export async function handleReorderNodesInSection(sectionId: string, nodeIds: string[]): Promise<void> {
-	const tabs = getStoredTabs();
+	const tabs = getCacheResolvedTabsArray();
 	const tab = tabs.find(t => t.sections.some(s => s.id === sectionId));
 	if (!tab) return;
 
@@ -376,7 +386,8 @@ export async function handleReorderNodesInSection(sectionId: string, nodeIds: st
 			return { ...s, nodes: nodeIds.map(id => nodeMap.get(id)!).filter(Boolean) };
 		}),
 	};
-	saveTab(updated);
+
+	updateTabCacheStorage(updated);
 	// Already handled optimistically client-side
 }
 

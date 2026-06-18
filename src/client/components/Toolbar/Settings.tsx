@@ -49,9 +49,10 @@ export function Settings() {
 			<Button size="1" variant="ghost"><SettingsIcon size={ICON_SIZE_SMALL} /></Button>
 		</Dialog.Trigger>
 
-		<Dialog.Content className="max-h-[300px] max-w-[100px]">
+		<Dialog.Content className="max-h-[300px]" max-width="120px">
 
-			<Dialog.Title size="4" className="mb-16">Settings</Dialog.Title>
+			<Dialog.Title size="4" mb="5">Settings</Dialog.Title>
+
 			{/* SELECTION SETTINGS */}
 			<SettingsSection label="Selection">
 

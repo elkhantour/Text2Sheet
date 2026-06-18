@@ -7,37 +7,63 @@ import {
 import type {
 	ExportOptions,
 	FrameTab,
+	NodeSection,
 	SelectionOptions,
+	StoredNodeSection,
+	StoredTab,
 } from "@ctypes/messages";
 import { resolveNode } from "./node";
 
 
+// ─── Helpers   ────────────────────────────────────────────────────────────────
+
+function sectionToStorage(section: NodeSection): StoredNodeSection {
+	return {
+		name: section.name,
+		id: section.id,
+		nodes: section.nodes.map(n => n.id)
+	};
+}
+
+function tabToStorage({ id, name, nodes, sections, itemOrder }: FrameTab): StoredTab {
+	return {
+		id,
+		name,
+		nodes: nodes.map(n => n.id),
+		sections: sections.map(sectionToStorage),
+		itemOrder,
+	};
+}
+
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 
 /** Returns the full persisted tab list (shells only — no MarkedNode data) */
-export function getStoredTabs(): FrameTab[] {
+export function getStoredTabs(): StoredTab[] {
 	const raw = JSON.parse(figma.root.getPluginData(TABS_KEY) || "[]");
-	if (Array.isArray(raw)) return raw as FrameTab[];
+	if (Array.isArray(raw)) return raw as StoredTab[];
 	return [];
 }
 
 /** Persists the full tab list */
-export function saveTabs(tabs: FrameTab[]): void {
-	figma.root.setPluginData(TABS_KEY, JSON.stringify(tabs));
+export function storeTabs(tabs: FrameTab[]): void {
+	figma.root.setPluginData(TABS_KEY, JSON.stringify(tabs.map(tabToStorage)));
 }
 
 /** Adds or replaces a single tab by id */
-export function saveTab(tab: FrameTab): void {
+export function storeTab(tab: FrameTab): void {
 	const tabs = getStoredTabs();
 	const idx = tabs.findIndex(t => t.id === tab.id);
-	if (idx !== -1) tabs[idx] = tab;
-	else tabs.push(tab);
-	saveTabs(tabs);
+	const convertedTab = tabToStorage(tab);
+
+	if (idx !== -1) tabs[idx] = convertedTab;
+	else tabs.push(convertedTab);
+	figma.root.setPluginData(TABS_KEY, JSON.stringify(tabs));
 }
 
 /** Removes a tab from persisted storage */
 export function removeTab(tabId: string): void {
-	saveTabs(getStoredTabs().filter(t => t.id !== tabId));
+	const tabs = getStoredTabs().filter(t => t.id !== tabId);
+	figma.root.setPluginData(TABS_KEY, JSON.stringify(tabs));
 }
 
 
