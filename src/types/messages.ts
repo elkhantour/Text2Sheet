@@ -7,6 +7,8 @@ export type UIToPluginMessage =
 	| { type: "UNMARK_NODES"; nodeIds: string[] }
 	| { type: "SELECT_NODE"; nodeId: string }
 	| { type: "LOAD_MARKED" }
+	| { type: "RESOLVE_TAB", tabId: string; }
+	| { type: "INIT_LOAD" }
 	| { type: "REORDER_ITEMS"; tabId: string; itemIds: string[] }
 	| { type: "CREATE_SECTION"; name: string; sectionId: string; tabId: string }
 	| { type: "DELETE_SECTION"; sectionId: string; tabId: string }
@@ -22,9 +24,10 @@ export type UIToPluginMessage =
 
 export type PluginToUIMessage =
 	/** Initial load + any mutation: always the full up-to-date tab list */
-	| { type: "STATE_UPDATE"; tabs: FrameTab[]; tree: TreeNode[]; exportOptions: ExportOptions; globalStats: GlobalStats; selectionOptions: SelectionOptions; }
+	| { type: "STATE_UPDATE"; tree: TreeNode[]; exportOptions: ExportOptions; globalStats: GlobalStats; selectionOptions: SelectionOptions; }
 	/** Server push after any mutation — the fully updated tab */
 	| { type: "TAB_UPDATED"; tab: FrameTab; globalStats: GlobalStats; }
+	| { type: "TAB_RESOLVED"; tab: FrameTab | null; }
 	| { type: "ERROR"; message: string }
 	| { type: "NOTIFY"; message: string }
 	| { type: "SELECT_NODES"; nodeIds: string[] }

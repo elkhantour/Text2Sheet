@@ -92,15 +92,10 @@ export function saveExportOptions(options: ExportOptions): void {
 export function getSelectionOptions(): SelectionOptions {
 	const raw = JSON.parse(figma.root.getPluginData(SELECTION_OPTIONS_KEY) || "{}");
 
-	console.log({ raw });
-
 	if (raw && typeof raw === "object") return { ...DEFAULT_SELECTION_OPTIONS, ...(raw as Partial<SelectionOptions>) };
 	return { ...DEFAULT_SELECTION_OPTIONS };
 }
 
 export function saveSelectionOptions(options: SelectionOptions): void {
-
-	console.log({ options });
-
 	figma.root.setPluginData(SELECTION_OPTIONS_KEY, JSON.stringify(options));
 }

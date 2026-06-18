@@ -1,6 +1,6 @@
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { sendError, sendNotify, sendToUI } from "./message";
-import { resolveNode, getTopFrame, loadAndSendState, computeGlobalStats } from "./node";
+import { resolveNode, getTopFrame, loadAndSendState, computeGlobalStats, resolveTab } from "./node";
 import {
 	getStoredTabs,
 	saveTab,
@@ -238,6 +238,8 @@ export async function handleSyncSelectionToUI(): Promise<void> {
 
 export async function handleClearAll(): Promise<void> {
 	saveTabs([]);
+	await loadAndSendState();
+	sendNotify("Cleared all marked layers.");
 }
 
 
@@ -298,6 +300,14 @@ export async function handleReorderItems(tabId: string, itemIds: string[]): Prom
 
 	saveTab({ ...tab, itemOrder: itemIds });
 	// Already handled optimistically client-side
+}
+
+export async function handleResolveTab(tabId: string): Promise<void> {
+	const tabs = getStoredTabs();
+	const tab = tabs.find(t => t.id === tabId);
+	let resolvedTab = tab ? await resolveTab(tab) : null;
+
+	sendToUI({ type: "TAB_RESOLVED", tab: resolvedTab });
 }
 
 export async function handleMoveNodeListToSection(
@@ -380,6 +390,8 @@ export async function handleSaveExportOptions(options: ExportOptions): Promise<v
 export async function handleSaveSelectionOptions(options: SelectionOptions): Promise<void> {
 	saveSelectionOptions(options);
 }
+
+
 
 
 // ─── Window ───────────────────────────────────────────────────────────────────

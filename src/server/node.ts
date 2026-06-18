@@ -12,21 +12,25 @@ import { ORPHAN_TAB_ID, ORPHAN_TAB_NAME } from "../lib/constants";
 // ─── Main state loader ────────────────────────────────────────────────────────
 
 export async function loadAndSendState(): Promise<void> {
+
+	const startTime = Date.now();
+
 	const storedTabs = getStoredTabs();
 	const exportOptions = getExportOptions();
 	const selectionOptions = getSelectionOptions();
-	const tabs = await resolveTabs(storedTabs);
-	const tree = getTreeFromTabs(tabs);
-	const globalStats = computeGlobalStats(tabs);
+	const tree = getTreeFromTabs(storedTabs);
+	const globalStats = computeGlobalStats(storedTabs);
 
 	sendToUI({
 		type: "STATE_UPDATE",
-		tabs,
 		tree,
 		exportOptions,
 		selectionOptions,
 		globalStats
 	});
+
+	const finalTime = Date.now() - startTime;
+	console.log(`Loaded in ${finalTime}ms`);
 }
 
 export async function loadAndSendMarkedNodes(): Promise<void> {

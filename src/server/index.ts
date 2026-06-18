@@ -18,8 +18,9 @@ import {
 	handleSyncSelectionToUI,
 	handleResizeWindow,
 	handleSaveSelectionOptions,
+	handleClearAll,
+	handleResolveTab,
 } from "./handlers";
-import { saveTabs } from "./storage";
 
 figma.showUI(__html__, { width: PLUGIN_WIDTH, height: PLUGIN_HEIGHT, title: "Text2Sheet" });
 
@@ -31,6 +32,7 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "UNMARK_NODES": await handleUnmarkNodeList(msg.nodeIds); break;
 		case "SELECT_NODE": await handleSelectNode(msg.nodeId); break;
 		case "LOAD_MARKED": await loadAndSendState(); break;
+		case "RESOLVE_TAB": await handleResolveTab(msg.tabId); break;
 		case "CREATE_SECTION": await handleCreateSection(msg.name, msg.sectionId, msg.tabId); break;
 		case "DELETE_SECTION": await handleDeleteSection(msg.tabId, msg.sectionId); break;
 		case "RENAME_SECTION": await handleRenameSection(msg.sectionId, msg.name); break;
@@ -40,11 +42,7 @@ figma.ui.onmessage = async (msg: UIToPluginMessage) => {
 		case "RESIZE_WINDOW": handleResizeWindow(msg.width, msg.height); break;
 		case "SAVE_EXPORT_OPTIONS": await handleSaveExportOptions(msg.options); break;
 		case "SAVE_SELECTION_OPTIONS": await handleSaveSelectionOptions(msg.options); break;
-		case "CLEAR_ALL":
-			saveTabs([]);
-			await loadAndSendState();
-			sendNotify("Cleared all marked layers.");
-			break;
+		case "CLEAR_ALL": await handleClearAll(); break;
 	}
 };
 

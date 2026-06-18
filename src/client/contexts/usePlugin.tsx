@@ -19,8 +19,6 @@ interface PluginContextValue {
 	tabs: FrameTab[];
 	activeTab: FrameTab | null;
 	setActiveTab: (id: string) => void;
-	activeNodes: MarkedNode[];
-	activeSections: NodeSection[];
 
 	// ── Actions ───────────────────────────────────────────────────────────────
 	markSelection: () => void;
@@ -61,10 +59,10 @@ function mergeTabs(prev: FrameTab[], updated: FrameTab): FrameTab[] {
 
 export function PluginProvider({ children }: { children: React.ReactNode }) {
 	const [tabs, setTabs] = useState<FrameTab[]>([]);
-	const [activeTabId, setActiveTabId] = useState<string | null>(null);
-
 	const [exportOptions, setExportOptions] = useState<ExportOptions>(DEFAULT_EXPORT_OPTIONS);
 	const [selectionOptions, setSelectionOptions] = useState<SelectionOptions>(DEFAULT_SELECTION_OPTIONS);
+
+	const [activeTab, setActiveTabInternal] = useState<FrameTab | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [toast, setToast] = useState<PluginContextValue["toast"]>(null);
 	const [latestAddedNodes, setLatestAddedNodes] = useState<string[]>([]);
@@ -84,14 +82,19 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 		const handler = (event: MessageEvent) => {
 			const msg = event.data.pluginMessage as PluginToUIMessage;
 			if (!msg) return;
+
 			switch (msg.type) {
 				case "STATE_UPDATE":
-					setTabs(msg.tabs);
 					setTree(msg.tree);
 					setExportOptions(msg.exportOptions);
 					setSelectionOptions(msg.selectionOptions);
 					setGlobalStats(msg.globalStats);
 					setIsLoading(false);
+					break;
+
+				case "TAB_RESOLVED":
+					setTabs(tabs => msg.tab && [...tabs, msg.tab] || tabs);
+					setActiveTabInternal(msg.tab);
 					break;
 
 				case "TAB_UPDATED":
@@ -122,17 +125,15 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 
 	// ── Active tab ────────────────────────────────────────────────────────────
 
-	const activeTab = useMemo(() =>
-		tabs.find(t => t.id === activeTabId) ?? tabs[0] ?? null,
-		[tabs, activeTabId]
-	);
-
-	const setActiveTab = useCallback((id: string) => setActiveTabId(id), []);
-
-	// ── Tab-scoped derived state ──────────────────────────────────────────────
-
-	const activeNodes = useMemo(() => activeTab?.nodes ?? [], [activeTab]);
-	const activeSections = useMemo(() => activeTab?.sections ?? [], [activeTab]);
+	const setActiveTab = useCallback((id: string) => {
+		// look up if tab is alrady cached client side
+		// else resolve tab server side
+		let activeTab = tabs.find(t => t.id === id);
+		if (!activeTab)
+			postMessage({ type: "RESOLVE_TAB", tabId: id });
+		else
+			setActiveTabInternal(activeTab);
+	}, [tabs]);
 
 	// ── Lookup maps ───────────────────────────────────────────────────────────
 
@@ -152,7 +153,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 		exportOptions, selectionOptions,
 		isLoading, toast, latestAddedNodes,
 		tabs, activeTab, setActiveTab,
-		activeNodes, activeSections, tree, globalStats,
+		tree, globalStats,
 
 		markSelection: useCallback(() => postMessage({ type: "MARK_SELECTION" }), []),
 		highlightMarked: useCallback(() => postMessage({ type: "HIGHLIGHT_MARKED" }), []),
