@@ -66,16 +66,6 @@ export function Settings() {
 							onChange={(e) => setSelectionFilter(key, !CheckboxStateToBool(e))}
 						/>)}
 					</div>
-
-					<div className="p-4 bg-red-950 border border-red-800 flex flex-col gap-4 justify-center rounded-md">
-						<Text color="red" size="1" ><b>Danger Zone</b></Text>
-						<Button color="red"
-							onClick={(hasNodes || activeTab?.sections.length) ? clearAll : undefined}
-							disabled={!hasNodes && !activeTab?.sections.length}>
-							Clear All
-						</Button>
-
-					</div>
 				</div>
 			</SettingsSection>
 
@@ -135,10 +125,22 @@ export function Settings() {
 					}
 
 				</div>
-
-
 			</SettingsSection>
 
+			<Separator size="4" className="mb-4" />
+
+			{/* STORAGE */}
+			<SettingsSection label="Storage">
+				<div className="p-4 bg-red-950 border border-red-800 flex flex-col gap-4 justify-center rounded-md">
+					<Text color="red" size="1" ><b>Danger Zone</b></Text>
+					<Button color="red"
+						onClick={(hasNodes || activeTab?.sections.length) ? clearAll : undefined}
+						disabled={!hasNodes && !activeTab?.sections.length}>
+						Clear All
+					</Button>
+
+				</div>
+			</SettingsSection>
 
 		</Dialog.Content>
 	</Dialog.Root >

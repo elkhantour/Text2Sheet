@@ -162,6 +162,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 
 		clearAll: useCallback(() => {
 			setTabs([]);
+			setActiveTabInternal(null);
 			postMessage({ type: "CLEAR_ALL" });
 		}, []),
 
