@@ -4,6 +4,7 @@ import {
 	getStoredTabs,
 	saveTabs,
 	getExportOptions,
+	getSelectionOptions,
 } from "./storage";
 import { ORPHAN_TAB_ID, ORPHAN_TAB_NAME } from "../lib/constants";
 
@@ -13,11 +14,19 @@ import { ORPHAN_TAB_ID, ORPHAN_TAB_NAME } from "../lib/constants";
 export async function loadAndSendState(): Promise<void> {
 	const storedTabs = getStoredTabs();
 	const exportOptions = getExportOptions();
+	const selectionOptions = getSelectionOptions();
 	const tabs = await resolveTabs(storedTabs);
 	const tree = getTreeFromTabs(tabs);
 	const globalStats = computeGlobalStats(tabs);
 
-	sendToUI({ type: "STATE_UPDATE", tabs, tree, exportOptions, globalStats });
+	sendToUI({
+		type: "STATE_UPDATE",
+		tabs,
+		tree,
+		exportOptions,
+		selectionOptions,
+		globalStats
+	});
 }
 
 export async function loadAndSendMarkedNodes(): Promise<void> {

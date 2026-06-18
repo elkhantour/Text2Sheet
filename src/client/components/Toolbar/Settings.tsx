@@ -49,12 +49,13 @@ export function Settings() {
 			<Button size="1" variant="ghost"><SettingsIcon size={ICON_SIZE_SMALL} /></Button>
 		</Dialog.Trigger>
 
-		<Dialog.Content className="max-h-[300px] max-w-[120px]">
+		<Dialog.Content className="max-h-[300px] max-w-[100px]">
 
+			<Dialog.Title size="4" className="mb-16">Settings</Dialog.Title>
 			{/* SELECTION SETTINGS */}
-			<SettingsSection label="Selection settings">
+			<SettingsSection label="Selection">
 
-				<div className="flex flex-col gap-4">
+				<div className="flex flex-col gap-4 mb-4">
 					<div className="flex flex-col gap-2">
 						<Text size="1" ><b>Include</b></Text>
 						{FILTERS_LABELS.map(({ key, label }) => <Checkbox
@@ -78,10 +79,10 @@ export function Settings() {
 				</div>
 			</SettingsSection>
 
-			<Separator size="4" className="my-4" />
+			<Separator size="4" className="mb-4" />
 
 			{/* EXPORTS SETTINGS */}
-			<SettingsSection label="Export settings">
+			<SettingsSection label="Export ">
 				<div className="flex flex-col gap-4 mt-2">
 
 					<Checkbox

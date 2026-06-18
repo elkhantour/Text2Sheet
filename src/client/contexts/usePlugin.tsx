@@ -89,6 +89,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 					setTabs(msg.tabs);
 					setTree(msg.tree);
 					setExportOptions(msg.exportOptions);
+					setSelectionOptions(msg.selectionOptions);
 					setGlobalStats(msg.globalStats);
 					setIsLoading(false);
 					break;

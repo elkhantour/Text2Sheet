@@ -45,9 +45,9 @@ export function removeTab(tabId: string): void {
 // ─── Tab node resolution ──────────────────────────────────────────────────────
 
 /**
- * Resolves all MarkedNodes for a tab by walking its nodeIds + section nodeIds
- * through the Figma API. Returns live node data — nothing is cached.
- */
+	* Resolves all MarkedNodes for a tab by walking its nodeIds + section nodeIds
+	* through the Figma API. Returns live node data — nothing is cached.
+	*/
 export async function resolveTabNodes(tab: FrameTab) {
 	const allNodeIds = [
 		...tab.nodes.map(n => n.id),
@@ -65,9 +65,9 @@ export async function resolveTabNodes(tab: FrameTab) {
 }
 
 /**
- * Resolves MarkedNodes for all tabs at once (e.g. on plugin launch).
- * Returns a map of tabId → MarkedNode[] for the caller to assemble FrameTabs.
- */
+	* Resolves MarkedNodes for all tabs at once (e.g. on plugin launch).
+	* Returns a map of tabId → MarkedNode[] for the caller to assemble FrameTabs.
+	*/
 export async function resolveAllTabNodes(tabs: FrameTab[]): Promise<Map<string, Awaited<ReturnType<typeof resolveTabNodes>>>> {
 	const entries = await Promise.all(
 		tabs.map(async (tab) => [tab.id, await resolveTabNodes(tab)] as const)
@@ -91,10 +91,16 @@ export function saveExportOptions(options: ExportOptions): void {
 
 export function getSelectionOptions(): SelectionOptions {
 	const raw = JSON.parse(figma.root.getPluginData(SELECTION_OPTIONS_KEY) || "{}");
+
+	console.log({ raw });
+
 	if (raw && typeof raw === "object") return { ...DEFAULT_SELECTION_OPTIONS, ...(raw as Partial<SelectionOptions>) };
 	return { ...DEFAULT_SELECTION_OPTIONS };
 }
 
 export function saveSelectionOptions(options: SelectionOptions): void {
+
+	console.log({ options });
+
 	figma.root.setPluginData(SELECTION_OPTIONS_KEY, JSON.stringify(options));
 }
