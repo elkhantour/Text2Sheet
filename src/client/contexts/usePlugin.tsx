@@ -221,7 +221,16 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 		}, []),
 
 		reorderItems: useCallback((tabId, itemIds) => {
-			setTabs(prev => prev.map(t => t.id === tabId ? { ...t, itemOrder: itemIds } : t));
+			setTabs(prev => prev.map(t => {
+
+				if (t.id === tabId) {
+					const newTab = { ...t, itemOrder: itemIds };
+					setActiveTabInternal(newTab);
+					return newTab;
+				}
+
+				return t;
+			}));
 			postMessage({ type: "REORDER_ITEMS", tabId, itemIds });
 		}, []),
 
