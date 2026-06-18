@@ -92,6 +92,13 @@ export interface ExportOptions {
 export interface SelectionOptions {
 	autogroup: boolean;
 	sync: boolean;
+	filters: {
+		number: boolean;
+		email: boolean;
+		price: boolean;
+		empty: boolean;
+		url: boolean;
+	}
 }
 
 export interface TreeNode {

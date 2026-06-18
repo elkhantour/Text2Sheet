@@ -3,7 +3,6 @@ import { TreeNode } from "@ctypes/messages";
 import { ChevronDown } from "lucide-react";
 import { Collapsible } from "radix-ui";
 import React, { ComponentPropsWithRef, useState } from "react";
-import { clsx } from "clsx";
 import { hasActiveChildren } from "./Helper";
 
 interface TreeNodeProps {

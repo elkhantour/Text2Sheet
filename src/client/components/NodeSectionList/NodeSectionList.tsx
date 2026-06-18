@@ -173,7 +173,7 @@ export function NodeSectionList(): React.ReactElement {
 				{/* Toolbar */}
 				<div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)]">
 					<div className="flex items-center gap-4">
-						<Text size="2" className="max-w-[200px] overflow-hidden text-ellipsis">
+						<Text size="2" className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
 							{activeTab?.name}
 						</Text>
 						<Text size="1" className="text-[var(--text-muted)]">

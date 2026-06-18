@@ -28,6 +28,32 @@ function upsertTab(tabs: FrameTab[], tab: FrameTab): FrameTab[] {
 	return exists ? tabs.map(t => t.id === tab.id ? tab : t) : [...tabs, tab];
 }
 
+function matchFilter(value: string, filters: SelectionOptions["filters"]) {
+
+	if (filters.empty && value.trim() === "") {
+		return true;
+	}
+
+	if (filters.number && /^-?\d+(\.\d+)?[KMBkmb]?\+?%?$/.test(value.trim())) {
+		return true;
+	}
+
+	if (filters.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+		return true;
+	}
+
+	if (filters.price && /^\$?\d{1,3}(,\d{3})*(\.\d{2})?$/.test(value.trim())) {
+		return true;
+	}
+
+	if (filters.url && /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/.test(value.trim())) {
+		return true;
+	}
+
+	return false;
+
+}
+
 
 // ─── Mark selection ───────────────────────────────────────────────────────────
 
@@ -38,7 +64,7 @@ export async function handleMarkSelection(): Promise<void> {
 	const selection = figma.currentPage.selection;
 	if (selection.length === 0) { sendError("Select at least one layer in the canvas first."); return; }
 
-	const { autogroup } = getSelectionOptions();
+	const { autogroup, filters } = getSelectionOptions();
 	let tabs = getStoredTabs();
 	const addedNodeIds: string[] = [];
 
@@ -47,7 +73,7 @@ export async function handleMarkSelection(): Promise<void> {
 		if (!node.visible) return [];
 		if (node.type === "TEXT") return [node];
 		if (!("findAllWithCriteria" in node)) return [];
-		return node.findAllWithCriteria({ types: ["TEXT"] }).filter(n => n.visible);
+		return node.findAllWithCriteria({ types: ["TEXT"] }).filter(n => n.visible && !matchFilter(n.characters, filters));
 	}
 
 	const isSectionable = (node: SceneNode) =>

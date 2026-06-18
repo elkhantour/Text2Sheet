@@ -16,4 +16,11 @@ export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
 export const DEFAULT_SELECTION_OPTIONS: SelectionOptions = {
 	autogroup: false,
 	sync: false,
+	filters: {
+		number: false,
+		price: false,
+		url: false,
+		email: false,
+		empty: false,
+	}
 };
