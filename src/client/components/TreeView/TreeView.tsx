@@ -80,11 +80,11 @@ function TreeNodeComponent({
 				<button
 					onClick={() => { setClicked(true); return node.tabId && setActiveTab(node.tabId); }}
 					data-active={isActive}
-					className={LABEL_STYLE}
+					className={`${LABEL_STYLE} flex items-center gap-1 min-w-0`}
 					onMouseEnter={() => node.tabId && handleMouseEnter(node.tabId)}
 					onMouseLeave={handleMouseLeave}
 				>
-					<span>{node.name}</span>
+					<span className="truncate min-w-0 flex-1 text-left">{node.name}</span>
 					{clicked && !isActive && <Spinner size="1" />}
 				</button>
 			)

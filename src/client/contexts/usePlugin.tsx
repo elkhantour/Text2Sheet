@@ -126,6 +126,23 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 	}, []);
 
 
+	useEffect(() => {
+		if (activeTab) return;
+
+		const getFirstTabId = (node: TreeNode): string | undefined => {
+			if (node.tabId) return node.tabId;
+			for (const child of node.children ?? []) {
+				const found = getFirstTabId(child);
+				if (found) return found;
+			}
+		};
+
+		for (const node of tree) {
+			const tabId = getFirstTabId(node);
+			if (tabId) { setActiveTab(tabId); break; }
+		}
+	}, [tree, activeTab]);
+
 	useEffect(() => { postMessage({ type: "INIT_LOAD" }); }, []);
 
 	// ── Active tab ────────────────────────────────────────────────────────────

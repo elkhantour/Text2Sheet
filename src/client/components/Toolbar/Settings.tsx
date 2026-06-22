@@ -25,10 +25,8 @@ export function Settings() {
 		exportOptions,
 		selectionOptions,
 		tabs,
-		activeTab,
+		tree,
 	} = usePlugin();
-
-	const hasNodes = activeTab ? activeTab.nodes.length > 0 : false;
 
 	const setExportOption = <K extends keyof ExportOptions>(key: K, value: ExportOptions[K]) =>
 		saveExportOptions({ ...exportOptions, [key]: value });
@@ -135,8 +133,8 @@ export function Settings() {
 				<div className="p-4 bg-red-950 border border-red-800 flex flex-col gap-4 justify-center rounded-md">
 					<Text color="red" size="1" ><b>Danger Zone</b></Text>
 					<Button color="red"
-						onClick={(hasNodes || activeTab?.sections.length) ? clearAll : undefined}
-						disabled={!hasNodes && !activeTab?.sections.length}>
+						onClick={tree.length ? clearAll : undefined}
+						disabled={!tree.length}>
 						Clear All
 					</Button>
 
