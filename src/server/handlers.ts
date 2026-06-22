@@ -1,70 +1,24 @@
-import { cacheResolvedTab, clearCacheResolvedTab, getCacheResolvedTabsArray } from "./cache";
+import { clearCacheResolvedTab, getCacheResolvedTabsArray } from "./cache";
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
-import { sendError, sendNotify, sendToUI } from "./message";
+import { collectTextNodes, findOrCreateTab, processAutogroup, pushLoadingNotif, updateTabCacheStorage, upsertTab } from "./handlers.helper";
+import { closeNotification, sendError, sendLoading, sendSuccess, sendToUI } from "./message";
 import { resolveNode, getTopFrame, loadAndSendState, computeGlobalStats, resolveTab } from "./node";
 import {
 	getStoredTabs,
 	saveExportOptions,
 	saveSelectionOptions,
 	getSelectionOptions,
-	storeTab,
 	storeTabs,
 } from "./storage";
 import type { ExportOptions, FrameTab, NodeSection, SelectionOptions } from "@ctypes/messages";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function findOrCreateTab(tabs: FrameTab[], tabId: string, tabName: string): FrameTab {
-	return tabs.find(t => t.id === tabId) ?? {
-		id: tabId,
-		name: tabName,
-		nodes: [],
-		sections: [],
-		itemOrder: [],
-	};
-}
-
-function upsertTab(tabs: FrameTab[], tab: FrameTab): FrameTab[] {
-	const exists = tabs.some(t => t.id === tab.id);
-	return exists ? tabs.map(t => t.id === tab.id ? tab : t) : [...tabs, tab];
-}
-
-function matchFilter(value: string, filters: SelectionOptions["filters"]) {
-
-	if (filters.empty && value.trim() === "") {
-		return true;
-	}
-
-	if (filters.number && /^-?\d+(\.\d+)?[KMBkmb]?\+?%?$/.test(value.trim())) {
-		return true;
-	}
-
-	if (filters.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
-		return true;
-	}
-
-	if (filters.price && /^\$?\d{1,3}(,\d{3})*(\.\d{2})?$/.test(value.trim())) {
-		return true;
-	}
-
-	if (filters.url && /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/.test(value.trim())) {
-		return true;
-	}
-
-	return false;
-
-}
-
-function updateTabCacheStorage(tab: FrameTab) {
-	storeTab(tab);
-	cacheResolvedTab(tab.id, tab);
-}
 
 
 // ─── Mark selection ───────────────────────────────────────────────────────────
 
 export async function handleMarkSelection(): Promise<void> {
-	const debugStart = Date.now();
+	// DEBUG const debugStart = Date.now();
+	let nodeCount = { value: 0 };
+
 	figma.skipInvisibleInstanceChildren = true;
 
 	const selection = figma.currentPage.selection;
@@ -74,79 +28,19 @@ export async function handleMarkSelection(): Promise<void> {
 	let tabs = getCacheResolvedTabsArray();
 	const addedNodeIds: string[] = [];
 
-	// Collect all text nodes under a node
-	function collectTextNodes(node: SceneNode): SceneNode[] {
-		if (!node.visible) return [];
-		if (node.type === "TEXT") return [node];
-		if (!("findAllWithCriteria" in node)) return [];
-		return node.findAllWithCriteria({ types: ["TEXT"] }).filter(n => n.visible && !matchFilter(n.characters, filters));
-	}
-
-	const isSectionable = (node: SceneNode) =>
-		node.type === "GROUP" || node.type === "FRAME";
-
 	for (const sel of selection) {
 		const { id: tabId, name: tabName } = getTopFrame(sel);
 		let tab = findOrCreateTab(tabs, tabId, tabName);
 
 		if (autogroup && "children" in sel) {
-			for (const child of sel.children) {
-				if (!child.visible) continue;
-
-				if (child.type === "TEXT") {
-					const node = resolveNode(child);
-					if (!tab.nodes.some(n => n.id === node.id)) {
-						tab.nodes.push(node);
-						if (!tab.itemOrder.includes(node.id)) tab.itemOrder.push(node.id);
-						addedNodeIds.push(node.id);
-					}
-					continue;
-				}
-
-				if (isSectionable(child)) {
-					const textNodes = collectTextNodes(child);
-					if (textNodes.length === 0) continue;
-
-					const existingSection = tab.sections.find(s => s.id === child.id);
-					if (existingSection) {
-						const existingIds = new Set(existingSection.nodes.map(n => n.id));
-						for (const t of textNodes) {
-							if (!existingIds.has(t.id)) {
-								const node = resolveNode(t);
-								existingSection.nodes.push(node);
-								addedNodeIds.push(node.id);
-							}
-						}
-						existingSection.name = child.name;
-					} else {
-						const nodes = textNodes.map(t => resolveNode(t));
-						const newSection: NodeSection = {
-							id: child.id,
-							name: child.name,
-							topFrameId: tabId,
-							nodes,
-						};
-						tab.sections.push(newSection);
-						if (!tab.itemOrder.includes(child.id)) tab.itemOrder.push(child.id);
-						addedNodeIds.push(...nodes.map(n => n.id));
-					}
-				} else {
-					for (const t of collectTextNodes(child)) {
-						const node = resolveNode(t);
-						if (!tab.nodes.some(n => n.id === node.id)) {
-							tab.nodes.push(node);
-							if (!tab.itemOrder.includes(node.id)) tab.itemOrder.push(node.id);
-							addedNodeIds.push(node.id);
-						}
-					}
-				}
-			}
+			await processAutogroup(sel, tab, tabId, filters, addedNodeIds, nodeCount);
 		} else {
-			for (const t of collectTextNodes(sel)) {
+			for (const t of collectTextNodes(sel, filters)) {
 				const node = resolveNode(t);
 				if (!tab.nodes.some(n => n.id === node.id)) {
 					tab.nodes.push(node);
 					if (!tab.itemOrder.includes(node.id)) tab.itemOrder.push(node.id);
+					await pushLoadingNotif(nodeCount);
 					addedNodeIds.push(node.id);
 				}
 			}
@@ -156,12 +50,11 @@ export async function handleMarkSelection(): Promise<void> {
 		updateTabCacheStorage(tab);
 	}
 
+
 	loadAndSendState();
 	sendToUI({ type: "LATEST_ADDED_NODES", nodeIds: addedNodeIds });
-	sendNotify(`Marked ${addedNodeIds.length} layer${addedNodeIds.length !== 1 ? "s" : ""} for export.`);
-
-	// DELETEME
-	console.log(`[markSelection] ${addedNodeIds.length} nodes added in ${Date.now() - debugStart}ms`);
+	sendSuccess(`Marked ${addedNodeIds.length} layer${addedNodeIds.length !== 1 ? "s" : ""} for export.`);
+	// DEBUG console.log(`[markSelection] ${addedNodeIds.length} nodes added in ${Date.now() - debugStart}ms`);
 }
 
 
@@ -210,7 +103,7 @@ export async function handleHighlightMarked(): Promise<void> {
 	if (validNodes.length === 0) { sendError("No marked layers found in this file."); return; }
 	figma.currentPage.selection = validNodes;
 	figma.viewport.scrollAndZoomIntoView(validNodes);
-	sendNotify(`Highlighted ${validNodes.length} marked layer${validNodes.length !== 1 ? "s" : ""}.`);
+	sendSuccess(`Highlighted ${validNodes.length} marked layer${validNodes.length !== 1 ? "s" : ""}.`);
 }
 
 export async function handleSelectNode(nodeId: string): Promise<void> {
@@ -246,7 +139,7 @@ export function handleClearAll(): void {
 	storeTabs([]);
 	clearCacheResolvedTab();
 	loadAndSendState();
-	sendNotify("Cleared all marked layers.");
+	sendSuccess("Cleared all marked layers.");
 }
 
 

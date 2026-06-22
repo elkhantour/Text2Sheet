@@ -28,11 +28,10 @@ export type PluginToUIMessage =
 	/** Server push after any mutation — the fully updated tab */
 	| { type: "TAB_UPDATED"; tab: FrameTab; globalStats: GlobalStats; }
 	| { type: "TAB_RESOLVED"; tab: FrameTab | null; }
-	| { type: "ERROR"; message: string }
-	| { type: "NOTIFY"; message: string }
+	| { type: "NOTIFY"; kind: ToastKind, message: string }
+	| { type: "NOTIFY_CLOSE"; }
 	| { type: "SELECT_NODES"; nodeIds: string[] }
 	| { type: "LATEST_ADDED_NODES"; nodeIds: string[] }
-
 
 // ─── Data shapes ─────────────────────────────────────────────────────────────
 
@@ -126,3 +125,5 @@ export interface StoredNodeSection {
 	name: string;
 	nodes: string[];
 }
+
+export type ToastKind = "ERROR" | "SUCCESS" | "INFO" | "LOADING";

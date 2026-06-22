@@ -1,6 +1,6 @@
 // PluginContext.tsx
 import React, { createContext, useContext, useEffect, useCallback, useState, useMemo } from "react";
-import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions, FrameTab, SelectionOptions, TreeNode, GlobalStats } from "@ctypes/messages";
+import type { MarkedNode, NodeSection, UIToPluginMessage, PluginToUIMessage, ExportOptions, FrameTab, SelectionOptions, TreeNode, GlobalStats, ToastKind } from "@ctypes/messages";
 import { DEFAULT_EXPORT_OPTIONS, DEFAULT_SELECTION_OPTIONS } from "../../lib/constants";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -10,7 +10,7 @@ interface PluginContextValue {
 	exportOptions: ExportOptions;
 	selectionOptions: SelectionOptions;
 	isLoading: boolean;
-	toast: { message: string; kind: "error" | "success" | "info" } | null;
+	toast: { message: string; kind: ToastKind } | null;
 	latestAddedNodes: string[];
 	tree: TreeNode[];
 	globalStats: GlobalStats;
@@ -72,7 +72,8 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 
 	// Auto-dismiss toast after 3s
 	useEffect(() => {
-		if (!toast) return;
+		// LOADING kind requires manual closing
+		if (!toast || toast.kind === "LOADING") return;
 		const t = setTimeout(() => setToast(null), 3000);
 		return () => clearTimeout(t);
 	}, [toast]);
@@ -95,7 +96,6 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 
 				case "TAB_RESOLVED":
 					setTabs(tabs => msg.tab && [...tabs, msg.tab] || tabs);
-					//setActiveTabInternal(msg.tab);
 					break;
 
 				case "TAB_UPDATED":
@@ -108,20 +108,21 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 					setLatestAddedNodes(msg.nodeIds);
 					break;
 
-				case "ERROR":
-					setToast({ message: msg.message, kind: "error" });
+				case "NOTIFY":
+					setToast({ message: msg.message, kind: msg.kind });
 					break;
 
-				case "NOTIFY":
-					setToast({ message: msg.message, kind: "success" });
+				case "NOTIFY_CLOSE":
+					setToast(null);
 					break;
+
 			}
 		};
 		window.addEventListener("message", handler);
 		return () => window.removeEventListener("message", handler);
 	}, []);
 
-	// Initial load
+
 	useEffect(() => { postMessage({ type: "INIT_LOAD" }); }, []);
 
 	// ── Active tab ────────────────────────────────────────────────────────────
