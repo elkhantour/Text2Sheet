@@ -2,7 +2,7 @@ import { usePlugin } from "@contexts/usePlugin";
 import { TreeNode } from "@ctypes/messages";
 import { ChevronDown } from "lucide-react";
 import { Collapsible } from "radix-ui";
-import React, { ComponentPropsWithRef, useState } from "react";
+import React, { ComponentPropsWithRef, useRef, useState } from "react";
 import { hasActiveChildren } from "./Helper";
 
 interface TreeNodeProps {
@@ -31,6 +31,16 @@ function TreeNodeComponent({
 	const hasChildren = node.children && node.children.length > 0;
 	const isActive = node.tabId === activeTabId;
 	const [isOpen, setIsOpen] = useState(false);
+
+	const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const handleMouseEnter = (id: string) => {
+		hoverTimer.current = setTimeout(() => loadTab(id), 100);
+	};
+
+	const handleMouseLeave = () => {
+		if (hoverTimer.current) clearTimeout(hoverTimer.current);
+	};
 
 
 	return (
@@ -68,7 +78,8 @@ function TreeNodeComponent({
 					onClick={() => node.tabId && setActiveTab(node.tabId)}
 					data-active={isActive}
 					className={LABEL_STYLE}
-					onMouseEnter={() => node.tabId && loadTab(node.tabId)}
+					onMouseEnter={() => node.tabId && handleMouseEnter(node.tabId)}
+					onMouseLeave={handleMouseLeave}
 				>
 					<span>{node.name}</span>
 				</button>
