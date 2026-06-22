@@ -1,7 +1,7 @@
 import { clearCacheResolvedTab, getCacheResolvedTabsArray } from "./cache";
 import { PLUGIN_HEIGHT, PLUGIN_WIDTH } from "./constants";
 import { collectTextNodes, findOrCreateTab, processAutogroup, pushLoadingNotif, updateTabCacheStorage, upsertTab } from "./handlers.helper";
-import { closeNotification, sendError, sendLoading, sendSuccess, sendToUI } from "./message";
+import { sendError, sendSuccess, sendToUI } from "./message";
 import { resolveNode, getTopFrame, loadAndSendState, computeGlobalStats, resolveTab } from "./node";
 import {
 	getStoredTabs,
@@ -161,9 +161,11 @@ export async function handleCreateSection(name: string, sectionId: string, tabId
 	// Already handled optimistically client-side
 }
 
-export async function handleDeleteSection(sectionId: string, tabId: string): Promise<void> {
+export async function handleDeleteSection(tabId: string, sectionId: string): Promise<void> {
+
 	const tabs = getCacheResolvedTabsArray();
 	const tab = tabs.find(t => t.id === tabId);
+
 	if (!tab) return;
 
 	const target = tab.sections.find(s => s.id === sectionId);

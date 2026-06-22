@@ -173,6 +173,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 		}, []),
 
 		unmarkNodes: useCallback((nodeIds) => {
+
 			const idSet = new Set(nodeIds);
 			setTabs(prev => prev.map(t => ({
 				...t,
@@ -183,40 +184,63 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 				})),
 				itemOrder: t.itemOrder.filter(id => !idSet.has(id)),
 			})).filter(t => t.nodes.length > 0 || t.sections.some(s => s.nodes.length > 0)));
+
 			postMessage({ type: "UNMARK_NODES", nodeIds });
 		}, []),
 
 		createSection: useCallback((name, tab) => {
+
 			const newSection: NodeSection = {
 				id: `section-${Date.now()}`,
 				name,
 				nodes: [],
 				topFrameId: tab.id,
 			};
-			setTabs(prev => prev.map(t =>
-				t.id === tab.id
-					? { ...t, sections: [...t.sections, newSection], itemOrder: [...t.itemOrder, newSection.id] }
-					: t
-			));
-			postMessage({ type: "CREATE_SECTION", name, sectionId: newSection.id, tabId: tab.id });
-		}, []),
 
-		deleteSection: useCallback((sectionId, tabId) => {
-			setTabs(prev => prev.map(t => {
-				if (t.id !== tabId) return t;
-				const target = t.sections.find(s => s.id === sectionId);
-				if (!target) return t;
-				return {
-					...t,
-					nodes: [...t.nodes, ...target.nodes],
-					sections: t.sections.filter(s => s.id !== sectionId),
-					itemOrder: t.itemOrder.flatMap(id =>
-						id === sectionId ? target.nodes.map(n => n.id) : [id]
-					),
-				};
-			}));
+			const updatedTab: FrameTab = {
+				...tab,
+				sections: [...tab.sections, newSection],
+				itemOrder: [...tab.itemOrder, newSection.id]
+			};
+
+			// update cached tabs
+			setTabs(prev => prev.map(t => t.id === tab.id ? updatedTab : t));
+
+			// (optional) update active tab live
+			if (activeTab?.id === updatedTab.id)
+				setActiveTabInternal(updatedTab);
+
+			postMessage({ type: "CREATE_SECTION", name, sectionId: newSection.id, tabId: tab.id });
+
+		}, [activeTab]),
+
+		deleteSection: useCallback((tabId, sectionId) => {
+
+			const currentTab = tabs.find(t => t.id === tabId);
+			if (!currentTab) return;
+
+			const targetSection = currentTab.sections.find(s => s.id === sectionId);
+			if (!targetSection) return;
+
+			const updatedTab: FrameTab = {
+				...currentTab,
+				nodes: [...currentTab.nodes, ...targetSection.nodes],
+				sections: currentTab.sections.filter(s => s.id !== sectionId),
+				itemOrder: currentTab.itemOrder.flatMap(id =>
+					id === sectionId ? targetSection.nodes.map(n => n.id) : [id]
+				),
+			};
+
+			// update cached tabs
+			setTabs(prev => prev.map(t => t.id === tabId ? updatedTab : t));
+
+			// (optional) update active tab live
+			if (activeTab?.id === tabId)
+				setActiveTabInternal(updatedTab);
+
 			postMessage({ type: "DELETE_SECTION", sectionId, tabId });
-		}, []),
+
+		}, [activeTab]),
 
 		renameSection: useCallback((sectionId, name) => {
 			setTabs(prev => prev.map(t => ({
