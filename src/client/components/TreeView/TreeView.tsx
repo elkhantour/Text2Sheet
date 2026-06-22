@@ -2,8 +2,9 @@ import { usePlugin } from "@contexts/usePlugin";
 import { TreeNode } from "@ctypes/messages";
 import { ChevronDown } from "lucide-react";
 import { Collapsible } from "radix-ui";
-import React, { ComponentPropsWithRef, useRef, useState } from "react";
+import React, { ComponentPropsWithRef, useEffect, useRef, useState } from "react";
 import { hasActiveChildren } from "./Helper";
+import { Spinner } from "@radix-ui/themes";
 
 interface TreeNodeProps {
 	node: TreeNode;
@@ -31,17 +32,19 @@ function TreeNodeComponent({
 	const hasChildren = node.children && node.children.length > 0;
 	const isActive = node.tabId === activeTabId;
 	const [isOpen, setIsOpen] = useState(false);
+	const [clicked, setClicked] = useState(false);
+
+	useEffect(() => { setClicked(false); }, [isActive]);
 
 	const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const handleMouseEnter = (id: string) => {
-		hoverTimer.current = setTimeout(() => loadTab(id), 100);
+		hoverTimer.current = setTimeout(() => loadTab(id, false), 100);
 	};
 
 	const handleMouseLeave = () => {
 		if (hoverTimer.current) clearTimeout(hoverTimer.current);
 	};
-
 
 	return (
 		<div className="pl-2 mb-2">
@@ -75,13 +78,14 @@ function TreeNodeComponent({
 				</Collapsible.Root>
 			) : (
 				<button
-					onClick={() => node.tabId && setActiveTab(node.tabId)}
+					onClick={() => { setClicked(true); return node.tabId && setActiveTab(node.tabId); }}
 					data-active={isActive}
 					className={LABEL_STYLE}
 					onMouseEnter={() => node.tabId && handleMouseEnter(node.tabId)}
 					onMouseLeave={handleMouseLeave}
 				>
 					<span>{node.name}</span>
+					{clicked && !isActive && <Spinner size="1" />}
 				</button>
 			)
 			}

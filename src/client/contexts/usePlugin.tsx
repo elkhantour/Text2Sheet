@@ -19,7 +19,7 @@ interface PluginContextValue {
 	tabs: FrameTab[];
 	activeTab: FrameTab | null;
 	setActiveTab: (id: string) => void;
-	loadTab: (id: string) => void;
+	loadTab: (id: string, setActive: boolean) => void;
 
 	// ── Actions ───────────────────────────────────────────────────────────────
 	markSelection: () => void;
@@ -96,6 +96,9 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 
 				case "TAB_RESOLVED":
 					setTabs(tabs => msg.tab && [...tabs, msg.tab] || tabs);
+					if (msg.tab && msg.setActive) {
+						setActiveTabInternal(msg.tab);
+					}
 					break;
 
 				case "TAB_UPDATED":
@@ -132,7 +135,7 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 		// else resolve tab server side
 		let activeTab = tabs.find(t => t.id === id);
 		if (!activeTab)
-			postMessage({ type: "RESOLVE_TAB", tabId: id });
+			postMessage({ type: "RESOLVE_TAB", tabId: id, setActive: true });
 		else
 			setActiveTabInternal(activeTab);
 	}, [tabs]);
@@ -160,9 +163,9 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
 		markSelection: useCallback(() => postMessage({ type: "MARK_SELECTION" }), []),
 		highlightMarked: useCallback(() => postMessage({ type: "HIGHLIGHT_MARKED" }), []),
 		selectNode: useCallback((nodeId) => postMessage({ type: "SELECT_NODE", nodeId }), []),
-		loadTab: useCallback((tabId) => {
+		loadTab: useCallback((tabId, setActive) => {
 			if (!tabs.find(t => t.id === tabId))
-				postMessage({ type: "RESOLVE_TAB", tabId })
+				postMessage({ type: "RESOLVE_TAB", tabId, setActive })
 		}, [tabs]),
 		resizeWindow: useCallback((width, height) => postMessage({ type: "RESIZE_WINDOW", width, height }), []),
 

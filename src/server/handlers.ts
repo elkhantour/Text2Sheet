@@ -207,12 +207,12 @@ export async function handleReorderItems(tabId: string, itemIds: string[]): Prom
 	// Already handled optimistically client-side
 }
 
-export async function handleResolveTab(tabId: string): Promise<void> {
+export async function handleResolveTab(tabId: string, setActive: boolean): Promise<void> {
 	const tabs = getStoredTabs();
 	const tab = tabs.find(t => t.id === tabId);
 	let resolvedTab = tab ? await resolveTab(tab) : null;
 
-	sendToUI({ type: "TAB_RESOLVED", tab: resolvedTab });
+	sendToUI({ type: "TAB_RESOLVED", tab: resolvedTab, setActive });
 }
 
 export async function handleMoveNodeListToSection(

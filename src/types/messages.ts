@@ -7,7 +7,7 @@ export type UIToPluginMessage =
 	| { type: "UNMARK_NODES"; nodeIds: string[] }
 	| { type: "SELECT_NODE"; nodeId: string }
 	| { type: "INIT_LOAD" }
-	| { type: "RESOLVE_TAB", tabId: string; }
+	| { type: "RESOLVE_TAB", tabId: string; setActive: boolean; }
 	| { type: "INIT_LOAD" }
 	| { type: "REORDER_ITEMS"; tabId: string; itemIds: string[] }
 	| { type: "CREATE_SECTION"; name: string; sectionId: string; tabId: string }
@@ -27,7 +27,7 @@ export type PluginToUIMessage =
 	| { type: "STATE_UPDATE"; tree: TreeNode[]; exportOptions: ExportOptions; globalStats: GlobalStats; selectionOptions: SelectionOptions; }
 	/** Server push after any mutation — the fully updated tab */
 	| { type: "TAB_UPDATED"; tab: FrameTab; globalStats: GlobalStats; }
-	| { type: "TAB_RESOLVED"; tab: FrameTab | null; }
+	| { type: "TAB_RESOLVED"; tab: FrameTab | null; setActive: boolean; }
 	| { type: "NOTIFY"; kind: ToastKind, message: string }
 	| { type: "NOTIFY_CLOSE"; }
 	| { type: "SELECT_NODES"; nodeIds: string[] }
