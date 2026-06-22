@@ -9,7 +9,6 @@ interface TreeNodeProps {
 	node: TreeNode;
 	depth: number;
 	activeTabId?: string;
-	setActiveTab: (tabId: string) => void;
 }
 
 const LABEL_STYLE = `
@@ -26,8 +25,9 @@ function TreeNodeComponent({
 	node,
 	depth,
 	activeTabId,
-	setActiveTab,
 }: TreeNodeProps) {
+
+	const { setActiveTab, loadTab } = usePlugin();
 	const hasChildren = node.children && node.children.length > 0;
 	const isActive = node.tabId === activeTabId;
 	const [isOpen, setIsOpen] = useState(false);
@@ -58,7 +58,6 @@ function TreeNodeComponent({
 									node={child}
 									depth={depth + 1}
 									activeTabId={activeTabId}
-									setActiveTab={setActiveTab}
 								/>
 							))}
 						</div>
@@ -69,11 +68,13 @@ function TreeNodeComponent({
 					onClick={() => node.tabId && setActiveTab(node.tabId)}
 					data-active={isActive}
 					className={LABEL_STYLE}
+					onMouseEnter={() => node.tabId && loadTab(node.tabId)}
 				>
 					<span>{node.name}</span>
 				</button>
-			)}
-		</div>
+			)
+			}
+		</div >
 	);
 }
 
@@ -81,7 +82,7 @@ function TreeNodeComponent({
 
 export default function TreeView({ className }: ComponentPropsWithRef<"div">) {
 
-	const { tree, activeTab, setActiveTab } = usePlugin();
+	const { tree, activeTab } = usePlugin();
 
 	return (
 		<div
@@ -94,7 +95,6 @@ export default function TreeView({ className }: ComponentPropsWithRef<"div">) {
 					node={node}
 					depth={0}
 					activeTabId={activeTab?.id}
-					setActiveTab={setActiveTab}
 				/>
 			))}
 		</div>
